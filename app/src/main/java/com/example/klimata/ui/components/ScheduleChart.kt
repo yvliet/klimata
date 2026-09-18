@@ -3,6 +3,7 @@ package com.example.klimata.ui.components
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -29,6 +30,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
@@ -56,6 +58,7 @@ import kotlin.math.roundToInt
 fun ScheduleChart(
     modifier: Modifier = Modifier,
     steps: List<ThermalStep> = MockData.thermalSteps,
+    onClick: () -> Unit = {},
 ) {
     val phases = remember(steps) {
         if (steps.size >= 4) {
@@ -81,6 +84,7 @@ fun ScheduleChart(
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White.copy(alpha = 0.12f))
             .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -99,15 +103,26 @@ fun ScheduleChart(
                     )
                 )
 
-                Text(
-                    text = "Stepped Drift",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.60f)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Text(
+                        text = "Stepped Drift",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.60f)
+                        )
                     )
-                )
+                    Icon(
+                        imageVector = safeCaretRightIcon(),
+                        contentDescription = "Open schedule details",
+                        tint = Color.White.copy(alpha = 0.50f),
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -389,6 +404,35 @@ private fun safeFanIcon(): ImageVector {
         return FallbackFanIcon
     }
     return getPhosphorLightIcon("Fan", FallbackFanIcon)
+}
+
+private val FallbackCaretRightIcon: ImageVector by lazy {
+    ImageVector.Builder(
+        name = "CaretRight",
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f
+    ).apply {
+        path(
+            stroke = SolidColor(Color.White),
+            strokeLineWidth = 2.2f,
+            strokeLineCap = StrokeCap.Round,
+            strokeLineJoin = StrokeJoin.Round
+        ) {
+            moveTo(9f, 6f)
+            lineTo(15f, 12f)
+            lineTo(9f, 18f)
+        }
+    }.build()
+}
+
+@Composable
+private fun safeCaretRightIcon(): ImageVector {
+    if (LocalInspectionMode.current) {
+        return FallbackCaretRightIcon
+    }
+    return getPhosphorLightIcon("CaretRight", FallbackCaretRightIcon)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF1976D2)

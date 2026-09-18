@@ -2,6 +2,7 @@ package com.example.klimata.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,8 @@ fun ImpactLedgerGrid(
     modifier: Modifier = Modifier,
     savings: ImpactMetric = MockData.savingsMetric,
     carbon: ImpactMetric = MockData.carbonMetric,
+    onSavingsClick: () -> Unit = {},
+    onCarbonClick: () -> Unit = {},
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -54,6 +57,7 @@ fun ImpactLedgerGrid(
             badgeText = "-38% kWh",
             icon = safeCurrencyDollarIcon(),
             accentColor = com.example.klimata.ui.theme.MineralMintActive,
+            onClick = onSavingsClick,
             modifier = Modifier.weight(1f)
         )
 
@@ -63,6 +67,7 @@ fun ImpactLedgerGrid(
             badgeText = "1.4 Trees eq.",
             icon = safeLeafIcon(),
             accentColor = Color.White,
+            onClick = onCarbonClick,
             modifier = Modifier.weight(1f)
         )
     }
@@ -75,6 +80,7 @@ private fun FrostedMetricCard(
     badgeText: String,
     icon: ImageVector,
     accentColor: Color,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -82,6 +88,7 @@ private fun FrostedMetricCard(
             .clip(RoundedCornerShape(20.dp))
             .background(Color.White.copy(alpha = 0.12f))
             .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {

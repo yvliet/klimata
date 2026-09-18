@@ -45,6 +45,9 @@ import kotlinx.coroutines.launch
 fun KlimataScreen(
     modifier: Modifier = Modifier,
     initialPhase: DiurnalPhase? = null,
+    onScheduleClick: (roomId: String) -> Unit = {},
+    onSavingsClick: (roomId: String) -> Unit = {},
+    onCarbonClick: (roomId: String) -> Unit = {},
 ) {
     var selectedPhase by remember {
         mutableStateOf(initialPhase ?: currentDiurnalPhase())
@@ -122,6 +125,7 @@ fun KlimataScreen(
                         ) {
                             ScheduleChart(
                                 steps = room.thermalSteps,
+                                onClick = { onScheduleClick(room.id) },
                                 modifier = Modifier.fillMaxWidth()
                             )
 
@@ -134,6 +138,8 @@ fun KlimataScreen(
                             ImpactLedgerGrid(
                                 savings = room.monthlySavings,
                                 carbon = room.avoidedCarbon,
+                                onSavingsClick = { onSavingsClick(room.id) },
+                                onCarbonClick = { onCarbonClick(room.id) },
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }

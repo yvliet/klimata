@@ -40,6 +40,34 @@ data class ImpactMetric(
     val subtitle: String,
 )
 
+data class TimeBucketedImpact(
+    val weekly: ImpactMetric,
+    val monthly: ImpactMetric,
+    val yearly: ImpactMetric,
+    val lifetime: ImpactMetric,
+) {
+    fun forPeriod(period: ImpactPeriod): ImpactMetric = when (period) {
+        ImpactPeriod.WEEKLY -> weekly
+        ImpactPeriod.MONTHLY -> monthly
+        ImpactPeriod.YEARLY -> yearly
+        ImpactPeriod.LIFETIME -> lifetime
+    }
+}
+
+data class SavingsBreakdown(
+    val compressorCyclingPercent: Int,
+    val fanCoastingPercent: Int,
+    val avgNightlyKwhSaved: Float,
+    val localTariffPerKwh: String,
+)
+
+data class CarbonEquivalence(
+    val treesEquivalent: Float,
+    val drivingKmAvoided: Float,
+    val ledHoursEquivalent: Float,
+    val gridEmissionFactor: Float,
+)
+
 data class DispatchState(
     val isAutonomous: Boolean,
     val statusLabel: String,
@@ -59,6 +87,10 @@ data class RoomState(
     val dispatchState: DispatchState,
     val monthlySavings: ImpactMetric,
     val avoidedCarbon: ImpactMetric,
+    val savingsHistory: TimeBucketedImpact,
+    val carbonHistory: TimeBucketedImpact,
+    val savingsBreakdown: SavingsBreakdown,
+    val carbonEquivalence: CarbonEquivalence,
 )
 
 object MockData {
@@ -162,6 +194,30 @@ object MockData {
         dispatchState = dispatch,
         monthlySavings = savingsMetric,
         avoidedCarbon = carbonMetric,
+        savingsHistory = TimeBucketedImpact(
+            weekly = ImpactMetric("Weekly Savings", "Rp 19.600", "$1.25 USD • -38% kWh"),
+            monthly = savingsMetric,
+            yearly = ImpactMetric("Yearly Savings", "Rp 1.014.000", "$64.80 USD • -38% kWh"),
+            lifetime = ImpactMetric("Lifetime Savings", "Rp 676.000", "$43.20 USD • 8 months active"),
+        ),
+        carbonHistory = TimeBucketedImpact(
+            weekly = ImpactMetric("Avoided Carbon", "8.0 kg", "CO₂e offset • 0.3 trees equiv"),
+            monthly = carbonMetric,
+            yearly = ImpactMetric("Avoided Carbon", "410.4 kg", "CO₂e offset • 16.8 trees equiv"),
+            lifetime = ImpactMetric("Avoided Carbon", "273.6 kg", "CO₂e offset • 11.2 trees equiv"),
+        ),
+        savingsBreakdown = SavingsBreakdown(
+            compressorCyclingPercent = 64,
+            fanCoastingPercent = 36,
+            avgNightlyKwhSaved = 1.85f,
+            localTariffPerKwh = "Rp 1.445",
+        ),
+        carbonEquivalence = CarbonEquivalence(
+            treesEquivalent = 1.4f,
+            drivingKmAvoided = 138.5f,
+            ledHoursEquivalent = 57.2f,
+            gridEmissionFactor = 0.78f,
+        ),
     )
 
     val livingRoom = RoomState(
@@ -239,6 +295,30 @@ object MockData {
             primaryValue = "48.6 kg",
             subtitle = "CO₂e offset • 2.1 trees equiv",
         ),
+        savingsHistory = TimeBucketedImpact(
+            weekly = ImpactMetric("Weekly Savings", "Rp 26.000", "$1.65 USD • -42% kWh"),
+            monthly = ImpactMetric("Monthly Savings", "Rp 112.000", "$7.15 USD • -42% kWh"),
+            yearly = ImpactMetric("Yearly Savings", "Rp 1.344.000", "$85.80 USD • -42% kWh"),
+            lifetime = ImpactMetric("Lifetime Savings", "Rp 896.000", "$57.20 USD • 8 months active"),
+        ),
+        carbonHistory = TimeBucketedImpact(
+            weekly = ImpactMetric("Avoided Carbon", "11.3 kg", "CO₂e offset • 0.5 trees equiv"),
+            monthly = ImpactMetric("Avoided Carbon", "48.6 kg", "CO₂e offset • 2.1 trees equiv"),
+            yearly = ImpactMetric("Avoided Carbon", "583.2 kg", "CO₂e offset • 25.2 trees equiv"),
+            lifetime = ImpactMetric("Avoided Carbon", "388.8 kg", "CO₂e offset • 16.8 trees equiv"),
+        ),
+        savingsBreakdown = SavingsBreakdown(
+            compressorCyclingPercent = 70,
+            fanCoastingPercent = 30,
+            avgNightlyKwhSaved = 2.45f,
+            localTariffPerKwh = "Rp 1.445",
+        ),
+        carbonEquivalence = CarbonEquivalence(
+            treesEquivalent = 2.1f,
+            drivingKmAvoided = 196.8f,
+            ledHoursEquivalent = 81.0f,
+            gridEmissionFactor = 0.78f,
+        ),
     )
 
     val studyRoom = RoomState(
@@ -315,6 +395,30 @@ object MockData {
             title = "Avoided Carbon",
             primaryValue = "18.4 kg",
             subtitle = "CO₂e offset • 0.8 trees equiv",
+        ),
+        savingsHistory = TimeBucketedImpact(
+            weekly = ImpactMetric("Weekly Savings", "Rp 9.900", "$0.63 USD • -22% kWh"),
+            monthly = ImpactMetric("Monthly Savings", "Rp 42.800", "$2.70 USD • -22% kWh"),
+            yearly = ImpactMetric("Yearly Savings", "Rp 513.600", "$32.40 USD • -22% kWh"),
+            lifetime = ImpactMetric("Lifetime Savings", "Rp 342.400", "$21.60 USD • 8 months active"),
+        ),
+        carbonHistory = TimeBucketedImpact(
+            weekly = ImpactMetric("Avoided Carbon", "4.3 kg", "CO₂e offset • 0.2 trees equiv"),
+            monthly = ImpactMetric("Avoided Carbon", "18.4 kg", "CO₂e offset • 0.8 trees equiv"),
+            yearly = ImpactMetric("Avoided Carbon", "220.8 kg", "CO₂e offset • 9.6 trees equiv"),
+            lifetime = ImpactMetric("Avoided Carbon", "147.2 kg", "CO₂e offset • 6.4 trees equiv"),
+        ),
+        savingsBreakdown = SavingsBreakdown(
+            compressorCyclingPercent = 58,
+            fanCoastingPercent = 42,
+            avgNightlyKwhSaved = 0.95f,
+            localTariffPerKwh = "Rp 1.445",
+        ),
+        carbonEquivalence = CarbonEquivalence(
+            treesEquivalent = 0.8f,
+            drivingKmAvoided = 74.5f,
+            ledHoursEquivalent = 30.6f,
+            gridEmissionFactor = 0.78f,
         ),
     )
 
