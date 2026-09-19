@@ -76,8 +76,8 @@ fun RoomThermalVisualizerCard(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
+            .bouncyClickable(onClick = onClick)
             .background(diurnal.frostedCardBackground)
-            .clickable(onClick = onClick)
             .padding(18.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {

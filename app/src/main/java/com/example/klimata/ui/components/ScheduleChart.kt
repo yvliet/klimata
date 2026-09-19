@@ -165,8 +165,8 @@ fun ScheduleChart(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
+            .bouncyClickable(onClick = onClick)
             .background(diurnal.frostedCardBackground)
-            .clickable(onClick = onClick)
             .padding(vertical = 18.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
