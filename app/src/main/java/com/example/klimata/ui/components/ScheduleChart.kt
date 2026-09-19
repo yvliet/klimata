@@ -136,6 +136,16 @@ fun ScheduleChart(
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homePhaseLabelAlpha"
     )
+    val coastPhaseLabelColor by animateColorAsState(
+        targetValue = if (isEcoEnabled) Color(0xFF6EE7B7) else Color.White.copy(alpha = 0.22f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "homeCoastPhaseLabelColor"
+    )
+    val activeTimeLabelAlpha by animateFloatAsState(
+        targetValue = if (isEcoEnabled) 1f else 0.45f,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "homeActiveTimeLabelAlpha"
+    )
     val timeLabelAlpha by animateFloatAsState(
         targetValue = if (isEcoEnabled) 0.85f else 0.35f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
@@ -217,10 +227,12 @@ fun ScheduleChart(
 
                 val leafColor by animateColorAsState(
                     targetValue = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = 0.35f),
+                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
                     label = "homeLeafIconTint"
                 )
                 val leafBgColor by animateColorAsState(
                     targetValue = if (isEcoEnabled) MineralMintActive.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.08f),
+                    animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
                     label = "homeLeafBg"
                 )
 
@@ -434,7 +446,7 @@ fun ScheduleChart(
                                         fontFamily = JakartaFamily,
                                         fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                                         fontSize = 12.sp,
-                                        color = if (isActive) Color.White.copy(alpha = if (isEcoEnabled) 1f else 0.45f) else Color.White.copy(alpha = timeLabelAlpha),
+                                        color = Color.White.copy(alpha = if (isActive) activeTimeLabelAlpha else timeLabelAlpha),
                                         textAlign = TextAlign.Center
                                     ),
                                     modifier = Modifier.fillMaxWidth()
@@ -446,7 +458,7 @@ fun ScheduleChart(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 11.sp,
-                                        color = if (step.setpointCelsius == 0 && isEcoEnabled) Color(0xFF6EE7B7) else Color.White.copy(alpha = phaseLabelAlpha),
+                                        color = if (step.setpointCelsius == 0) coastPhaseLabelColor else Color.White.copy(alpha = phaseLabelAlpha),
                                         textAlign = TextAlign.Center
                                     ),
                                     modifier = Modifier.fillMaxWidth()

@@ -376,6 +376,12 @@ fun ACDigitalRemoteCard(
         label = "RemoteModeBtnBgColor"
     )
 
+    val powerIndicatorDotColor by animateColorAsState(
+        targetValue = if (isPowerOn) MineralMintActive else Color.White.copy(alpha = 0.20f),
+        animationSpec = tween(200),
+        label = "RemotePowerDot"
+    )
+
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
@@ -405,7 +411,7 @@ fun ACDigitalRemoteCard(
                     modifier = Modifier
                         .size(7.dp)
                         .clip(CircleShape)
-                        .background(if (isPowerOn) MineralMintActive else Color.White.copy(alpha = 0.20f))
+                        .background(powerIndicatorDotColor)
                 )
             }
 

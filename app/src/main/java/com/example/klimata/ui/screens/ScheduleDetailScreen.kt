@@ -88,10 +88,12 @@ fun ScheduleDetailScreen(
 
     val leafColor by animateColorAsState(
         targetValue = if (room.isEcoEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = 0.40f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailLeafIconTint"
     )
     val leafBgColor by animateColorAsState(
         targetValue = if (room.isEcoEnabled) MineralMintActive.copy(alpha = 0.15f) else DetailCardSurface,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailLeafBg"
     )
 
@@ -168,6 +170,31 @@ private fun MinimalistThermalForecastCard(
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailPhaseTagAlpha"
     )
+    val fanTagColor by animateColorAsState(
+        targetValue = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = 0.28f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "detailFanTagColor"
+    )
+    val activePhaseTagColor by animateColorAsState(
+        targetValue = if (isEcoEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = 0.22f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "detailActivePhaseTagColor"
+    )
+    val activeAirflowIconTint by animateColorAsState(
+        targetValue = if (isEcoEnabled) MineralMintActive else DetailTextMuted.copy(alpha = 0.22f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "detailActiveAirflowIconTint"
+    )
+    val activeAirflowTextTint by animateColorAsState(
+        targetValue = if (isEcoEnabled) DetailTextPrimary else DetailTextMuted.copy(alpha = 0.22f),
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "detailActiveAirflowTextTint"
+    )
+    val activeColumnBgColor by animateColorAsState(
+        targetValue = if (isEcoEnabled) DetailActiveColumnHighlight else DetailCardSurface,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "detailActiveColBg"
+    )
 
     Box(
         modifier = modifier
@@ -190,7 +217,7 @@ private fun MinimalistThermalForecastCard(
                                     .fillMaxHeight()
                                     .then(
                                         if (index == activeIndex) {
-                                            Modifier.background(DetailActiveColumnHighlight)
+                                            Modifier.background(activeColumnBgColor)
                                         } else {
                                             Modifier
                                         }
@@ -440,7 +467,7 @@ private fun MinimalistThermalForecastCard(
                                         Icon(
                                             imageVector = PhosphorIcons.Light.Fan,
                                             contentDescription = null,
-                                            tint = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = setpointTextAlpha),
+                                            tint = fanTagColor,
                                             modifier = Modifier.size(11.dp)
                                         )
                                         Spacer(modifier = Modifier.width(2.dp))
@@ -450,7 +477,7 @@ private fun MinimalistThermalForecastCard(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 11.5.sp,
-                                                color = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = setpointTextAlpha)
+                                                color = fanTagColor
                                             )
                                         )
                                     }
@@ -490,7 +517,7 @@ private fun MinimalistThermalForecastCard(
                                         fontFamily = JakartaFamily,
                                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold,
                                         fontSize = 12.sp,
-                                        color = if (isActive && isEcoEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = if (isEcoEnabled) 1f else phaseTagAlpha),
+                                        color = if (isActive) activePhaseTagColor else DetailTextSecondary.copy(alpha = phaseTagAlpha),
                                         textAlign = TextAlign.Center
                                     ),
                                     modifier = Modifier.fillMaxWidth(),
@@ -513,7 +540,7 @@ private fun MinimalistThermalForecastCard(
                                             else -> PhosphorIcons.Light.CaretUp
                                         },
                                         contentDescription = null,
-                                        tint = if (isActive && isEcoEnabled) MineralMintActive else DetailTextMuted.copy(alpha = if (isEcoEnabled) 1f else phaseTagAlpha),
+                                        tint = if (isActive) activeAirflowIconTint else DetailTextMuted.copy(alpha = phaseTagAlpha),
                                         modifier = Modifier.size(10.dp)
                                     )
                                     Spacer(modifier = Modifier.width(2.dp))
@@ -529,7 +556,7 @@ private fun MinimalistThermalForecastCard(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Normal,
                                             fontSize = 11.sp,
-                                            color = if (isActive && isEcoEnabled) DetailTextPrimary else DetailTextMuted.copy(alpha = if (isEcoEnabled) 1f else phaseTagAlpha),
+                                            color = if (isActive) activeAirflowTextTint else DetailTextMuted.copy(alpha = phaseTagAlpha),
                                             textAlign = TextAlign.Center
                                         ),
                                         maxLines = 1
