@@ -1,11 +1,8 @@
 package com.example.klimata.ui.navigation
 
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -48,7 +45,7 @@ sealed class Screen(val route: String) {
 }
 
 /**
- * Root navigation graph managing horizontal slide transitions across detail
+ * Root navigation graph managing horizontal slide-only transitions across detail
  * destinations while preserving the atmospheric sky canvas.
  */
 @Composable
@@ -79,10 +76,16 @@ fun KlimataNavGraph(
                 composable(
                     route = Screen.Home.route,
                     exitTransition = {
-                        fadeOut(animationSpec = tween(220))
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(380, easing = FastOutSlowInEasing)
+                        ) { fullWidth -> (fullWidth * 0.28f).toInt() }
                     },
                     popEnterTransition = {
-                        fadeIn(animationSpec = tween(260))
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(380, easing = FastOutSlowInEasing)
+                        ) { fullWidth -> (fullWidth * 0.28f).toInt() }
                     }
                 ) {
                     KlimataScreen(
@@ -115,19 +118,19 @@ fun KlimataNavGraph(
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(320))
+                        )
                     },
                     exitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     },
                     popExitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
@@ -145,19 +148,19 @@ fun KlimataNavGraph(
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(320))
+                        )
                     },
                     exitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     },
                     popExitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
@@ -175,19 +178,19 @@ fun KlimataNavGraph(
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(320))
+                        )
                     },
                     exitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     },
                     popExitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
@@ -205,19 +208,19 @@ fun KlimataNavGraph(
                         slideIntoContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(320))
+                        )
                     },
                     exitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     },
                     popExitTransition = {
                         slideOutOfContainer(
                             towards = AnimatedContentTransitionScope.SlideDirection.Right,
-                            animationSpec = tween(320, easing = FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(240))
+                            animationSpec = tween(350, easing = FastOutSlowInEasing)
+                        )
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -62,6 +63,7 @@ fun DetailPageScaffold(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .clip(RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp))
             .background(DetailBlackBackground)
             .statusBarsPadding()
             .navigationBarsPadding()
