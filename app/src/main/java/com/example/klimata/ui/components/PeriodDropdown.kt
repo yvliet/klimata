@@ -7,7 +7,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -27,12 +29,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.CaretDown
-import com.adamglin.phosphoricons.light.Check
 import com.example.klimata.data.ImpactPeriod
 import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCardSurfaceElevated
@@ -116,24 +118,17 @@ fun PeriodDropdown(
                         text = {
                             Text(
                                 text = period.label,
+                                textAlign = TextAlign.Center,
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontSize = 13.sp,
                                     color = if (isSelected) MineralMintActive else DetailTextPrimary
-                                )
+                                ),
+                                modifier = Modifier.fillMaxWidth()
                             )
                         },
-                        trailingIcon = if (isSelected) {
-                            {
-                                Icon(
-                                    imageVector = PhosphorIcons.Light.Check,
-                                    contentDescription = null,
-                                    tint = MineralMintActive,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                            }
-                        } else null,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
                         onClick = {
                             onPeriodSelected(period)
                             expanded = false
