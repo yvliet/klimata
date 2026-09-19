@@ -78,12 +78,12 @@ fun Modifier.bouncyClickable(
                     try {
                         tryAwaitRelease()
                     } finally {
-                        pressJob.cancel()
-                        sheenJob.cancel()
                         coroutineScope.launch {
+                            pressJob.join()
                             scaleAnim.animateTo(1.0f, releaseSpring)
                         }
                         coroutineScope.launch {
+                            sheenJob.join()
                             sheenAnim.animateTo(0.0f, releaseSpring)
                         }
                     }
