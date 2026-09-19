@@ -144,7 +144,7 @@ private fun MinimalistThermalForecastCard(
 ) {
     val count = steps.size.coerceAtLeast(1)
     val activeIndex = steps.indexOfFirst { it.isActive }.takeIf { it >= 0 } ?: 0
-    val colWidth = 80.dp
+    val colWidth = 74.dp
     val totalWidth = colWidth * count
     val scrollState = rememberScrollState()
 
