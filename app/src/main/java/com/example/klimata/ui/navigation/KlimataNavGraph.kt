@@ -26,6 +26,7 @@ import com.example.klimata.ui.screens.CarbonDetailScreen
 import com.example.klimata.ui.screens.RoomThermalDetailScreen
 import com.example.klimata.ui.screens.SavingsDetailScreen
 import com.example.klimata.ui.screens.ScheduleDetailScreen
+import com.example.klimata.ui.screens.provisioning.AddRoomWizardScreen
 import com.example.klimata.ui.theme.DiurnalPhase
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.LocalDiurnalColors
@@ -45,6 +46,7 @@ sealed class Screen(val route: String) {
     data object CarbonDetail : Screen("carbon/{roomId}") {
         fun createRoute(roomId: String) = "carbon/$roomId"
     }
+    data object AddRoom : Screen("add_room")
 }
 
 /**
@@ -62,6 +64,7 @@ fun KlimataNavGraph(
     }
 
     var rooms by remember { mutableStateOf(MockData.rooms) }
+    var hasCompletedOnboarding by remember { mutableStateOf(false) }
 
     fun navigateSafely(route: String) {
         if (navController.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
@@ -143,6 +146,9 @@ fun KlimataNavGraph(
                         },
                         onCarbonClick = { roomId ->
                             navigateSafely(Screen.CarbonDetail.createRoute(roomId))
+                        },
+                        onAddRoomClick = {
+                            navigateSafely(Screen.AddRoom.route)
                         }
                     )
                 }
@@ -264,6 +270,38 @@ fun KlimataNavGraph(
                     CarbonDetailScreen(
                         room = room,
                         onBackClick = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = Screen.AddRoom.route,
+                    enterTransition = {
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(480, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(420, easing = FastOutSlowInEasing)
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(420, easing = FastOutSlowInEasing)
+                        )
+                    }
+                ) {
+                    AddRoomWizardScreen(
+                        isOnboarding = !hasCompletedOnboarding,
+                        onBackClick = { navController.popBackStack() },
+                        onRoomCreated = { newRoom ->
+                            rooms = rooms + newRoom
+                            hasCompletedOnboarding = true
+                            navController.popBackStack()
+                        }
                     )
                 }
             }

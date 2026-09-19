@@ -83,6 +83,7 @@ fun KlimataScreen(
     onThermalClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
     onCarbonClick: (roomId: String) -> Unit = {},
+    onAddRoomClick: () -> Unit = {},
 ) {
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size })
     val coroutineScope = rememberCoroutineScope()
@@ -339,7 +340,7 @@ fun KlimataScreen(
                 )
 
                 AmbientTopBarActions(
-                    onAddRoomClick = { /* TODO: Hook room provisioning flow */ },
+                    onAddRoomClick = onAddRoomClick,
                     onMenuClick = {
                         val nextPhase = when (phase) {
                             DiurnalPhase.DAY -> DiurnalPhase.EVENING
