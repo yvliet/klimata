@@ -65,35 +65,33 @@ fun PeriodDropdown(
     )
 
     Box(modifier = modifier) {
-        Box(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(DetailCardSurface)
-                .clickable { expanded = true }
-                .padding(horizontal = 12.dp, vertical = 7.dp)
+                .bouncyClickable(
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = { expanded = true }
+                )
+                .padding(horizontal = 6.dp, vertical = 6.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Text(
-                    text = selectedPeriod.label,
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        color = DetailTextPrimary
-                    )
+            Text(
+                text = selectedPeriod.label,
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = DetailTextPrimary
                 )
-                Icon(
-                    imageVector = PhosphorIcons.Light.CaretDown,
-                    contentDescription = "Select time period",
-                    tint = DetailTextSecondary,
-                    modifier = Modifier
-                        .size(12.dp)
-                        .graphicsLayer { rotationZ = chevronRotation }
-                )
-            }
+            )
+            Icon(
+                imageVector = PhosphorIcons.Light.CaretDown,
+                contentDescription = "Select time period",
+                tint = DetailTextSecondary,
+                modifier = Modifier
+                    .size(12.dp)
+                    .graphicsLayer { rotationZ = chevronRotation }
+            )
         }
 
         MaterialTheme(
