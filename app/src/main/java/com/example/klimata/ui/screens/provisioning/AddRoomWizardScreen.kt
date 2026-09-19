@@ -337,9 +337,11 @@ fun AddRoomWizardScreen(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(CircleShape)
+                        .bouncyClickable(
+                            shape = CircleShape,
+                            onClick = { handleBack() }
+                        )
                         .background(DetailCardSurface)
-                        .clickable { handleBack() }
                 ) {
                     Icon(
                         imageVector = PhosphorIcons.Light.CaretLeft,
@@ -496,9 +498,11 @@ fun AddRoomWizardScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .bouncyClickable(
+                                            shape = RoundedCornerShape(10.dp),
+                                            onClick = { sizingMode = "presets" }
+                                        )
                                         .background(if (sizingMode == "presets") diurnal.accentColor else Color.Transparent)
-                                        .clickable { sizingMode = "presets" }
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Text(
@@ -514,9 +518,11 @@ fun AddRoomWizardScreen(
 
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .bouncyClickable(
+                                            shape = RoundedCornerShape(10.dp),
+                                            onClick = { sizingMode = "custom" }
+                                        )
                                         .background(if (sizingMode == "custom") diurnal.accentColor else Color.Transparent)
-                                        .clickable { sizingMode = "custom" }
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Text(
@@ -580,14 +586,16 @@ fun AddRoomWizardScreen(
                                                 contentAlignment = Alignment.Center,
                                                 modifier = Modifier
                                                     .weight(1f)
-                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .bouncyClickable(
+                                                        shape = RoundedCornerShape(12.dp),
+                                                        onClick = {
+                                                            selectedPreset = label
+                                                            areaSquareMeters = sqm
+                                                            manualWidth = dims.first
+                                                            manualLength = dims.second
+                                                        }
+                                                    )
                                                     .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
-                                                    .clickable {
-                                                        selectedPreset = label
-                                                        areaSquareMeters = sqm
-                                                        manualWidth = dims.first
-                                                        manualLength = dims.second
-                                                    }
                                                     .padding(vertical = 10.dp)
                                             ) {
                                                 Text(
@@ -746,11 +754,11 @@ fun AddRoomWizardScreen(
                                             modifier = Modifier
                                                 .fillMaxWidth()
                                                 .height(44.dp)
-                                                .clip(RoundedCornerShape(12.dp))
+                                                .bouncyClickable(
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    onClick = { isPolygonClosed = true }
+                                                )
                                                 .background(diurnal.accentColor.copy(alpha = 0.18f))
-                                                .bouncyClickable {
-                                                    isPolygonClosed = true
-                                                }
                                         ) {
                                             Text(
                                                 text = "Close Shape (${customVertices.size} Corners)",
@@ -774,15 +782,17 @@ fun AddRoomWizardScreen(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(44.dp)
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .background(DetailCardSurface)
-                                                .bouncyClickable {
-                                                    if (isPolygonClosed) {
-                                                        isPolygonClosed = false
-                                                    } else if (customVertices.isNotEmpty()) {
-                                                        customVertices = customVertices.dropLast(1)
+                                                .bouncyClickable(
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    onClick = {
+                                                        if (isPolygonClosed) {
+                                                            isPolygonClosed = false
+                                                        } else if (customVertices.isNotEmpty()) {
+                                                            customVertices = customVertices.dropLast(1)
+                                                        }
                                                     }
-                                                }
+                                                )
+                                                .background(DetailCardSurface)
                                         ) {
                                             Text(
                                                 text = if (isPolygonClosed) "Edit Corners" else "Undo",
@@ -801,12 +811,14 @@ fun AddRoomWizardScreen(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(44.dp)
-                                                .clip(RoundedCornerShape(12.dp))
+                                                .bouncyClickable(
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    onClick = {
+                                                        customVertices = emptyList()
+                                                        isPolygonClosed = false
+                                                    }
+                                                )
                                                 .background(DetailCardSurface)
-                                                .bouncyClickable {
-                                                    customVertices = emptyList()
-                                                    isPolygonClosed = false
-                                                }
                                         ) {
                                             Text(
                                                 text = "Reset",
@@ -993,26 +1005,28 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(150.dp)
-                                            .clip(RoundedCornerShape(22.dp))
-                                            .background(DetailCardSurface)
-                                            .bouncyClickable {
-                                                val hasCameraPermission = ContextCompat.checkSelfPermission(
-                                                    context,
-                                                    Manifest.permission.CAMERA
-                                                ) == PackageManager.PERMISSION_GRANTED
+                                            .bouncyClickable(
+                                                shape = RoundedCornerShape(22.dp),
+                                                onClick = {
+                                                    val hasCameraPermission = ContextCompat.checkSelfPermission(
+                                                        context,
+                                                        Manifest.permission.CAMERA
+                                                    ) == PackageManager.PERMISSION_GRANTED
 
-                                                if (hasCameraPermission) {
-                                                    try {
-                                                        cameraLauncher.launch(null)
-                                                    } catch (e: Exception) {
+                                                    if (hasCameraPermission) {
                                                         try {
-                                                            galleryLauncher.launch("image/*")
-                                                        } catch (ignored: Exception) {}
+                                                            cameraLauncher.launch(null)
+                                                        } catch (e: Exception) {
+                                                            try {
+                                                                galleryLauncher.launch("image/*")
+                                                            } catch (ignored: Exception) {}
+                                                        }
+                                                    } else {
+                                                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                                     }
-                                                } else {
-                                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                                 }
-                                            }
+                                            )
+                                            .background(DetailCardSurface)
                                     ) {
                                         Column(
                                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1054,8 +1068,11 @@ fun AddRoomWizardScreen(
                                             textAlign = TextAlign.Center
                                         ),
                                         modifier = Modifier
-                                            .clickable { galleryLauncher.launch("image/*") }
-                                            .padding(vertical = 4.dp)
+                                            .bouncyClickable(
+                                                shape = RoundedCornerShape(8.dp),
+                                                onClick = { galleryLauncher.launch("image/*") }
+                                            )
+                                            .padding(vertical = 4.dp, horizontal = 8.dp)
                                     )
                                 }
 
@@ -1068,8 +1085,11 @@ fun AddRoomWizardScreen(
                                         color = DetailTextMuted
                                     ),
                                     modifier = Modifier
-                                        .clickable { currentStage = WizardStage.CONFIRM_AC }
-                                        .padding(bottom = 16.dp, top = 8.dp)
+                                        .bouncyClickable(
+                                            shape = RoundedCornerShape(8.dp),
+                                            onClick = { currentStage = WizardStage.CONFIRM_AC }
+                                        )
+                                        .padding(bottom = 16.dp, top = 8.dp, start = 8.dp, end = 8.dp)
                                 )
                             }
                         }
@@ -1207,21 +1227,23 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(48.dp)
-                                            .clip(RoundedCornerShape(14.dp))
+                                            .bouncyClickable(
+                                                shape = RoundedCornerShape(14.dp),
+                                                onClick = {
+                                                    acBrand = when (acBrand) {
+                                                        "Daikin" -> "Panasonic"
+                                                        "Panasonic" -> "Mitsubishi"
+                                                        "Mitsubishi" -> "LG"
+                                                        else -> "Daikin"
+                                                    }
+                                                    acCapacity = when (acCapacity) {
+                                                        "1.0 PK" -> "1.5 PK"
+                                                        "1.5 PK" -> "0.75 PK"
+                                                        else -> "1.0 PK"
+                                                    }
+                                                }
+                                            )
                                             .background(DetailCardSurface)
-                                            .bouncyClickable {
-                                                acBrand = when (acBrand) {
-                                                    "Daikin" -> "Panasonic"
-                                                    "Panasonic" -> "Mitsubishi"
-                                                    "Mitsubishi" -> "LG"
-                                                    else -> "Daikin"
-                                                }
-                                                acCapacity = when (acCapacity) {
-                                                    "1.0 PK" -> "1.5 PK"
-                                                    "1.5 PK" -> "0.75 PK"
-                                                    else -> "1.0 PK"
-                                                }
-                                            }
                                     ) {
                                         Text(
                                             text = "Change Specs",
@@ -1239,11 +1261,13 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier
                                             .weight(1.3f)
                                             .height(48.dp)
-                                            .clip(RoundedCornerShape(14.dp))
+                                            .bouncyClickable(
+                                                shape = RoundedCornerShape(14.dp),
+                                                onClick = {
+                                                    currentStage = WizardStage.LOCATION_SYNC
+                                                }
+                                            )
                                             .background(diurnal.accentColor)
-                                            .bouncyClickable {
-                                                currentStage = WizardStage.LOCATION_SYNC
-                                            }
                                     ) {
                                         Text(
                                             text = "Yes, Looks Right",
@@ -1332,9 +1356,11 @@ fun AddRoomWizardScreen(
                                                 contentAlignment = Alignment.Center,
                                                 modifier = Modifier
                                                     .size(32.dp)
-                                                    .clip(CircleShape)
+                                                    .bouncyClickable(
+                                                        shape = CircleShape,
+                                                        onClick = { runGpsDetection() }
+                                                    )
                                                     .background(DetailCardSurfaceElevated)
-                                                    .clickable { runGpsDetection() }
                                             ) {
                                                 Icon(
                                                     imageVector = PhosphorIcons.Light.ArrowsClockwise,
@@ -1497,9 +1523,12 @@ private fun PrimaryActionButton(
         modifier = Modifier
             .fillMaxWidth()
             .height(52.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .bouncyClickable(
+                enabled = enabled,
+                shape = RoundedCornerShape(16.dp),
+                onClick = onClick
+            )
             .background(if (enabled) accentColor else DetailCardSurfaceElevated)
-            .bouncyClickable(enabled = enabled, onClick = onClick)
     ) {
         Text(
             text = label,
@@ -1551,9 +1580,11 @@ private fun WallThermalMaterialPicker(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
+                        .bouncyClickable(
+                            shape = RoundedCornerShape(10.dp),
+                            onClick = { onThermalMassChange(type) }
+                        )
                         .background(if (isSelected) accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
-                        .clickable { onThermalMassChange(type) }
                         .padding(vertical = 8.dp)
                 ) {
                     Text(

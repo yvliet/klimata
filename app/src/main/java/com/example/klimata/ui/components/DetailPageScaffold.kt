@@ -72,9 +72,11 @@ fun DetailPageScaffold(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(40.dp)
-                    .clip(CircleShape)
+                    .bouncyClickable(
+                        shape = CircleShape,
+                        onClick = onBackClick
+                    )
                     .background(DetailCardSurface)
-                    .clickable(onClick = onBackClick)
             ) {
                 Icon(
                     imageVector = PhosphorIcons.Light.CaretLeft,

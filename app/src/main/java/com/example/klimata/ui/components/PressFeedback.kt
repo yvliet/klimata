@@ -20,16 +20,16 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 /**
- * GPU-accelerated press interaction applying a tactile 0.97f scale-down and soft luminous
+ * GPU-accelerated press interaction applying a tactile 0.96f scale-down and soft luminous
  * frosted sheen on touch, followed by a gentle, non-harsh spring release without triggering
  * Compose layout or recomposition passes.
  */
 @Composable
 fun Modifier.bouncyClickable(
     enabled: Boolean = true,
-    pressedScale: Float = 0.97f,
-    sheenAlpha: Float = 0.10f,
-    shape: Shape = RoundedCornerShape(24.dp),
+    pressedScale: Float = 0.96f,
+    sheenAlpha: Float = 0.08f,
+    shape: Shape = RoundedCornerShape(16.dp),
     onClick: () -> Unit,
 ): Modifier {
     if (!enabled) return this
