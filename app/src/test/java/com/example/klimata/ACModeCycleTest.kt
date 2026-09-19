@@ -54,7 +54,7 @@ class ACModeCycleTest {
         val isPowerOn = false
         var setpoint = 24
         var mode = "Cool"
-        var isEcoFlow = true
+        var isEco = true
 
         fun onTempStep(delta: Int) {
             if (isPowerOn) setpoint += delta
@@ -63,7 +63,7 @@ class ACModeCycleTest {
             if (isPowerOn) mode = cycleMode(mode)
         }
         fun onEcoToggle() {
-            if (isPowerOn) isEcoFlow = !isEcoFlow
+            if (isPowerOn) isEco = !isEco
         }
 
         onTempStep(1)
@@ -73,6 +73,6 @@ class ACModeCycleTest {
         assertEquals("Cool", mode)
 
         onEcoToggle()
-        assertTrue(isEcoFlow)
+        assertTrue(isEco)
     }
 }

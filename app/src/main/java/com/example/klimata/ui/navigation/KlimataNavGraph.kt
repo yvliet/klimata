@@ -84,9 +84,9 @@ fun KlimataNavGraph(
                     KlimataScreen(
                         initialPhase = selectedPhase,
                         rooms = rooms,
-                        onEcoFlowToggle = { roomId, isEnabled ->
+                        onEcoToggle = { roomId, isEnabled ->
                             rooms = rooms.map {
-                                if (it.id == roomId) it.copy(isEcoFlowEnabled = isEnabled) else it
+                                if (it.id == roomId) it.copy(isEcoEnabled = isEnabled) else it
                             }
                         },
                         onScheduleClick = { roomId ->

@@ -60,7 +60,7 @@ import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.data.ThermalStep
 import com.example.klimata.ui.components.DetailPageScaffold
-import com.example.klimata.ui.components.EcoFlowInfoDialog
+import com.example.klimata.ui.components.EcoInfoDialog
 import com.example.klimata.ui.theme.DetailActiveColumnHighlight
 import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCurveAmbient
@@ -80,24 +80,24 @@ fun ScheduleDetailScreen(
     var showEcoInfoDialog by remember { mutableStateOf(false) }
 
     if (showEcoInfoDialog) {
-        EcoFlowInfoDialog(
-            isEcoFlowEnabled = room.isEcoFlowEnabled,
+        EcoInfoDialog(
+            isEcoEnabled = room.isEcoEnabled,
             onDismissRequest = { showEcoInfoDialog = false }
         )
     }
 
     val leafColor by animateColorAsState(
-        targetValue = if (room.isEcoFlowEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = 0.40f),
+        targetValue = if (room.isEcoEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = 0.40f),
         label = "detailLeafIconTint"
     )
     val leafBgColor by animateColorAsState(
-        targetValue = if (room.isEcoFlowEnabled) MineralMintActive.copy(alpha = 0.15f) else DetailCardSurface,
+        targetValue = if (room.isEcoEnabled) MineralMintActive.copy(alpha = 0.15f) else DetailCardSurface,
         label = "detailLeafBg"
     )
 
     DetailPageScaffold(
         title = "Tonight's Schedule",
-        subtitle = "${room.name} • ${if (room.isEcoFlowEnabled) "Adaptive Thermal Drift" else "Eco Flow Off"}",
+        subtitle = "${room.name} • ${if (room.isEcoEnabled) "Adaptive Thermal Drift" else "Eco Off"}",
         onBackClick = onBackClick,
         trailingContent = {
             Box(
@@ -110,7 +110,7 @@ fun ScheduleDetailScreen(
             ) {
                 Icon(
                     imageVector = PhosphorIcons.Light.Leaf,
-                    contentDescription = "Eco Flow info",
+                    contentDescription = "Eco info",
                     tint = leafColor,
                     modifier = Modifier.size(18.dp)
                 )
@@ -119,7 +119,7 @@ fun ScheduleDetailScreen(
     ) {
         MinimalistThermalForecastCard(
             steps = room.thermalSteps,
-            isEcoFlowEnabled = room.isEcoFlowEnabled,
+            isEcoEnabled = room.isEcoEnabled,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -129,12 +129,12 @@ fun ScheduleDetailScreen(
  * High-contrast minimalist thermal forecast card clearly separating top outdoor ambient weather
  * (Sky Blue curve, night weather icons, outdoor temperatures) from bottom indoor AC automation
  * (Mineral Mint curve, target setpoints, AC phase labels, and airflow modes).
- * Supports 1-hour resolution with internal horizontal scrolling and smooth grayed-out transitions when Eco Flow is disabled.
+ * Supports 1-hour resolution with internal horizontal scrolling and smooth grayed-out transitions when Eco is disabled.
  */
 @Composable
 private fun MinimalistThermalForecastCard(
     steps: List<ThermalStep>,
-    isEcoFlowEnabled: Boolean = true,
+    isEcoEnabled: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val count = steps.size.coerceAtLeast(1)
@@ -144,27 +144,27 @@ private fun MinimalistThermalForecastCard(
     val scrollState = rememberScrollState()
 
     val setpointCurveColor by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) DetailCurveSetpoint else Color.White.copy(alpha = 0.20f),
+        targetValue = if (isEcoEnabled) DetailCurveSetpoint else Color.White.copy(alpha = 0.20f),
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailSetpointCurveColor"
     )
     val setpointDotColor by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) DetailCurveSetpoint else Color.White.copy(alpha = 0.25f),
+        targetValue = if (isEcoEnabled) DetailCurveSetpoint else Color.White.copy(alpha = 0.25f),
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailSetpointDotColor"
     )
     val dashLineAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 0.16f else 0.06f,
+        targetValue = if (isEcoEnabled) 0.16f else 0.06f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailDashAlpha"
     )
     val setpointTextAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 1f else 0.28f,
+        targetValue = if (isEcoEnabled) 1f else 0.28f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailSetpointTextAlpha"
     )
     val phaseTagAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 1f else 0.22f,
+        targetValue = if (isEcoEnabled) 1f else 0.22f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailPhaseTagAlpha"
     )
@@ -440,7 +440,7 @@ private fun MinimalistThermalForecastCard(
                                         Icon(
                                             imageVector = PhosphorIcons.Light.Fan,
                                             contentDescription = null,
-                                            tint = if (isEcoFlowEnabled) MineralMintActive else Color.White.copy(alpha = setpointTextAlpha),
+                                            tint = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = setpointTextAlpha),
                                             modifier = Modifier.size(11.dp)
                                         )
                                         Spacer(modifier = Modifier.width(2.dp))
@@ -450,7 +450,7 @@ private fun MinimalistThermalForecastCard(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 11.5.sp,
-                                                color = if (isEcoFlowEnabled) MineralMintActive else Color.White.copy(alpha = setpointTextAlpha)
+                                                color = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = setpointTextAlpha)
                                             )
                                         )
                                     }
@@ -490,7 +490,7 @@ private fun MinimalistThermalForecastCard(
                                         fontFamily = JakartaFamily,
                                         fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold,
                                         fontSize = 12.sp,
-                                        color = if (isActive && isEcoFlowEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = if (isEcoFlowEnabled) 1f else phaseTagAlpha),
+                                        color = if (isActive && isEcoEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = if (isEcoEnabled) 1f else phaseTagAlpha),
                                         textAlign = TextAlign.Center
                                     ),
                                     modifier = Modifier.fillMaxWidth(),
@@ -513,7 +513,7 @@ private fun MinimalistThermalForecastCard(
                                             else -> PhosphorIcons.Light.CaretUp
                                         },
                                         contentDescription = null,
-                                        tint = if (isActive && isEcoFlowEnabled) MineralMintActive else DetailTextMuted.copy(alpha = if (isEcoFlowEnabled) 1f else phaseTagAlpha),
+                                        tint = if (isActive && isEcoEnabled) MineralMintActive else DetailTextMuted.copy(alpha = if (isEcoEnabled) 1f else phaseTagAlpha),
                                         modifier = Modifier.size(10.dp)
                                     )
                                     Spacer(modifier = Modifier.width(2.dp))
@@ -529,7 +529,7 @@ private fun MinimalistThermalForecastCard(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Normal,
                                             fontSize = 11.sp,
-                                            color = if (isActive && isEcoFlowEnabled) DetailTextPrimary else DetailTextMuted.copy(alpha = if (isEcoFlowEnabled) 1f else phaseTagAlpha),
+                                            color = if (isActive && isEcoEnabled) DetailTextPrimary else DetailTextMuted.copy(alpha = if (isEcoEnabled) 1f else phaseTagAlpha),
                                             textAlign = TextAlign.Center
                                         ),
                                         maxLines = 1

@@ -65,23 +65,23 @@ import com.example.klimata.ui.theme.MineralMintActive
 
 /**
  * 2-column Bento AC control row:
- * - Left card (ACTelemetryCard): Displays setpoint, hardware AC operational mode, Klimata Eco Flow status, and hardware profile.
- * - Right card (ACDigitalRemoteCard): Tactile digital remote with power key, Eco Flow leaf toggle, temp steppers, and hardware mode selector.
+ * - Left card (ACTelemetryCard): Displays setpoint, hardware AC operational mode, Klimata Eco status, and hardware profile.
+ * - Right card (ACDigitalRemoteCard): Tactile digital remote with power key, Eco leaf toggle, temp steppers, and hardware mode selector.
  */
 @Composable
 fun ACControlPanel(
     modifier: Modifier = Modifier,
     profile: ACProfile = MockData.acProfile,
     dispatch: DispatchState = MockData.dispatch,
-    initialEcoFlowEnabled: Boolean = true,
+    initialEcoEnabled: Boolean = true,
     onPowerToggle: (Boolean) -> Unit = {},
-    onEcoFlowToggle: (Boolean) -> Unit = {},
+    onEcoToggle: (Boolean) -> Unit = {},
     onTempChange: (Int) -> Unit = {},
 ) {
     var isPowerOn by remember { mutableStateOf(value = true) }
     var setpoint by remember(profile.currentSetpoint) { mutableIntStateOf(profile.currentSetpoint) }
     var activeMode by remember(profile.mode) { mutableStateOf(profile.mode) }
-    var isEcoFlowEnabled by remember(initialEcoFlowEnabled) { mutableStateOf(initialEcoFlowEnabled) }
+    var isEcoEnabled by remember(initialEcoEnabled) { mutableStateOf(initialEcoEnabled) }
 
     Row(
         modifier = modifier
@@ -95,7 +95,7 @@ fun ACControlPanel(
             setpoint = setpoint,
             isPowerOn = isPowerOn,
             currentMode = activeMode,
-            isEcoFlowEnabled = isEcoFlowEnabled,
+            isEcoEnabled = isEcoEnabled,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxHeight()
@@ -105,14 +105,14 @@ fun ACControlPanel(
             isPowerOn = isPowerOn,
             setpoint = setpoint,
             currentMode = activeMode,
-            isEcoFlowEnabled = isEcoFlowEnabled,
+            isEcoEnabled = isEcoEnabled,
             onPowerToggle = {
                 isPowerOn = it
                 onPowerToggle(it)
             },
-            onEcoFlowToggle = {
-                isEcoFlowEnabled = it
-                onEcoFlowToggle(it)
+            onEcoToggle = {
+                isEcoEnabled = it
+                onEcoToggle(it)
             },
             onTempChange = {
                 setpoint = it
@@ -143,7 +143,7 @@ fun ACTelemetryCard(
     setpoint: Int,
     isPowerOn: Boolean,
     currentMode: String,
-    isEcoFlowEnabled: Boolean,
+    isEcoEnabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
     val diurnal = LocalDiurnalColors.current
@@ -228,9 +228,9 @@ fun ACTelemetryCard(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Crossfade(
-                    targetState = Pair(isEcoFlowEnabled, isPowerOn),
+                    targetState = Pair(isEcoEnabled, isPowerOn),
                     animationSpec = tween(180),
-                    label = "EcoFlowCrossfade"
+                    label = "EcoCrossfade"
                 ) { (isEco, powerState) ->
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -244,11 +244,11 @@ fun ACTelemetryCard(
                         )
                         Text(
                             text = if (!powerState) {
-                                "Eco Flow Standby"
+                                "Eco Standby"
                             } else if (isEco) {
-                                "Eco Flow Active"
+                                "Eco Active"
                             } else {
-                                "Eco Flow Off"
+                                "Eco Off"
                             },
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
@@ -320,9 +320,9 @@ fun ACDigitalRemoteCard(
     isPowerOn: Boolean,
     setpoint: Int,
     currentMode: String,
-    isEcoFlowEnabled: Boolean,
+    isEcoEnabled: Boolean,
     onPowerToggle: (Boolean) -> Unit,
-    onEcoFlowToggle: (Boolean) -> Unit,
+    onEcoToggle: (Boolean) -> Unit,
     onTempChange: (Int) -> Unit,
     onModeCycle: () -> Unit,
     modifier: Modifier = Modifier,
@@ -343,7 +343,7 @@ fun ACDigitalRemoteCard(
     val ecoButtonColor by animateColorAsState(
         targetValue = when {
             !isPowerOn -> Color.White.copy(alpha = 0.04f)
-            isEcoFlowEnabled -> MineralMintActive
+            isEcoEnabled -> MineralMintActive
             else -> Color.White.copy(alpha = 0.08f)
         },
         animationSpec = tween(200),
@@ -352,7 +352,7 @@ fun ACDigitalRemoteCard(
     val ecoIconColor by animateColorAsState(
         targetValue = when {
             !isPowerOn -> Color.White.copy(alpha = 0.25f)
-            isEcoFlowEnabled -> Color(0xFF0F172A)
+            isEcoEnabled -> Color(0xFF0F172A)
             else -> Color.White.copy(alpha = 0.70f)
         },
         animationSpec = tween(200),
@@ -411,7 +411,7 @@ fun ACDigitalRemoteCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Tactile Symmetrical Action Keys (Power and Eco Flow Leaf)
+            // Tactile Symmetrical Action Keys (Power and Eco Leaf)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -453,12 +453,12 @@ fun ACDigitalRemoteCard(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
                             ) {
-                                onEcoFlowToggle(!isEcoFlowEnabled)
+                                onEcoToggle(!isEcoEnabled)
                             }
                     ) {
                         Icon(
                             imageVector = PhosphorIcons.Light.Leaf,
-                            contentDescription = "Toggle Eco Flow Mode",
+                            contentDescription = "Toggle Eco Mode",
                             tint = ecoIconColor,
                             modifier = Modifier.size(17.dp)
                         )

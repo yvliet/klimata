@@ -74,7 +74,7 @@ fun KlimataScreen(
     modifier: Modifier = Modifier,
     initialPhase: DiurnalPhase? = null,
     rooms: List<RoomState> = MockData.rooms,
-    onEcoFlowToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
+    onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
     onScheduleClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
     onCarbonClick: (roomId: String) -> Unit = {},
@@ -267,7 +267,7 @@ fun KlimataScreen(
                     ) {
                         ScheduleChart(
                             steps = room.thermalSteps,
-                            isEcoFlowEnabled = room.isEcoFlowEnabled,
+                            isEcoEnabled = room.isEcoEnabled,
                             onClick = { onScheduleClick(room.id) },
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -275,8 +275,8 @@ fun KlimataScreen(
                         ACControlPanel(
                             profile = room.profile,
                             dispatch = room.dispatchState,
-                            initialEcoFlowEnabled = room.isEcoFlowEnabled,
-                            onEcoFlowToggle = { isEnabled -> onEcoFlowToggle(room.id, isEnabled) },
+                            initialEcoEnabled = room.isEcoEnabled,
+                            onEcoToggle = { isEnabled -> onEcoToggle(room.id, isEnabled) },
                             modifier = Modifier.fillMaxWidth()
                         )
 

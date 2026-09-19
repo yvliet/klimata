@@ -33,12 +33,12 @@ import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
 
 /**
- * Compact modal dialog explaining the Eco Flow schedule and the rationale
+ * Compact modal dialog explaining the Eco schedule and the rationale
  * behind active vs greyed-out states.
  */
 @Composable
-fun EcoFlowInfoDialog(
-    isEcoFlowEnabled: Boolean,
+fun EcoInfoDialog(
+    isEcoEnabled: Boolean,
     onDismissRequest: () -> Unit,
 ) {
     Dialog(
@@ -70,7 +70,7 @@ fun EcoFlowInfoDialog(
                             .size(42.dp)
                             .clip(CircleShape)
                             .background(
-                                if (isEcoFlowEnabled) {
+                                if (isEcoEnabled) {
                                     MineralMintActive.copy(alpha = 0.15f)
                                 } else {
                                     Color.White.copy(alpha = 0.08f)
@@ -80,14 +80,14 @@ fun EcoFlowInfoDialog(
                         Icon(
                             imageVector = PhosphorIcons.Light.Leaf,
                             contentDescription = null,
-                            tint = if (isEcoFlowEnabled) MineralMintActive else Color.White.copy(alpha = 0.45f),
+                            tint = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = 0.45f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
 
                     Column {
                         Text(
-                            text = if (isEcoFlowEnabled) "Eco Flow is Active" else "Eco Flow is Off",
+                            text = if (isEcoEnabled) "Eco is Active" else "Eco is Off",
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.Bold,
@@ -100,7 +100,7 @@ fun EcoFlowInfoDialog(
                         Spacer(modifier = Modifier.height(2.dp))
 
                         Text(
-                            text = if (isEcoFlowEnabled) {
+                            text = if (isEcoEnabled) {
                                 "Automatic thermal sync"
                             } else {
                                 "Manual temperature mode"
@@ -119,10 +119,10 @@ fun EcoFlowInfoDialog(
 
                 // Human, concise body copy
                 Text(
-                    text = if (isEcoFlowEnabled) {
+                    text = if (isEcoEnabled) {
                         "Your AC automatically adjusts its temperature through the night as it gets cooler outside. This keeps your room comfortable so you don't wake up shivering, while saving electricity along the way."
                     } else {
-                        "Your AC is currently set to a flat, fixed temperature all night. The schedule curve is greyed out because automatic adjustments are turned off.\n\nTo turn Eco Flow back on, simply tap the leaf button on your remote."
+                        "Your AC is currently set to a flat, fixed temperature all night. The schedule curve is greyed out because automatic adjustments are turned off.\n\nTo turn Eco back on, simply tap the leaf button on your remote."
                     },
                     style = TextStyle(
                         fontFamily = JakartaFamily,

@@ -94,7 +94,7 @@ data class RoomState(
     val currentTemp: Int,
     val targetTemp: Int,
     val isPowerOn: Boolean = true,
-    val isEcoFlowEnabled: Boolean = true,
+    val isEcoEnabled: Boolean = true,
     val weatherCondition: String = "Clear",
     val thermalSteps: List<ThermalStep>,
     val dispatchState: DispatchState,

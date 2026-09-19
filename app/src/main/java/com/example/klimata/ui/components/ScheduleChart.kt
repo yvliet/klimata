@@ -63,13 +63,13 @@ import kotlin.math.roundToInt
 /**
  * Clean, minimalist home screen visualization of the 1-hour overnight thermal automation progression
  * with horizontal scrolling and single adaptive stepped AC setpoint spline.
- * Grays out smoothly when Eco Flow automation is disabled.
+ * Grays out smoothly when Eco automation is disabled.
  */
 @Composable
 fun ScheduleChart(
     modifier: Modifier = Modifier,
     steps: List<ThermalStep> = MockData.thermalSteps,
-    isEcoFlowEnabled: Boolean = true,
+    isEcoEnabled: Boolean = true,
     onClick: () -> Unit = {},
 ) {
     val diurnal = LocalDiurnalColors.current
@@ -81,63 +81,63 @@ fun ScheduleChart(
     var showEcoInfoDialog by remember { mutableStateOf(false) }
 
     if (showEcoInfoDialog) {
-        EcoFlowInfoDialog(
-            isEcoFlowEnabled = isEcoFlowEnabled,
+        EcoInfoDialog(
+            isEcoEnabled = isEcoEnabled,
             onDismissRequest = { showEcoInfoDialog = false }
         )
     }
 
     val color1 by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) Color(0xFF60A5FA) else Color.White.copy(alpha = 0.22f),
+        targetValue = if (isEcoEnabled) Color(0xFF60A5FA) else Color.White.copy(alpha = 0.22f),
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeLineC1"
     )
     val color2 by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) Color(0xFF38BDF8) else Color.White.copy(alpha = 0.22f),
+        targetValue = if (isEcoEnabled) Color(0xFF38BDF8) else Color.White.copy(alpha = 0.22f),
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeLineC2"
     )
     val color3 by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) Color(0xFF34D399) else Color.White.copy(alpha = 0.22f),
+        targetValue = if (isEcoEnabled) Color(0xFF34D399) else Color.White.copy(alpha = 0.22f),
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeLineC3"
     )
     val lineGradientColors = listOf(color1, color2, color3)
 
     val fillTop by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) Color(0xFF38BDF8).copy(alpha = 0.18f) else Color.White.copy(alpha = 0.02f),
+        targetValue = if (isEcoEnabled) Color(0xFF38BDF8).copy(alpha = 0.18f) else Color.White.copy(alpha = 0.02f),
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeFillTop"
     )
     val fillMid by animateColorAsState(
-        targetValue = if (isEcoFlowEnabled) Color(0xFF38BDF8).copy(alpha = 0.04f) else Color.Transparent,
+        targetValue = if (isEcoEnabled) Color(0xFF38BDF8).copy(alpha = 0.04f) else Color.Transparent,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeFillMid"
     )
     val fillGradientColors = listOf(fillTop, fillMid, Color.Transparent)
 
     val activeDashAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 0.35f else 0.12f,
+        targetValue = if (isEcoEnabled) 0.35f else 0.12f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeActiveDashAlpha"
     )
     val activeDotAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 1f else 0.30f,
+        targetValue = if (isEcoEnabled) 1f else 0.30f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeActiveDotAlpha"
     )
     val tempLabelAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 1f else 0.28f,
+        targetValue = if (isEcoEnabled) 1f else 0.28f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeTempLabelAlpha"
     )
     val phaseLabelAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 0.60f else 0.22f,
+        targetValue = if (isEcoEnabled) 0.60f else 0.22f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homePhaseLabelAlpha"
     )
     val timeLabelAlpha by animateFloatAsState(
-        targetValue = if (isEcoFlowEnabled) 0.85f else 0.35f,
+        targetValue = if (isEcoEnabled) 0.85f else 0.35f,
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "homeTimeLabelAlpha"
     )
@@ -216,11 +216,11 @@ fun ScheduleChart(
                 )
 
                 val leafColor by animateColorAsState(
-                    targetValue = if (isEcoFlowEnabled) MineralMintActive else Color.White.copy(alpha = 0.35f),
+                    targetValue = if (isEcoEnabled) MineralMintActive else Color.White.copy(alpha = 0.35f),
                     label = "homeLeafIconTint"
                 )
                 val leafBgColor by animateColorAsState(
-                    targetValue = if (isEcoFlowEnabled) MineralMintActive.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.08f),
+                    targetValue = if (isEcoEnabled) MineralMintActive.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.08f),
                     label = "homeLeafBg"
                 )
 
@@ -234,7 +234,7 @@ fun ScheduleChart(
                 ) {
                     Icon(
                         imageVector = PhosphorIcons.Light.Leaf,
-                        contentDescription = "Eco Flow info",
+                        contentDescription = "Eco info",
                         tint = leafColor,
                         modifier = Modifier.size(13.dp)
                     )
@@ -434,7 +434,7 @@ fun ScheduleChart(
                                         fontFamily = JakartaFamily,
                                         fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                                         fontSize = 12.sp,
-                                        color = if (isActive) Color.White.copy(alpha = if (isEcoFlowEnabled) 1f else 0.45f) else Color.White.copy(alpha = timeLabelAlpha),
+                                        color = if (isActive) Color.White.copy(alpha = if (isEcoEnabled) 1f else 0.45f) else Color.White.copy(alpha = timeLabelAlpha),
                                         textAlign = TextAlign.Center
                                     ),
                                     modifier = Modifier.fillMaxWidth()
@@ -446,7 +446,7 @@ fun ScheduleChart(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.Normal,
                                         fontSize = 11.sp,
-                                        color = if (step.setpointCelsius == 0 && isEcoFlowEnabled) Color(0xFF6EE7B7) else Color.White.copy(alpha = phaseLabelAlpha),
+                                        color = if (step.setpointCelsius == 0 && isEcoEnabled) Color(0xFF6EE7B7) else Color.White.copy(alpha = phaseLabelAlpha),
                                         textAlign = TextAlign.Center
                                     ),
                                     modifier = Modifier.fillMaxWidth()
