@@ -322,125 +322,80 @@ fun ACTelemetryCard(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(5.dp))
 
-                // Status Row (Eco & Auto Swing)
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Crossfade(
-                        targetState = Pair(isEcoEnabled, isPowerOn),
-                        animationSpec = tween(180),
-                        label = "EcoCrossfade"
-                    ) { (isEco, powerState) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)
-                        ) {
-                            Icon(
-                                imageVector = PhosphorIcons.Light.Leaf,
-                                contentDescription = null,
-                                tint = if (powerState && isEco) MineralMintActive else Color.White.copy(alpha = 0.35f),
-                                modifier = Modifier.size(12.dp)
-                            )
-                            Text(
-                                text = if (!powerState) {
-                                    "Eco Standby"
-                                } else if (isEco) {
-                                    "Eco Active"
+                // Auto Swing (below Mode, on top of Eco)
+                Crossfade(
+                    targetState = Pair(isSwing, isPowerOn),
+                    animationSpec = tween(180),
+                    label = "SwingCrossfade"
+                ) { (swingActive, powerState) ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Wind,
+                            contentDescription = null,
+                            tint = if (powerState && swingActive) Color(0xFF38BDF8) else Color.White.copy(alpha = 0.35f),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = if (powerState && swingActive) "Swing On" else "Swing Fixed",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.sp,
+                                color = if (powerState && swingActive) {
+                                    Color.White.copy(alpha = 0.90f)
                                 } else {
-                                    "Eco Off"
-                                },
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
-                                    color = if (powerState && isEco) {
-                                        Color.White.copy(alpha = 0.90f)
-                                    } else {
-                                        Color.White.copy(alpha = 0.45f)
-                                    }
-                                )
+                                    Color.White.copy(alpha = 0.45f)
+                                }
                             )
-                        }
+                        )
                     }
+                }
 
-                    Box(
-                        modifier = Modifier
-                            .width(1.dp)
-                            .height(8.dp)
-                            .background(Color.White.copy(alpha = 0.20f))
-                    )
+                Spacer(modifier = Modifier.height(5.dp))
 
-                    Crossfade(
-                        targetState = Pair(isSwing, isPowerOn),
-                        animationSpec = tween(180),
-                        label = "SwingCrossfade"
-                    ) { (swingActive, powerState) ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(3.dp)
-                        ) {
-                            Icon(
-                                imageVector = PhosphorIcons.Light.Wind,
-                                contentDescription = null,
-                                tint = if (powerState && swingActive) Color(0xFF38BDF8) else Color.White.copy(alpha = 0.35f),
-                                modifier = Modifier.size(12.dp)
+                // Eco Mode (below Swing)
+                Crossfade(
+                    targetState = Pair(isEcoEnabled, isPowerOn),
+                    animationSpec = tween(180),
+                    label = "EcoCrossfade"
+                ) { (isEco, powerState) ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Leaf,
+                            contentDescription = null,
+                            tint = if (powerState && isEco) MineralMintActive else Color.White.copy(alpha = 0.35f),
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = if (!powerState) {
+                                "Eco Standby"
+                            } else if (isEco) {
+                                "Eco Active"
+                            } else {
+                                "Eco Off"
+                            },
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.sp,
+                                color = if (powerState && isEco) {
+                                    Color.White.copy(alpha = 0.90f)
+                                } else {
+                                    Color.White.copy(alpha = 0.45f)
+                                }
                             )
-                            Text(
-                                text = if (powerState && swingActive) "Swing On" else "Swing Off",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 11.sp,
-                                    color = if (powerState && swingActive) {
-                                        Color.White.copy(alpha = 0.90f)
-                                    } else {
-                                        Color.White.copy(alpha = 0.45f)
-                                    }
-                                )
-                            )
-                        }
+                        )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Signal Protocol Badge
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Color.White.copy(alpha = 0.05f))
-                    .padding(horizontal = 8.dp, vertical = 5.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Icon(
-                        imageVector = PhosphorIcons.Light.Broadcast,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.50f),
-                        modifier = Modifier.size(11.dp)
-                    )
-                    Text(
-                        text = profile.irCodeSet?.replace('_', ' ')?.uppercase(Locale.ROOT) ?: "AUTO PROTOCOL",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 9.sp,
-                            letterSpacing = 0.3.sp,
-                            color = Color.White.copy(alpha = 0.60f)
-                        ),
-                        maxLines = 1
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
