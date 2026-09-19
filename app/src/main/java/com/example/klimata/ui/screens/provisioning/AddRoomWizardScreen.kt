@@ -81,14 +81,19 @@ import androidx.core.content.ContextCompat
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.ArrowsClockwise
+import com.adamglin.phosphoricons.light.Broadcast
 import com.adamglin.phosphoricons.light.Camera
 import com.adamglin.phosphoricons.light.CaretLeft
 import com.adamglin.phosphoricons.light.Check
 import com.adamglin.phosphoricons.light.MapPin
+import com.adamglin.phosphoricons.light.Power
 import com.example.klimata.data.AcRecognitionService
 import com.example.klimata.data.LocationHelper
 import com.example.klimata.data.RoomFactory
 import com.example.klimata.data.RoomState
+import com.example.klimata.data.ir.IrBlasterService
+import com.example.klimata.ui.components.AcRemotePairingModal
+import com.example.klimata.ui.theme.MineralMintActive
 import com.example.klimata.data.engine.ThermalCalculationEngine
 import com.example.klimata.data.network.AmbientWeatherReport
 import com.example.klimata.data.network.WeatherApiClient
@@ -186,6 +191,8 @@ fun AddRoomWizardScreen(
     var isAnalyzingPhoto by remember { mutableStateOf(false) }
     var isAiVerified by remember { mutableStateOf(false) }
     var showModelPicker by remember { mutableStateOf(false) }
+    var showPairingModal by remember { mutableStateOf(false) }
+    var selectedCodeSetId by remember { mutableStateOf<String?>(null) }
     var tempPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     // Location state
@@ -344,7 +351,8 @@ fun AddRoomWizardScreen(
             acInverterType = acInverterType,
             location = selectedLocation,
             hourlyOutdoorTemps = liveWeatherReport?.hourlyTemps ?: emptyMap(),
-            weatherCondition = liveWeatherReport?.condition ?: "Clear Night"
+            weatherCondition = liveWeatherReport?.condition ?: "Clear Night",
+            irCodeSet = selectedCodeSetId
         )
         onRoomCreated(newRoom)
     }
@@ -1338,6 +1346,156 @@ fun AddRoomWizardScreen(
                                     )
                                 }
 
+                                val irBlasterService = remember { IrBlasterService(context) }
+                                val effectiveCodeSetId = selectedCodeSetId ?: RoomFactory.resolveDefaultCodeSet(acBrand, acModel)
+                                val brandCodeSets = remember(acBrand) { irBlasterService.getCodeSetsForBrand(acBrand) }
+                                val activeCodeSet = brandCodeSets.find { it.id == effectiveCodeSetId } ?: brandCodeSets.firstOrNull()
+
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(DetailCardSurface)
+                                        .border(1.dp, DetailCardBorder.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
+                                        .padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .clip(CircleShape)
+                                                    .background(diurnal.accentColor.copy(alpha = 0.16f))
+                                            ) {
+                                                Icon(
+                                                    imageVector = PhosphorIcons.Light.Broadcast,
+                                                    contentDescription = null,
+                                                    tint = diurnal.accentColor,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = "IR Remote Signal",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = DetailTextPrimary
+                                                )
+                                            )
+                                        }
+
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(MineralMintActive.copy(alpha = 0.16f))
+                                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(
+                                                text = activeCodeSet?.displayName ?: "Signal 1",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 11.sp,
+                                                    color = MineralMintActive
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Text(
+                                        text = activeCodeSet?.description ?: "Verified protocol timing for your hardware.",
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 12.sp,
+                                            lineHeight = 16.sp,
+                                            color = DetailTextSecondary
+                                        )
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(42.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(DetailCardSurfaceElevated)
+                                                .border(1.dp, DetailCardBorder, RoundedCornerShape(12.dp))
+                                                .bouncyClickable(
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    onClick = {
+                                                        coroutineScope.launch {
+                                                            irBlasterService.dispatchTestPulse(
+                                                                brand = acBrand,
+                                                                codeSetId = effectiveCodeSetId,
+                                                                power = true
+                                                            )
+                                                        }
+                                                    }
+                                                )
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = PhosphorIcons.Light.Power,
+                                                    contentDescription = null,
+                                                    tint = diurnal.accentColor,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                                Text(
+                                                    text = "Test Power",
+                                                    style = TextStyle(
+                                                        fontFamily = JakartaFamily,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        fontSize = 12.sp,
+                                                        color = DetailTextPrimary
+                                                    )
+                                                )
+                                            }
+                                        }
+
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .weight(1.3f)
+                                                .height(42.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(diurnal.accentColor.copy(alpha = 0.15f))
+                                                .border(1.dp, diurnal.accentColor.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                                                .bouncyClickable(
+                                                    shape = RoundedCornerShape(12.dp),
+                                                    onClick = { showPairingModal = true }
+                                                )
+                                        ) {
+                                            Text(
+                                                text = "Pair Remote (${brandCodeSets.size} Signals)",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.sp,
+                                                    color = diurnal.accentColor
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1637,10 +1795,22 @@ fun AddRoomWizardScreen(
                     acModel = selected.modelCode
                     acCapacity = selected.defaultCapacity
                     acInverterType = selected.inverterType
+                    selectedCodeSetId = RoomFactory.resolveDefaultCodeSet(selected.brand, selected.modelCode)
                     isAiVerified = false
                     showModelPicker = false
                 },
                 accentColor = diurnal.accentColor
+            )
+        }
+
+        if (showPairingModal) {
+            AcRemotePairingModal(
+                brand = acBrand,
+                currentCodeSetId = selectedCodeSetId ?: RoomFactory.resolveDefaultCodeSet(acBrand, acModel),
+                onCodeSetSelected = { codeSetId ->
+                    selectedCodeSetId = codeSetId
+                },
+                onDismiss = { showPairingModal = false }
             )
         }
     }

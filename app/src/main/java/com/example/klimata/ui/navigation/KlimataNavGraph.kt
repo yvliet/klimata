@@ -173,7 +173,8 @@ fun KlimataNavGraph(
                                     power = isPowerOn,
                                     temp = target.targetTemp,
                                     mode = target.profile.mode,
-                                    isEco = target.isEcoEnabled
+                                    isEco = target.isEcoEnabled,
+                                    codeSetId = target.profile.irCodeSet
                                 )
                             }
                         },
@@ -188,7 +189,8 @@ fun KlimataNavGraph(
                                     power = target.isPowerOn,
                                     temp = target.targetTemp,
                                     mode = target.profile.mode,
-                                    isEco = isEnabled
+                                    isEco = isEnabled,
+                                    codeSetId = target.profile.irCodeSet
                                 )
                             }
                         },
@@ -216,7 +218,8 @@ fun KlimataNavGraph(
                                     power = target.isPowerOn,
                                     temp = setpoint,
                                     mode = target.profile.mode,
-                                    isEco = target.isEcoEnabled
+                                    isEco = target.isEcoEnabled,
+                                    codeSetId = target.profile.irCodeSet
                                 )
                             }
                         },
@@ -235,7 +238,8 @@ fun KlimataNavGraph(
                                     power = target.isPowerOn,
                                     temp = target.targetTemp,
                                     mode = mode,
-                                    isEco = target.isEcoEnabled
+                                    isEco = target.isEcoEnabled,
+                                    codeSetId = target.profile.irCodeSet
                                 )
                             }
                         },

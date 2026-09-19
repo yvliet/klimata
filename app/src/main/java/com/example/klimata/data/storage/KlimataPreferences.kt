@@ -136,6 +136,7 @@ object KlimataPreferences {
                 put("inverterType", room.profile.inverterType)
                 put("currentSetpoint", room.profile.currentSetpoint)
                 put("mode", room.profile.mode)
+                put("irCodeSet", room.profile.irCodeSet)
             }
             put("profile", profObj)
 
@@ -196,7 +197,8 @@ object KlimataPreferences {
             capacity = profJson.getString("capacity"),
             inverterType = profJson.getString("inverterType"),
             currentSetpoint = profJson.getInt("currentSetpoint"),
-            mode = profJson.getString("mode")
+            mode = profJson.getString("mode"),
+            irCodeSet = profJson.optString("irCodeSet").takeIf { !it.isNullOrBlank() && it != "null" }
         )
 
         val dispJson = obj.getJSONObject("dispatchState")

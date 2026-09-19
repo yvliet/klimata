@@ -18,7 +18,8 @@ object RoomFactory {
         location: String = "South Jakarta",
         dispatchMethod: String = "IR Blaster",
         hourlyOutdoorTemps: Map<String, Int> = emptyMap(),
-        weatherCondition: String = "Clear Night"
+        weatherCondition: String = "Clear Night",
+        irCodeSet: String? = null
     ): RoomState {
         val id = "room_${UUID.randomUUID().toString().take(8)}"
         val cleanName = name.trim().ifEmpty { "Bedroom" }
@@ -33,6 +34,8 @@ object RoomFactory {
             hourlyOutdoorTemps = hourlyOutdoorTemps
         )
 
+        val resolvedCodeSet = irCodeSet ?: resolveDefaultCodeSet(acBrand, acModel)
+
         val profile = ACProfile(
             roomName = cleanName,
             brand = acBrand,
@@ -40,7 +43,8 @@ object RoomFactory {
             capacity = acCapacity,
             inverterType = acInverterType,
             currentSetpoint = targetTemp,
-            mode = "Cool"
+            mode = "Cool",
+            irCodeSet = resolvedCodeSet
         )
 
         val dispatch = DispatchState(
@@ -118,6 +122,27 @@ object RoomFactory {
                     isOptimal = true
                 )
             }
+        }
+    }
+
+    fun resolveDefaultCodeSet(brand: String, modelCode: String?): String {
+        val cleanBrand = brand.lowercase(java.util.Locale.ROOT)
+        val m = modelCode?.lowercase(java.util.Locale.ROOT) ?: ""
+        return when {
+            cleanBrand.contains("sharp") -> when {
+                m.contains("ucy") || m.contains("say") || m.contains("turbo") || m.contains("yb0f") -> "sharp_gree_oem"
+                m.contains("crmc") || m.contains("a705") || m.contains("a820") || m.contains("pr13") -> "sharp_crmc_a705"
+                m.contains("aux") || m.contains("ncy") -> "sharp_aux_oem"
+                else -> "sharp_inverter_104"
+            }
+            cleanBrand.contains("daikin") -> if (m.contains("ftne") || m.contains("ftv") || m.contains("480")) "daikin_arc480" else "daikin_arc433"
+            cleanBrand.contains("panasonic") -> if (m.contains("ckp") || m.contains("pc")) "panasonic_ckp" else "panasonic_dke"
+            cleanBrand.contains("gree") || cleanBrand.contains("tcl") || cleanBrand.contains("aqua") -> "gree_yb0f2"
+            cleanBrand.contains("mitsubishi") -> if (m.contains("heavy") || m.contains("srk")) "mitsubishi_heavy" else "mitsubishi_fd"
+            cleanBrand.contains("lg") -> "lg_28bit"
+            cleanBrand.contains("samsung") -> "samsung_14byte"
+            cleanBrand.contains("midea") || cleanBrand.contains("toshiba") || cleanBrand.contains("carrier") -> "midea_r05"
+            else -> "sharp_inverter_104"
         }
     }
 }

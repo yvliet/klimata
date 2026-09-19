@@ -1,4 +1,4 @@
-﻿package com.example.klimata.data.models
+package com.example.klimata.data.models
 
 data class AcModelInfo(
     val brand: String,
@@ -37,23 +37,33 @@ object AcDatabase {
         ),
         AcModelInfo(
             brand = "Sharp",
-            series = "Turbo Cool Sayonara Panas",
+            series = "Turbo Cool Sayonara Panas (Gree OEM)",
             modelCode = "AH-A9UCY",
             supportedCapacities = listOf("0.5 PK", "0.75 PK", "1.0 PK"),
             defaultCapacity = "1.0 PK",
             inverterType = "Standard / Non-Inverter",
-            irProtocol = "SHARP_104BIT",
-            notes = "R32 refrigerant with turbo cool rapid pull-down"
+            irProtocol = "sharp_gree_oem",
+            notes = "OEM Gree platform (YB0F2 / YB1F2 remote) with Turbo Cool"
         ),
         AcModelInfo(
             brand = "Sharp",
-            series = "Turbo Cool Standard",
+            series = "Turbo Cool Standard (Gree OEM)",
             modelCode = "AH-A5UCY",
             supportedCapacities = listOf("0.5 PK"),
             defaultCapacity = "0.5 PK",
             inverterType = "Standard / Non-Inverter",
-            irProtocol = "SHARP_104BIT",
-            notes = "Ultra low wattage 350W compact bedroom unit"
+            irProtocol = "sharp_gree_oem",
+            notes = "Ultra low wattage 350W compact bedroom unit (Gree OEM YB0F2 remote)"
+        ),
+        AcModelInfo(
+            brand = "Sharp",
+            series = "Generic / Universal Sharp",
+            modelCode = "Sharp Universal",
+            supportedCapacities = listOf("0.5 PK", "0.75 PK", "1.0 PK", "1.5 PK", "2.0 PK"),
+            defaultCapacity = "1.0 PK",
+            inverterType = "Standard / Inverter",
+            irProtocol = "sharp_inverter_104",
+            notes = "Universal multi-signal profile with smart code pairing for unknown Sharp ACs"
         ),
         AcModelInfo(
             brand = "Sharp",

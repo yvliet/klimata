@@ -24,6 +24,7 @@ data class ACProfile(
     val inverterType: String,
     val currentSetpoint: Int,
     val mode: String,
+    val irCodeSet: String? = null,
 )
 
 @Immutable
