@@ -11,7 +11,7 @@ enum class SavingsFactIcon {
 
 @Immutable
 data class SavingsEquivalentFact(
-    val title: String,
+    val title: String = "It's like..",
     val value: String,
     val unit: String,
     val description: String,
@@ -27,7 +27,7 @@ enum class CarbonFactIcon {
 
 @Immutable
 data class CarbonEquivalentFact(
-    val title: String,
+    val title: String = "It's like..",
     val value: String,
     val unit: String,
     val description: String,
@@ -36,233 +36,219 @@ data class CarbonEquivalentFact(
 
 object HumanEquivalents {
 
-    fun getSavingsTopHighlight(period: ImpactPeriod): String = when (period) {
-        ImpactPeriod.WEEKLY -> "☕ ~1 Morning Coffee"
-        ImpactPeriod.MONTHLY -> "☕ ~4 Artisan Coffees"
-        ImpactPeriod.YEARLY -> "🏖️ Weekend Staycation"
-        ImpactPeriod.LIFETIME -> "💰 Smart Utility Reserve"
-    }
-
     fun getSavingsFacts(period: ImpactPeriod): List<SavingsEquivalentFact> = when (period) {
         ImpactPeriod.WEEKLY -> listOf(
             SavingsEquivalentFact(
-                title = "Daily Treat",
+                title = "It's like..",
                 value = "1",
                 unit = "Coffee",
-                description = "A fresh morning iced kopi susu or warm pastry on your commute.",
+                description = "A cup of iced coffee or breakfast on your way to work.",
                 iconType = SavingsFactIcon.COFFEE
             ),
             SavingsEquivalentFact(
-                title = "Streaming Credit",
+                title = "It's like..",
                 value = "0.3",
                 unit = "Mo",
-                description = "Covers roughly a week of Spotify Premium or mobile streaming.",
+                description = "About a week of your Spotify or Netflix bill.",
                 iconType = SavingsFactIcon.SUBSCRIPTION
             ),
             SavingsEquivalentFact(
-                title = "Compressor Rest",
+                title = "It's like..",
                 value = "13",
                 unit = "hrs",
-                description = "Over a half-day of compressor motor idle, reducing internal heat wear.",
+                description = "Giving your AC compressor a half-day break so it lasts longer.",
                 iconType = SavingsFactIcon.AC_HEALTH
             )
         )
         ImpactPeriod.MONTHLY -> listOf(
             SavingsEquivalentFact(
-                title = "Everyday Treats",
+                title = "It's like..",
                 value = "4",
                 unit = "Coffees",
-                description = "Four cups of artisan iced latte or cozy weekend breakfasts with family.",
+                description = "Treating yourself to 4 iced coffees or morning breakfasts.",
                 iconType = SavingsFactIcon.COFFEE
             ),
             SavingsEquivalentFact(
-                title = "Subscriptions",
+                title = "It's like..",
                 value = "1.5",
                 unit = "Months",
-                description = "Covers a full month of Spotify Premium or Netflix without dipping into cash.",
+                description = "A whole month of Spotify or Netflix paid for.",
                 iconType = SavingsFactIcon.SUBSCRIPTION
             ),
             SavingsEquivalentFact(
-                title = "AC Health",
+                title = "It's like..",
                 value = "56",
                 unit = "hrs",
-                description = "Over 2 full days of compressor downtime, prolonging your unit's lifespan.",
+                description = "Over two full days of your AC compressor resting.",
                 iconType = SavingsFactIcon.AC_HEALTH
             )
         )
         ImpactPeriod.YEARLY -> listOf(
             SavingsEquivalentFact(
-                title = "Morning Ritual",
+                title = "It's like..",
                 value = "48",
                 unit = "Coffees",
-                description = "Nearly a full year of weekly morning coffee runs completely covered.",
+                description = "Almost a full year of weekly morning coffee runs.",
                 iconType = SavingsFactIcon.COFFEE
             ),
             SavingsEquivalentFact(
-                title = "Home Broadband",
-                value = "~3",
+                title = "It's like..",
+                value = "3",
                 unit = "Months",
-                description = "Equivalent to nearly three billing cycles of high-speed home fiber Wi-Fi.",
+                description = "About 3 months of home Wi-Fi paid for.",
                 iconType = SavingsFactIcon.SUBSCRIPTION
             ),
             SavingsEquivalentFact(
-                title = "Motor Preservation",
+                title = "It's like..",
                 value = "675",
                 unit = "hrs",
-                description = "Nearly an entire month of mechanical compressor rest saved over the year.",
+                description = "Nearly a whole month of your AC motor resting.",
                 iconType = SavingsFactIcon.AC_HEALTH
             )
         )
         ImpactPeriod.LIFETIME -> listOf(
             SavingsEquivalentFact(
-                title = "Quiet Treats",
+                title = "It's like..",
                 value = "32",
                 unit = "Coffees",
-                description = "Over thirty morning lattes paid for purely through intelligent sleep sync.",
+                description = "Over thirty morning coffees covered by smart cooling.",
                 iconType = SavingsFactIcon.COFFEE
             ),
             SavingsEquivalentFact(
-                title = "Internet Bills",
+                title = "It's like..",
                 value = "2",
                 unit = "Months",
-                description = "Two full monthly broadband subscriptions redirected to your savings.",
+                description = "Two months of home internet bills saved.",
                 iconType = SavingsFactIcon.SUBSCRIPTION
             ),
             SavingsEquivalentFact(
-                title = "AC Unit Longevity",
+                title = "It's like..",
                 value = "450",
                 unit = "hrs",
-                description = "Cumulative compressor relief extending component life by estimated years.",
+                description = "Weeks of compressor rest, saving money on AC maintenance.",
                 iconType = SavingsFactIcon.AC_HEALTH
             )
         )
-    }
-
-    fun getCarbonTopHighlight(period: ImpactPeriod): String = when (period) {
-        ImpactPeriod.WEEKLY -> "🌱 0.3 Trees Working"
-        ImpactPeriod.MONTHLY -> "🌿 1.4 Trees Working"
-        ImpactPeriod.YEARLY -> "🌳 16.8 Trees Grove"
-        ImpactPeriod.LIFETIME -> "🍃 11.2 Trees Offset"
     }
 
     fun getCarbonFacts(period: ImpactPeriod): List<CarbonEquivalentFact> = when (period) {
         ImpactPeriod.WEEKLY -> listOf(
             CarbonEquivalentFact(
-                title = "Urban Tree Work",
+                title = "It's like..",
                 value = "0.3",
                 unit = "Trees",
-                description = "What a leafy urban tree seedling absorbs from city air over a week.",
+                description = "A young tree absorbing carbon for an entire week.",
                 iconType = CarbonFactIcon.TREE
             ),
             CarbonEquivalentFact(
-                title = "City Scooter Rides",
+                title = "It's like..",
                 value = "32",
                 unit = "km",
-                description = "Skipping ~6 daily cross-town scooter trips across South Jakarta.",
+                description = "Skipping about 6 scooter trips across town.",
                 iconType = CarbonFactIcon.COMMUTE
             ),
             CarbonEquivalentFact(
-                title = "Phone Charges",
+                title = "It's like..",
                 value = "950+",
                 unit = "charges",
-                description = "Recharging your smartphone every night for more than two and a half years.",
+                description = "Charging your phone every night for over two years.",
                 iconType = CarbonFactIcon.SMARTPHONE
             ),
             CarbonEquivalentFact(
-                title = "Home Lighting",
+                title = "It's like..",
                 value = "13",
                 unit = "hrs",
-                description = "Illuminating your living room with high-efficiency LED lights for evenings.",
+                description = "Keeping the living room lights on all evening.",
                 iconType = CarbonFactIcon.LIGHTING
             )
         )
         ImpactPeriod.MONTHLY -> listOf(
             CarbonEquivalentFact(
-                title = "Urban Tree Work",
+                title = "It's like..",
                 value = "1.4",
                 unit = "Trees",
-                description = "What a mature urban tree absorbs and filters out over an entire month.",
+                description = "A tree absorbing carbon from the air for a whole month.",
                 iconType = CarbonFactIcon.TREE
             ),
             CarbonEquivalentFact(
-                title = "City Commute Avoided",
+                title = "It's like..",
                 value = "138",
                 unit = "km",
-                description = "Equal to ~25 daily scooter rides or driving from Jakarta to Bandung.",
+                description = "Skipping 25 scooter rides, or driving to Bandung.",
                 iconType = CarbonFactIcon.COMMUTE
             ),
             CarbonEquivalentFact(
-                title = "Phone Recharges",
+                title = "It's like..",
                 value = "4,100+",
                 unit = "charges",
-                description = "Enough clean energy to charge your phone from 0% to 100% daily for 11 years.",
+                description = "Charging your phone every day for 11 years.",
                 iconType = CarbonFactIcon.SMARTPHONE
             ),
             CarbonEquivalentFact(
-                title = "Living Room Lights",
+                title = "It's like..",
                 value = "57",
                 unit = "hrs",
-                description = "Continuous high-efficiency LED illumination for almost two and a half days.",
+                description = "Leaving your living room lights on for over two days straight.",
                 iconType = CarbonFactIcon.LIGHTING
             )
         )
         ImpactPeriod.YEARLY -> listOf(
             CarbonEquivalentFact(
-                title = "Personal Urban Grove",
+                title = "It's like..",
                 value = "16.8",
                 unit = "Trees",
-                description = "A personal cluster of urban trees filtering Jakarta's tropical skyline.",
+                description = "A small grove of trees cleaning city air for a year.",
                 iconType = CarbonFactIcon.TREE
             ),
             CarbonEquivalentFact(
-                title = "Island Road Trip",
+                title = "It's like..",
                 value = "1,660",
                 unit = "km",
-                description = "Driving the entire length of Java from Anyer to Banyuwangi and back.",
+                description = "Driving all the way across Java and back.",
                 iconType = CarbonFactIcon.COMMUTE
             ),
             CarbonEquivalentFact(
-                title = "Phone Charges",
+                title = "It's like..",
                 value = "49,000+",
                 unit = "charges",
-                description = "Decades of smartphone power saved from nighttime peaker power plants.",
+                description = "Decades worth of charging your phone every night.",
                 iconType = CarbonFactIcon.SMARTPHONE
             ),
             CarbonEquivalentFact(
-                title = "Continuous Glow",
+                title = "It's like..",
                 value = "680",
                 unit = "hrs",
-                description = "Nearly an entire month of continuous around-the-clock room lighting.",
+                description = "A month of continuous light without wasting power.",
                 iconType = CarbonFactIcon.LIGHTING
             )
         )
         ImpactPeriod.LIFETIME -> listOf(
             CarbonEquivalentFact(
-                title = "Cumulative Forest",
+                title = "It's like..",
                 value = "11.2",
                 unit = "Trees",
-                description = "Continuous carbon absorption across your active Klimata operating history.",
+                description = "Over 11 trees absorbing carbon while you used Klimata.",
                 iconType = CarbonFactIcon.TREE
             ),
             CarbonEquivalentFact(
-                title = "Clean Highway Km",
+                title = "It's like..",
                 value = "1,108",
                 unit = "km",
-                description = "Over a thousand kilometers of tailpipe emissions avoided while asleep.",
+                description = "Over a thousand kilometers of road trips without emissions.",
                 iconType = CarbonFactIcon.COMMUTE
             ),
             CarbonEquivalentFact(
-                title = "Phone Charges",
+                title = "It's like..",
                 value = "32,800+",
                 unit = "charges",
-                description = "Tens of thousands of battery recharges spared from fossil grid generation.",
+                description = "Tens of thousands of phone charges kept off the grid.",
                 iconType = CarbonFactIcon.SMARTPHONE
             ),
             CarbonEquivalentFact(
-                title = "Home Lighting",
+                title = "It's like..",
                 value = "450",
                 unit = "hrs",
-                description = "Over two and a half weeks of continuous clean home illumination.",
+                description = "Weeks of clean home lighting powered by saved energy.",
                 iconType = CarbonFactIcon.LIGHTING
             )
         )

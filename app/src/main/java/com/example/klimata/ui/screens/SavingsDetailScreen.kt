@@ -63,16 +63,13 @@ fun SavingsDetailScreen(
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.savingsHistory.forPeriod(selectedPeriod)
     val breakdown = room.savingsBreakdown
-    val topHighlight = remember(selectedPeriod) {
-        HumanEquivalents.getSavingsTopHighlight(selectedPeriod)
-    }
     val facts = remember(selectedPeriod) {
         HumanEquivalents.getSavingsFacts(selectedPeriod)
     }
 
     DetailPageScaffold(
         title = "${selectedPeriod.label} Savings",
-        subtitle = "${room.name} • Utility Ledger & Daily Impact",
+        subtitle = room.name,
         onBackClick = onBackClick,
         trailingContent = {
             PeriodDropdown(
@@ -90,42 +87,19 @@ fun SavingsDetailScreen(
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(MineralMintActive.copy(alpha = 0.18f)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(MineralMintActive.copy(alpha = 0.18f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Light.CurrencyDollar,
-                            contentDescription = null,
-                            tint = MineralMintActive,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MineralMintActive.copy(alpha = 0.16f))
-                            .padding(horizontal = 9.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = topHighlight,
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.5.sp,
-                                color = MineralMintActive
-                            )
-                        )
-                    }
+                    Icon(
+                        imageVector = PhosphorIcons.Light.CurrencyDollar,
+                        contentDescription = null,
+                        tint = MineralMintActive,
+                        modifier = Modifier.size(20.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -156,7 +130,7 @@ fun SavingsDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Quietly saved while you sleep without sacrificing room comfort.",
+                    text = "Saved while you sleep, without making your room feel any warmer.",
                     style = TextStyle(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Normal,
@@ -167,38 +141,21 @@ fun SavingsDetailScreen(
             }
         }
 
-        // Did You Know: Real-World Pocket Equivalents
+        // Did You Know: Tangible Equivalents
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Did You Know? Everyday Value",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = DetailTextPrimary
-                    ),
-                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
-                )
-
-                Text(
-                    text = "What this quietly buys",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 11.5.sp,
-                        color = DetailTextMuted
-                    ),
-                    modifier = Modifier.padding(end = 4.dp)
-                )
-            }
+            Text(
+                text = "Did You Know?",
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = DetailTextPrimary
+                ),
+                modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+            )
 
             if (facts.size >= 2) {
                 Row(
@@ -245,7 +202,7 @@ fun SavingsDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Where the electricity cuts actually happened",
+                        text = "Where the savings came from",
                         style = TextStyle(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Normal,
@@ -294,7 +251,7 @@ fun SavingsDetailScreen(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(CircleShape)
-                            .background(MineralMintActive.copy(alpha = 0.16f)),
+                                .background(MineralMintActive.copy(alpha = 0.16f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -311,7 +268,7 @@ fun SavingsDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "The 2 AM Metabolic Drift",
+                                    text = "The 2 AM Drift",
                                     style = TextStyle(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.Medium,
@@ -331,7 +288,7 @@ fun SavingsDetailScreen(
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "As outdoor air cooled down to 26°C, your AC eased up from 24°C to 25°C. Deep sleep naturally lowers your body temperature, so you slept peacefully while the compressor rested for hours.",
+                                text = "When outside temperatures dropped to 26°C, your AC stepped up from 24°C to 25°C. Your body naturally cools down during deep sleep anyway, so you stayed comfortable while your compressor took a break.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -351,7 +308,7 @@ fun SavingsDetailScreen(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(CircleShape)
-                            .background(Color(0xFF636366).copy(alpha = 0.25f)),
+                                .background(Color(0xFF636366).copy(alpha = 0.25f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -368,7 +325,7 @@ fun SavingsDetailScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Dawn Thermal Coasting",
+                                    text = "Dawn Coasting",
                                     style = TextStyle(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.Medium,
@@ -388,7 +345,7 @@ fun SavingsDetailScreen(
                             }
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "From 5:30 AM to sunrise, cold air remained trapped in your room's thermal mass. Klimata disengaged the heavy compressor entirely and floated on gentle fan circulation.",
+                                text = "By 5:30 AM, your room was already cool. Klimata turned off the compressor and just used the fan to circulate the remaining cool air until morning.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -399,84 +356,6 @@ fun SavingsDetailScreen(
                             )
                         }
                     }
-                }
-            }
-        }
-
-        // Realistic Math & Hardware Profile Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(DetailCardSurface)
-                .padding(18.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Honest Math & Grid Reality",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = DetailTextPrimary
-                    )
-                )
-
-                Text(
-                    text = "Based on avoiding ~${breakdown.avgNightlyKwhSaved} kWh each night compared to a continuous flat 20°C freeze. Benchmarked at ${breakdown.localTariffPerKwh}/kWh (standard PLN R-1 residential tariff).",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 12.5.sp,
-                        lineHeight = 18.sp,
-                        color = DetailTextSecondary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Hardware Profile",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = DetailTextMuted
-                        )
-                    )
-                    Text(
-                        text = "${room.profile.brand} ${room.profile.inverterType}",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            color = DetailTextPrimary
-                        )
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(DetailCardSurfaceElevated)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = "💡 Prolonged AC Lifespan: Reducing aggressive start-stop compressor bursts prevents motor overheating, helping your unit last years longer.",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            lineHeight = 16.sp,
-                            color = DetailTextSecondary
-                        )
-                    )
                 }
             }
         }
@@ -609,17 +488,19 @@ private fun SavingsFactItemCard(
                         color = DetailTextPrimary
                     )
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = fact.unit,
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp,
-                        color = tint
-                    ),
-                    modifier = Modifier.padding(bottom = 2.dp)
-                )
+                if (fact.unit.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = fact.unit,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                            color = tint
+                        ),
+                        modifier = Modifier.padding(bottom = 2.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(4.dp))
