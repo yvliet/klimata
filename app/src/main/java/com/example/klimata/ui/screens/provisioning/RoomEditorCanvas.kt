@@ -2,23 +2,23 @@ package com.example.klimata.ui.screens.provisioning
 
 import android.graphics.Paint
 import android.view.HapticFeedbackConstants
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,61 +28,53 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.klimata.ui.theme.DetailCardBorder
 import com.example.klimata.ui.theme.DetailCardSurface
+import com.example.klimata.ui.theme.DetailCardSurfaceElevated
+import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
+import com.example.klimata.ui.theme.JakartaFamily
+import com.example.klimata.ui.theme.MineralMint
 import com.example.klimata.ui.theme.MineralMintActive
 import kotlin.math.abs
-import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * Preset wireframe mode — renders a rectangular room schematic with dimension labels.
- * Width/length driven externally by sliders; canvas morphs via spring animation.
+ * Interactive room wireframe preview with live 3D isometric and 2D plan views.
+ * Updates 1:1 immediately with slider values for zero-latency dragging.
  */
 @Composable
 fun PresetRoomCanvas(
     widthMeters: Float,
     lengthMeters: Float,
+    ceilingHeightMeters: Float = 2.8f,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-
-    val animWidth = remember { Animatable(widthMeters) }
-    val animLength = remember { Animatable(lengthMeters) }
-
-    LaunchedEffect(widthMeters) {
-        animWidth.animateTo(
-            widthMeters,
-            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)
-        )
-    }
-    LaunchedEffect(lengthMeters) {
-        animLength.animateTo(
-            lengthMeters,
-            animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow)
-        )
-    }
+    var is3dView by remember { mutableStateOf(true) }
 
     val labelPaint = remember(density) {
         Paint().apply {
             color = android.graphics.Color.WHITE
-            textSize = with(density) { 11.sp.toPx() }
+            textSize = with(density) { 10.5.sp.toPx() }
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
-            typeface = android.graphics.Typeface.create(
-                android.graphics.Typeface.DEFAULT,
-                android.graphics.Typeface.BOLD
-            )
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
         }
     }
 
@@ -103,100 +95,269 @@ fun PresetRoomCanvas(
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
-            val w = animWidth.value
-            val l = animLength.value
+            val canvasW = size.width
+            val canvasH = size.height
 
-            val padding = 48.dp.toPx()
-            val availW = size.width - padding * 2
-            val availH = size.height - padding * 2
+            if (is3dView) {
+                // 3D Isometric wireframe projection with auto-centering
+                val isoAngle = 0.5236f // 30 degrees
+                val cosA = cos(isoAngle)
+                val sinA = sin(isoAngle)
 
-            val scale = minOf(availW / w, availH / l)
-            val roomPxW = w * scale
-            val roomPxL = l * scale
+                val w = widthMeters
+                val l = lengthMeters
+                val h = ceilingHeightMeters
 
-            val left = (size.width - roomPxW) / 2f
-            val top = (size.height - roomPxL) / 2f
+                // 8 corners in 3D: (x, y, z)
+                val pts3D = listOf(
+                    Triple(0f, 0f, 0f),      // 0: front-left floor
+                    Triple(w, 0f, 0f),       // 1: front-right floor
+                    Triple(w, l, 0f),        // 2: back-right floor
+                    Triple(0f, l, 0f),       // 3: back-left floor
+                    Triple(0f, 0f, h),       // 4: front-left ceiling
+                    Triple(w, 0f, h),        // 5: front-right ceiling
+                    Triple(w, l, h),         // 6: back-right ceiling
+                    Triple(0f, l, h)         // 7: back-left ceiling
+                )
 
-            val corners = listOf(
-                Offset(left, top),
-                Offset(left + roomPxW, top),
-                Offset(left + roomPxW, top + roomPxL),
-                Offset(left, top + roomPxL)
-            )
-
-            // Subtle grid dots inside the room
-            val gridStep = 0.5f * scale
-            var gx = left + gridStep
-            while (gx < left + roomPxW) {
-                var gy = top + gridStep
-                while (gy < top + roomPxL) {
-                    drawCircle(
-                        color = DetailCardBorder.copy(alpha = 0.25f),
-                        radius = 1.5f,
-                        center = Offset(gx, gy)
-                    )
-                    gy += gridStep
+                // Project each 3D point to (u, v) space
+                val uvPts = pts3D.map { (x, y, z) ->
+                    val u = (x - y) * cosA
+                    val v = -(x + y) * sinA - z
+                    Offset(u, v)
                 }
-                gx += gridStep
+
+                val minU = uvPts.minOf { it.x }
+                val maxU = uvPts.maxOf { it.x }
+                val minV = uvPts.minOf { it.y }
+                val maxV = uvPts.maxOf { it.y }
+
+                val spanU = max(maxU - minU, 0.1f)
+                val spanV = max(maxV - minV, 0.1f)
+
+                val pad = 36.dp.toPx()
+                val availW = canvasW - pad * 2
+                val availH = canvasH - pad * 2
+
+                val scale = min(availW / spanU, availH / spanV)
+                val midU = (minU + maxU) / 2f
+                val midV = (minV + maxV) / 2f
+
+                fun project(uv: Offset): Offset {
+                    return Offset(
+                        x = canvasW / 2f + (uv.x - midU) * scale,
+                        y = canvasH / 2f + (uv.y - midV) * scale
+                    )
+                }
+
+                val p = uvPts.map { project(it) }
+
+                // 1. Back walls soft illumination (depth cue)
+                val rearWallRight = Path().apply {
+                    moveTo(p[1].x, p[1].y)
+                    lineTo(p[2].x, p[2].y)
+                    lineTo(p[6].x, p[6].y)
+                    lineTo(p[5].x, p[5].y)
+                    close()
+                }
+                drawPath(rearWallRight, color = MineralMintActive.copy(alpha = 0.04f), style = Fill)
+
+                val rearWallLeft = Path().apply {
+                    moveTo(p[3].x, p[3].y)
+                    lineTo(p[2].x, p[2].y)
+                    lineTo(p[6].x, p[6].y)
+                    lineTo(p[7].x, p[7].y)
+                    close()
+                }
+                drawPath(rearWallLeft, color = MineralMint.copy(alpha = 0.05f), style = Fill)
+
+                // 2. Floor plane fill & wireframe
+                val floorPath = Path().apply {
+                    moveTo(p[0].x, p[0].y)
+                    lineTo(p[1].x, p[1].y)
+                    lineTo(p[2].x, p[2].y)
+                    lineTo(p[3].x, p[3].y)
+                    close()
+                }
+                drawPath(floorPath, color = MineralMintActive.copy(alpha = 0.06f), style = Fill)
+                drawPath(floorPath, color = MineralMintActive.copy(alpha = 0.85f), style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round))
+
+                // 3. Vertical pillars
+                val pillarColor = Color.White.copy(alpha = 0.70f)
+                val pillarStroke = Stroke(width = 1.6.dp.toPx(), cap = StrokeCap.Round)
+                drawLine(pillarColor, p[0], p[4], strokeWidth = pillarStroke.width, cap = StrokeCap.Round)
+                drawLine(pillarColor, p[1], p[5], strokeWidth = pillarStroke.width, cap = StrokeCap.Round)
+                drawLine(pillarColor, p[2], p[6], strokeWidth = pillarStroke.width, cap = StrokeCap.Round)
+                drawLine(pillarColor, p[3], p[7], strokeWidth = pillarStroke.width, cap = StrokeCap.Round)
+
+                // 4. Ceiling wireframe
+                val ceilPath = Path().apply {
+                    moveTo(p[4].x, p[4].y)
+                    lineTo(p[5].x, p[5].y)
+                    lineTo(p[6].x, p[6].y)
+                    lineTo(p[7].x, p[7].y)
+                    close()
+                }
+                drawPath(ceilPath, color = MineralMintActive, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+
+                // 5. Corner nodes
+                listOf(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]).forEach { node ->
+                    drawCircle(color = DetailCardSurface, radius = 4.5.dp.toPx(), center = node)
+                    drawCircle(color = MineralMintActive, radius = 3.dp.toPx(), center = node)
+                }
+
+                // 6. Dimension callouts in 3D
+                // Width (p0 -> p1)
+                val midWidth = Offset((p[0].x + p[1].x) / 2f, (p[0].y + p[1].y) / 2f + 14.dp.toPx())
+                drawContext.canvas.nativeCanvas.drawText(
+                    "W: %.1f m".format(w),
+                    midWidth.x,
+                    midWidth.y,
+                    labelPaint
+                )
+
+                // Length (p0 -> p3)
+                val midLength = Offset((p[0].x + p[3].x) / 2f - 22.dp.toPx(), (p[0].y + p[3].y) / 2f + 6.dp.toPx())
+                drawContext.canvas.nativeCanvas.drawText(
+                    "L: %.1f m".format(l),
+                    midLength.x,
+                    midLength.y,
+                    labelPaint
+                )
+
+                // Height (p1 -> p5 vertical pillar)
+                val midHeight = Offset(p[1].x + 22.dp.toPx(), (p[1].y + p[5].y) / 2f)
+                drawContext.canvas.nativeCanvas.drawText(
+                    "H: %.1f m".format(h),
+                    midHeight.x,
+                    midHeight.y,
+                    mintLabelPaint
+                )
+
+            } else {
+                // 2D Top-down Plan View
+                val w = widthMeters
+                val l = lengthMeters
+
+                val padding = 44.dp.toPx()
+                val availW = canvasW - padding * 2
+                val availH = canvasH - padding * 2
+
+                val scale = min(availW / w, availH / l)
+                val roomPxW = w * scale
+                val roomPxL = l * scale
+
+                val left = (canvasW - roomPxW) / 2f
+                val top = (canvasH - roomPxL) / 2f
+
+                val corners = listOf(
+                    Offset(left, top),
+                    Offset(left + roomPxW, top),
+                    Offset(left + roomPxW, top + roomPxL),
+                    Offset(left, top + roomPxL)
+                )
+
+                // Dot grid inside room
+                val gridStep = 0.5f * scale
+                var gx = left + gridStep
+                while (gx < left + roomPxW) {
+                    var gy = top + gridStep
+                    while (gy < top + roomPxL) {
+                        drawCircle(
+                            color = DetailCardBorder.copy(alpha = 0.30f),
+                            radius = 1.5f,
+                            center = Offset(gx, gy)
+                        )
+                        gy += gridStep
+                    }
+                    gx += gridStep
+                }
+
+                val roomPath = Path().apply {
+                    moveTo(corners[0].x, corners[0].y)
+                    corners.drop(1).forEach { lineTo(it.x, it.y) }
+                    close()
+                }
+                drawPath(roomPath, color = MineralMintActive.copy(alpha = 0.06f), style = Fill)
+                drawPath(roomPath, color = MineralMintActive, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+
+                corners.forEach { corner ->
+                    drawCircle(color = MineralMintActive, radius = 4.dp.toPx(), center = corner)
+                }
+
+                val labelOffset = 18.dp.toPx()
+                val wallLabels = listOf(
+                    Triple(corners[0], corners[1], "%.1f m".format(w)),
+                    Triple(corners[1], corners[2], "%.1f m".format(l)),
+                    Triple(corners[2], corners[3], "%.1f m".format(w)),
+                    Triple(corners[3], corners[0], "%.1f m".format(l))
+                )
+
+                wallLabels.forEachIndexed { i, (p1, p2, text) ->
+                    val mid = Offset((p1.x + p2.x) / 2f, (p1.y + p2.y) / 2f)
+                    val offsetY = when (i) {
+                        0 -> -labelOffset
+                        2 -> labelOffset + 4.dp.toPx()
+                        else -> 0f
+                    }
+                    val offsetX = when (i) {
+                        1 -> labelOffset + 4.dp.toPx()
+                        3 -> -labelOffset - 4.dp.toPx()
+                        else -> 0f
+                    }
+                    drawContext.canvas.nativeCanvas.drawText(
+                        text,
+                        mid.x + offsetX,
+                        mid.y + offsetY,
+                        if (i == 0 || i == 2) labelPaint else mintLabelPaint
+                    )
+                }
             }
+        }
 
-            // Room polygon fill
-            val roomPath = Path().apply {
-                moveTo(corners[0].x, corners[0].y)
-                corners.drop(1).forEach { lineTo(it.x, it.y) }
-                close()
-            }
-            drawPath(
-                roomPath,
-                color = MineralMintActive.copy(alpha = 0.06f),
-                style = Fill
-            )
-
-            // Room walls
-            drawPath(
-                roomPath,
-                color = MineralMintActive,
-                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-            )
-
-            // Corner nodes
-            corners.forEach { corner ->
-                drawCircle(
-                    color = MineralMintActive,
-                    radius = 4.dp.toPx(),
-                    center = corner
+        // View mode toggle pill (3D Iso / 2D Plan) in top-right corner
+        Row(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(10.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(DetailCardSurfaceElevated.copy(alpha = 0.90f))
+                .padding(2.dp),
+            horizontalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (is3dView) MineralMintActive else Color.Transparent)
+                    .clickable { is3dView = true }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "3D",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        color = if (is3dView) Color(0xFF0F172A) else DetailTextSecondary
+                    )
                 )
             }
 
-            // Dimension labels on each wall
-            val wallLabels = listOf(
-                Triple(corners[0], corners[1], w),   // top (width)
-                Triple(corners[1], corners[2], l),   // right (length)
-                Triple(corners[2], corners[3], w),   // bottom (width)
-                Triple(corners[3], corners[0], l)    // left (length)
-            )
-
-            val labelOffset = 18.dp.toPx()
-            wallLabels.forEachIndexed { i, (p1, p2, meters) ->
-                val mid = Offset((p1.x + p2.x) / 2f, (p1.y + p2.y) / 2f)
-                val label = "%.1f m".format(meters)
-
-                val offsetY = when (i) {
-                    0 -> -labelOffset
-                    2 -> labelOffset + 4.dp.toPx()
-                    else -> 0f
-                }
-                val offsetX = when (i) {
-                    1 -> labelOffset + 4.dp.toPx()
-                    3 -> -labelOffset - 4.dp.toPx()
-                    else -> 0f
-                }
-
-                drawContext.canvas.nativeCanvas.drawText(
-                    label,
-                    mid.x + offsetX,
-                    mid.y + offsetY,
-                    if (i == 0 || i == 2) labelPaint else mintLabelPaint
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (!is3dView) MineralMintActive else Color.Transparent)
+                    .clickable { is3dView = false }
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "2D",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        color = if (!is3dView) Color(0xFF0F172A) else DetailTextSecondary
+                    )
                 )
             }
         }
@@ -205,7 +366,7 @@ fun PresetRoomCanvas(
 
 /**
  * Custom polygon editor — tap to place corners on a dot grid, drag to adjust.
- * Orthogonal snapping, loop closure, Shoelace area, wall dimension badges.
+ * Uses rememberUpdatedState to prevent stale pointer input closures so any number of corners can be added.
  */
 @Composable
 fun CustomRoomCanvas(
@@ -218,16 +379,20 @@ fun CustomRoomCanvas(
     val density = LocalDensity.current
     val view = LocalView.current
 
+    // Live updated state references to prevent stale closures in pointerInput
+    val currentVertices by rememberUpdatedState(vertices)
+    val currentIsClosed by rememberUpdatedState(isClosed)
+    val currentOnVerticesChanged by rememberUpdatedState(onVerticesChanged)
+    val currentOnClosedChanged by rememberUpdatedState(onClosedChanged)
+
     val gridSpacingMeters = 0.5f
     val pixelsPerMeter = with(density) { 60.dp.toPx() }
     val gridPx = gridSpacingMeters * pixelsPerMeter
 
-    // Touch radius for vertex hit-testing (48dp Material spec)
-    val touchRadiusPx = with(density) { 36.dp.toPx() }
-    // Magnetic closure radius
-    val closureRadiusPx = with(density) { 28.dp.toPx() }
-    // Snap threshold for orthogonal locking
-    val orthoSnapDeg = 7.5f
+    // Touch radius for vertex hit-testing (48dp spec)
+    val touchRadiusPx = with(density) { 40.dp.toPx() }
+    // Magnetic closure radius around first vertex
+    val closureRadiusPx = with(density) { 32.dp.toPx() }
 
     var activeVertexIndex by remember { mutableStateOf<Int?>(null) }
 
@@ -257,24 +422,6 @@ fun CustomRoomCanvas(
         return Offset(snappedX, snappedY)
     }
 
-    fun snapOrtho(newPos: Offset, prevPos: Offset): Offset {
-        val dx = newPos.x - prevPos.x
-        val dy = newPos.y - prevPos.y
-        val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
-        val normAngle = ((angle % 90f) + 90f) % 90f
-
-        return if (normAngle < orthoSnapDeg || normAngle > 90f - orthoSnapDeg) {
-            // Near 0/90/180/270 — snap to axis
-            if (abs(dx) > abs(dy)) {
-                Offset(newPos.x, prevPos.y)
-            } else {
-                Offset(prevPos.x, newPos.y)
-            }
-        } else {
-            newPos
-        }
-    }
-
     fun shoelaceArea(pts: List<Offset>): Float {
         if (pts.size < 3) return 0f
         var sum = 0f
@@ -295,62 +442,73 @@ fun CustomRoomCanvas(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .pointerInput(isClosed) {
-                    if (!isClosed) {
-                        detectTapGestures { tapOffset ->
-                            val snapped = snapToGrid(tapOffset)
-                            val orthoSnapped = if (vertices.isNotEmpty()) {
-                                snapOrtho(snapped, vertices.last())
-                            } else {
-                                snapped
-                            }
-                            val finalPos = snapToGrid(orthoSnapped)
+                .pointerInput(Unit) {
+                    detectTapGestures { tapOffset ->
+                        if (currentIsClosed) return@detectTapGestures
 
-                            // Check for closure
-                            if (vertices.size >= 3) {
-                                val distToFirst = sqrt(
-                                    (finalPos.x - vertices.first().x).let { it * it } +
-                                            (finalPos.y - vertices.first().y).let { it * it }
-                                )
-                                if (distToFirst < closureRadiusPx) {
-                                    onClosedChanged(true)
-                                    view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                                    return@detectTapGestures
-                                }
-                            }
+                        val liveVerts = currentVertices
+                        val snapped = snapToGrid(tapOffset)
 
-                            onVerticesChanged(vertices + finalPos)
-                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        // Check for magnetic closure on start vertex
+                        if (liveVerts.size >= 3) {
+                            val distToFirst = sqrt(
+                                (snapped.x - liveVerts.first().x).let { it * it } +
+                                        (snapped.y - liveVerts.first().y).let { it * it }
+                            )
+                            if (distToFirst <= closureRadiusPx) {
+                                currentOnClosedChanged(true)
+                                view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                                return@detectTapGestures
+                            }
                         }
+
+                        // Prevent duplicate taps at identical position as previous vertex
+                        if (liveVerts.isNotEmpty()) {
+                            val distToLast = sqrt(
+                                (snapped.x - liveVerts.last().x).let { it * it } +
+                                        (snapped.y - liveVerts.last().y).let { it * it }
+                            )
+                            if (distToLast < gridPx * 0.75f) {
+                                return@detectTapGestures
+                            }
+                        }
+
+                        currentOnVerticesChanged(liveVerts + snapped)
+                        view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
                     }
                 }
-                .pointerInput(vertices, isClosed) {
-                    if (isClosed && vertices.size >= 3) {
-                        detectDragGestures(
-                            onDragStart = { touchOffset ->
-                                activeVertexIndex = vertices.indexOfFirst { vertex ->
-                                    sqrt(
-                                        (vertex.x - touchOffset.x).let { it * it } +
-                                                (vertex.y - touchOffset.y).let { it * it }
-                                    ) <= touchRadiusPx
-                                }.takeIf { it != -1 }
-                            },
-                            onDrag = { change, _ ->
-                                change.consume()
-                                activeVertexIndex?.let { index ->
-                                    val raw = change.position
-                                    val snapped = snapToGrid(raw)
-                                    val newVerts = vertices.toMutableList()
-                                    newVerts[index] = snapped
-                                    onVerticesChanged(newVerts)
-                                }
-                            },
-                            onDragEnd = {
-                                activeVertexIndex = null
-                                view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { touchOffset ->
+                            if (!currentIsClosed) return@detectDragGestures
+                            val liveVerts = currentVertices
+                            val idx = liveVerts.indexOfFirst { vertex ->
+                                sqrt(
+                                    (vertex.x - touchOffset.x).let { it * it } +
+                                            (vertex.y - touchOffset.y).let { it * it }
+                                ) <= touchRadiusPx
                             }
-                        )
-                    }
+                            if (idx != -1) {
+                                activeVertexIndex = idx
+                            }
+                        },
+                        onDrag = { change, _ ->
+                            if (!currentIsClosed) return@detectDragGestures
+                            change.consume()
+                            activeVertexIndex?.let { index ->
+                                val snapped = snapToGrid(change.position)
+                                val newVerts = currentVertices.toMutableList()
+                                if (index in newVerts.indices) {
+                                    newVerts[index] = snapped
+                                    currentOnVerticesChanged(newVerts)
+                                }
+                            }
+                        },
+                        onDragEnd = {
+                            activeVertexIndex = null
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                        }
+                    )
                 }
         ) {
             // Dot grid background
@@ -397,7 +555,7 @@ fun CustomRoomCanvas(
                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
             )
 
-            // Dashed active leg to indicate next wall direction
+            // Dashed indicator back to start vertex when drafting
             if (!isClosed && vertices.size >= 2) {
                 val last = vertices.last()
                 val first = vertices.first()
@@ -410,7 +568,7 @@ fun CustomRoomCanvas(
                 )
             }
 
-            // Wall dimension badges
+            // Wall dimension labels
             val segCount = if (isClosed) vertices.size else vertices.size - 1
             for (i in 0 until segCount) {
                 val p1 = vertices[i]
@@ -421,7 +579,6 @@ fun CustomRoomCanvas(
                 ) / pixelsPerMeter
                 val label = "%.1f m".format(lengthM)
 
-                // Offset label perpendicular to wall
                 val dx = p2.x - p1.x
                 val dy = p2.y - p1.y
                 val len = sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
@@ -441,10 +598,9 @@ fun CustomRoomCanvas(
                 val isActive = i == activeVertexIndex
                 val isFirst = i == 0
 
-                // Closure target ring on first vertex when polygon not yet closed
                 if (isFirst && !isClosed && vertices.size >= 3) {
                     drawCircle(
-                        color = MineralMintActive.copy(alpha = 0.20f),
+                        color = MineralMintActive.copy(alpha = 0.25f),
                         radius = closureRadiusPx,
                         center = vertex
                     )
@@ -462,7 +618,7 @@ fun CustomRoomCanvas(
                 )
             }
 
-            // Area badge in center of closed polygon
+            // Enclosed area label
             if (isClosed && vertices.size >= 3) {
                 val area = shoelaceArea(vertices)
                 val cx = vertices.map { it.x }.average().toFloat()

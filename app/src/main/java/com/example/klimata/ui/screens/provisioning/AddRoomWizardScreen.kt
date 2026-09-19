@@ -130,6 +130,28 @@ fun AddRoomWizardScreen(
     var thermalMass by remember { mutableStateOf("Medium") }
     var manualLength by remember { mutableFloatStateOf(5.0f) }
     var manualWidth by remember { mutableFloatStateOf(4.0f) }
+    var sizingMode by remember { mutableStateOf("presets") }
+    var selectedPreset by remember { mutableStateOf<String?>("Standard") }
+
+    // Custom canvas polygon state
+    var customVertices by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    var isPolygonClosed by remember { mutableStateOf(false) }
+
+    val floorVerticesInMeters = remember(sizingMode, manualWidth, manualLength, customVertices, isPolygonClosed) {
+        if (sizingMode == "custom" && isPolygonClosed && customVertices.size >= 3) {
+            val minX = customVertices.minOf { it.x }
+            val minY = customVertices.minOf { it.y }
+            val pxPerMeter = with(density) { 60.dp.toPx() }
+            customVertices.map { Offset((it.x - minX) / pxPerMeter, (it.y - minY) / pxPerMeter) }
+        } else {
+            listOf(
+                Offset(0f, 0f),
+                Offset(manualWidth, 0f),
+                Offset(manualWidth, manualLength),
+                Offset(0f, manualLength)
+            )
+        }
+    }
 
     // AC hardware state
     var acBrand by remember { mutableStateOf("Daikin") }
@@ -144,9 +166,6 @@ fun AddRoomWizardScreen(
     var isDetectingGps by remember { mutableStateOf(false) }
     var gpsStatusMessage by remember { mutableStateOf<String?>(null) }
 
-    // Custom canvas polygon state
-    var customVertices by remember { mutableStateOf<List<Offset>>(emptyList()) }
-    var isPolygonClosed by remember { mutableStateOf(false) }
 
     // GPS location detection logic
     fun runGpsDetection() {
@@ -496,8 +515,6 @@ fun AddRoomWizardScreen(
 
                         // Stage 2: Room Sizing
                         WizardStage.ROOM_SIZING -> {
-                            var sizingMode by remember { mutableStateOf("presets") }
-
                             Text(
                                 text = "Size your room",
                                 style = TextStyle(
@@ -512,9 +529,9 @@ fun AddRoomWizardScreen(
 
                             Text(
                                 text = if (sizingMode == "presets") {
-                                    "Adjust the sliders to match your room."
+                                    "Adjust dimensions to match your room in 3D."
                                 } else {
-                                    "Tap corners to draw your room shape."
+                                    "Tap corners on the grid to plot your room."
                                 },
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
@@ -571,20 +588,21 @@ fun AddRoomWizardScreen(
                             }
 
                             if (sizingMode == "presets") {
-                                // Live wireframe canvas
+                                // Live 3D isometric room wireframe canvas with 2D/3D toggle
                                 PresetRoomCanvas(
                                     widthMeters = manualWidth,
                                     lengthMeters = manualLength,
+                                    ceilingHeightMeters = ceilingHeight,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(200.dp)
+                                        .height(210.dp)
                                 )
 
-                                // Live area/volume badge
+                                // Live area and volume badge with math multiplication symbol
                                 val areaDisplay = (manualWidth * manualLength)
                                 val volumeDisplay = (areaDisplay * ceilingHeight).roundToInt()
                                 Text(
-                                    text = "%.1f m² • %d m³ volume".format(areaDisplay, volumeDisplay),
+                                    text = "%.1f m² × %d m³".format(areaDisplay, volumeDisplay),
                                     style = TextStyle(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.Bold,
@@ -612,7 +630,7 @@ fun AddRoomWizardScreen(
                                             Triple("Standard", 16, 4.0f to 4.0f),
                                             Triple("Spacious", 25, 5.0f to 5.0f)
                                         ).forEach { (label, sqm, dims) ->
-                                            val isSelected = areaSquareMeters == sqm
+                                            val isSelected = selectedPreset == label
                                             Box(
                                                 contentAlignment = Alignment.Center,
                                                 modifier = Modifier
@@ -620,6 +638,7 @@ fun AddRoomWizardScreen(
                                                     .clip(RoundedCornerShape(12.dp))
                                                     .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
                                                     .clickable {
+                                                        selectedPreset = label
                                                         areaSquareMeters = sqm
                                                         manualWidth = dims.first
                                                         manualLength = dims.second
@@ -649,7 +668,8 @@ fun AddRoomWizardScreen(
                                         Slider(
                                             value = manualWidth,
                                             onValueChange = {
-                                                manualWidth = it
+                                                selectedPreset = null
+                                                manualWidth = (it * 10f).roundToInt() / 10f
                                                 areaSquareMeters = (manualWidth * manualLength).roundToInt().coerceIn(8, 80)
                                             },
                                             valueRange = 2.5f..8.0f,
@@ -670,10 +690,32 @@ fun AddRoomWizardScreen(
                                         Slider(
                                             value = manualLength,
                                             onValueChange = {
-                                                manualLength = it
+                                                selectedPreset = null
+                                                manualLength = (it * 10f).roundToInt() / 10f
                                                 areaSquareMeters = (manualWidth * manualLength).roundToInt().coerceIn(8, 80)
                                             },
                                             valueRange = 2.5f..10.0f,
+                                            colors = SliderDefaults.colors(
+                                                thumbColor = MineralMintActive,
+                                                activeTrackColor = MineralMintActive,
+                                                inactiveTrackColor = DetailCardBorder
+                                            )
+                                        )
+                                    }
+
+                                    // Ceiling Height slider
+                                    Column {
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text(text = "Ceiling Height", style = TextStyle(fontFamily = JakartaFamily, fontSize = 12.sp, color = DetailTextSecondary))
+                                            Text(text = "%.1f m".format(ceilingHeight), style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
+                                        }
+                                        Slider(
+                                            value = ceilingHeight,
+                                            onValueChange = {
+                                                selectedPreset = null
+                                                ceilingHeight = (it * 10f).roundToInt() / 10f
+                                            },
+                                            valueRange = 2.2f..4.0f,
                                             colors = SliderDefaults.colors(
                                                 thumbColor = MineralMintActive,
                                                 activeTrackColor = MineralMintActive,
@@ -720,9 +762,35 @@ fun AddRoomWizardScreen(
 
                                         if (isPolygonClosed && customVertices.size >= 3) {
                                             val customArea = shoelaceAreaM2(customVertices, pxPerMeter)
-                                            Text(text = " • ", color = DetailTextMuted)
+                                            val customVol = (customArea * ceilingHeight).roundToInt()
+                                            Text(text = "  •  ", color = DetailTextMuted)
                                             Text(
-                                                text = "%.1f m²".format(customArea),
+                                                text = "%.1f m² × %d m³".format(customArea, customVol),
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = MineralMintActive
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    // Explicit Close Shape action button when >= 3 corners placed
+                                    if (!isPolygonClosed && customVertices.size >= 3) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(44.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(MineralMintActive.copy(alpha = 0.18f))
+                                                .bouncyClickable {
+                                                    isPolygonClosed = true
+                                                }
+                                        ) {
+                                            Text(
+                                                text = "Close Shape (${customVertices.size} Corners)",
                                                 style = TextStyle(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.Bold,
@@ -849,40 +917,6 @@ fun AddRoomWizardScreen(
                                         }
                                     }
                                 }
-
-                                // Ceiling height
-                                Text(
-                                    text = "Ceiling Height",
-                                    style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp, color = DetailTextPrimary)
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    listOf("2.6m" to 2.6f, "2.8m" to 2.8f, "3.0m" to 3.0f, "3.5m" to 3.5f).forEach { (label, height) ->
-                                        val isSelected = ceilingHeight == height
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
-                                                .clickable { ceilingHeight = height }
-                                                .padding(vertical = 8.dp)
-                                        ) {
-                                            Text(
-                                                text = label,
-                                                style = TextStyle(
-                                                    fontFamily = JakartaFamily,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                                    fontSize = 12.sp,
-                                                    color = if (isSelected) MineralMintActive else DetailTextSecondary,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
                             }
                         }
 
@@ -914,16 +948,16 @@ fun AddRoomWizardScreen(
                             )
 
                             RoomConstructionCanvas(
-                                areaM2 = areaSquareMeters,
-                                heightM = ceilingHeight,
+                                floorVertices = floorVerticesInMeters,
+                                ceilingHeightM = ceilingHeight,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(200.dp)
+                                    .height(210.dp)
                             )
 
                             val volume = (areaSquareMeters * ceilingHeight).roundToInt()
                             Text(
-                                text = "$areaSquareMeters m² Floor Area • $volume m³ Air Volume",
+                                text = "$areaSquareMeters m² × $volume m³",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Bold,
