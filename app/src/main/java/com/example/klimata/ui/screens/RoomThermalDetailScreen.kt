@@ -127,28 +127,33 @@ fun RoomThermalDetailScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text(
-                    text = "${room.volumeCubicMeters} m³ Air Volume",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp,
-                        letterSpacing = (-0.5).sp,
-                        color = DetailTextPrimary
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "${room.volumeCubicMeters} m³ Air Volume",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 28.sp,
+                            letterSpacing = (-0.5).sp,
+                            color = DetailTextPrimary
+                        )
                     )
-                )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = "Room dimensions and cooling air distribution",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 13.sp,
-                        color = DetailTextSecondary
+                    Text(
+                        text = "Room dimensions and cooling air distribution",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 13.sp,
+                            color = DetailTextSecondary
+                        )
                     )
-                )
+                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
