@@ -1,11 +1,14 @@
-package com.example.klimata.data
+﻿package com.example.klimata.data
 
 import android.graphics.Bitmap
+import android.util.Log
+import com.example.klimata.data.models.AcDatabase
+import com.example.klimata.data.models.AcModelInfo
+import com.example.klimata.data.network.AiConfig
+import com.example.klimata.data.network.GeminiApiClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-
-import android.util.Log
 
 data class AcRecognitionResult(
     val brand: String,
@@ -19,69 +22,14 @@ data class AcRecognitionResult(
 
 object AcRecognitionService {
 
-    private val sampleProfiles = listOf(
-        AcRecognitionResult(
-            brand = "Sharp",
-            model = "AH-XP10VXY",
-            capacity = "1.0 PK",
-            inverterType = "J-Tech Inverter",
-            confidenceScore = 0.93f,
-            notes = "Sharp Plasmacluster Ion badge detected on chassis",
-            isAiDetected = false
-        ),
-        AcRecognitionResult(
-            brand = "Daikin",
-            model = "FTKF25",
-            capacity = "1.0 PK",
-            inverterType = "Eco Inverter",
-            confidenceScore = 0.94f,
-            notes = "Daikin curved indoor unit with blue standby LED",
-            isAiDetected = false
-        ),
-        AcRecognitionResult(
-            brand = "Panasonic",
-            model = "CS-XU18XKH",
-            capacity = "1.5 PK",
-            inverterType = "Aero Inverter",
-            confidenceScore = 0.91f,
-            notes = "Panasonic nanoe™ X badge detected on lower louvre",
-            isAiDetected = false
-        ),
-        AcRecognitionResult(
-            brand = "Mitsubishi Electric",
-            model = "MSY-GR13VF",
-            capacity = "1.0 PK",
-            inverterType = "Mr. Slim Inverter",
-            confidenceScore = 0.89f,
-            notes = "Mitsubishi badge & clean rectangular fascia",
-            isAiDetected = false
-        ),
-        AcRecognitionResult(
-            brand = "LG",
-            model = "DualCool Eco",
-            capacity = "1.0 PK",
-            inverterType = "Dual Inverter",
-            confidenceScore = 0.92f,
-            notes = "LG Dual Inverter badge detected",
-            isAiDetected = false
-        ),
-        AcRecognitionResult(
-            brand = "Gree",
-            model = "GWC-09MOO5",
-            capacity = "1.0 PK",
-            inverterType = "Standard / Non-Inverter",
-            confidenceScore = 0.88f,
-            notes = "Gree front panel branding recognized",
-            isAiDetected = false
-        )
-    )
+    fun getAllCatalogModels(): List<AcModelInfo> = AcDatabase.allModels
 
     suspend fun analyzeAcPhoto(bitmap: Bitmap?, areaSquareMeters: Int): AcRecognitionResult = withContext(Dispatchers.Default) {
-        val apiKey = com.example.klimata.data.network.AiConfig.GEMINI_API_KEY
+        val apiKey = AiConfig.GEMINI_API_KEY
         Log.d("AcRecognitionService", "analyzeAcPhoto called. Bitmap present: ${bitmap != null}, apiKey configured: ${apiKey.isNotBlank()}")
 
         if (bitmap != null && apiKey.isNotBlank()) {
-            val aiResult = com.example.klimata.data.network.GeminiApiClient.analyzeAcPhoto(
+            val aiResult = GeminiApiClient.analyzeAcPhoto(
                 bitmap = bitmap,
                 apiKey = apiKey
             )
@@ -90,18 +38,29 @@ object AcRecognitionService {
                 Log.d("AcRecognitionService", "Gemini AI Recognition succeeded: ${recognized.brand} ${recognized.model}")
                 return@withContext recognized.copy(isAiDetected = true)
             } else {
-                Log.w("AcRecognitionService", "Gemini AI call failed, falling back to heuristics", aiResult.exceptionOrNull())
+                Log.w("AcRecognitionService", "Gemini AI call failed, falling back to catalog baseline", aiResult.exceptionOrNull())
             }
         }
 
-        delay(1000)
+        delay(600)
 
-        if (areaSquareMeters > 28) {
-            sampleProfiles[2]
-        } else if (bitmap != null && bitmap.width > bitmap.height * 1.5f) {
-            sampleProfiles[0]
+        // Baseline catalog selection based on room thermal volume requirements
+        val defaultModel = if (areaSquareMeters > 28) {
+            AcDatabase.allModels.firstOrNull { it.brand == "Sharp" && it.defaultCapacity == "1.5 PK" }
+                ?: AcDatabase.allModels[1]
         } else {
-            sampleProfiles[1]
+            AcDatabase.allModels.firstOrNull { it.brand == "Sharp" && it.modelCode == "AH-XP10VXY" }
+                ?: AcDatabase.allModels[0]
         }
+
+        AcRecognitionResult(
+            brand = defaultModel.brand,
+            model = defaultModel.modelCode,
+            capacity = defaultModel.defaultCapacity,
+            inverterType = defaultModel.inverterType,
+            confidenceScore = 0.85f,
+            notes = "Catalog match: ${defaultModel.series}. Tap 'Browse Catalog' to switch models.",
+            isAiDetected = false
+        )
     }
 }

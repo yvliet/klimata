@@ -1,8 +1,12 @@
-package com.example.klimata.data.network
+﻿package com.example.klimata.data.network
 
 import android.graphics.Bitmap
+import android.util.Base64
+import android.util.Log
 import com.example.klimata.data.AcRecognitionResult
+import com.example.klimata.data.models.AcDatabase
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
@@ -12,8 +16,6 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
-import android.util.Base64
-import android.util.Log
 
 object GeminiApiClient {
 
@@ -31,12 +33,35 @@ object GeminiApiClient {
         val base64Data = prepareImageBase64(bitmap)
         val payload = buildRequestPayload(base64Data)
 
-        val primaryResult = executeGeneration(AiConfig.PRIMARY_MODEL, apiKey, payload)
-        if (primaryResult.isSuccess) {
-            return@withContext primaryResult
+        val modelsToTry = listOf(
+            AiConfig.PRIMARY_MODEL,
+            AiConfig.SECONDARY_MODEL,
+            AiConfig.TERTIARY_MODEL
+        )
+
+        var lastException: Throwable? = null
+
+        for (model in modelsToTry) {
+            var attemptResult = executeGeneration(model, apiKey, payload)
+            if (attemptResult.isSuccess) {
+                return@withContext attemptResult
+            }
+
+            // If 503 temporary overload, backoff briefly and retry once
+            val err = attemptResult.exceptionOrNull()
+            lastException = err
+            if (err?.message?.contains("503") == true) {
+                Log.d("KlimataAI", "Model $model encountered 503, retrying in 800ms...")
+                delay(800)
+                attemptResult = executeGeneration(model, apiKey, payload)
+                if (attemptResult.isSuccess) {
+                    return@withContext attemptResult
+                }
+                lastException = attemptResult.exceptionOrNull()
+            }
         }
 
-        executeGeneration(AiConfig.FALLBACK_MODEL, apiKey, payload)
+        Result.failure(lastException ?: IllegalStateException("All Gemini vision models failed"))
     }
 
     private fun executeGeneration(
@@ -92,24 +117,62 @@ object GeminiApiClient {
 
             Log.d("KlimataAI", "Gemini raw response: $textOutput")
 
-            val parsedJson = JSONObject(textOutput)
-            val brand = parsedJson.optString("brand", "Sharp")
-            val model = parsedJson.optString("model", "Standard Inverter")
-            val capacity = parsedJson.optString("capacity", "1.0 PK")
-            val inverterType = parsedJson.optString("inverterType", "J-Tech Inverter")
-            val confidence = parsedJson.optDouble("confidenceScore", 0.92).toFloat()
-            val notes = parsedJson.optString("notes", "Identified via neural vision analysis")
+            // Sanitize markdown fences
+            var cleanJson = textOutput.trim()
+            if (cleanJson.startsWith("```json")) {
+                cleanJson = cleanJson.removePrefix("```json")
+            } else if (cleanJson.startsWith("```")) {
+                cleanJson = cleanJson.removePrefix("```")
+            }
+            if (cleanJson.endsWith("```")) {
+                cleanJson = cleanJson.removeSuffix("```")
+            }
+            cleanJson = cleanJson.trim()
+            val startIdx = cleanJson.indexOf('{')
+            val endIdx = cleanJson.lastIndexOf('}')
+            if (startIdx != -1 && endIdx != -1 && endIdx > startIdx) {
+                cleanJson = cleanJson.substring(startIdx, endIdx + 1)
+            }
 
-            Log.d("KlimataAI", "Parsed AC: brand=$brand, model=$model, capacity=$capacity, inverter=$inverterType")
+            val parsedJson = JSONObject(cleanJson)
+
+            fun optCleanString(key: String): String? {
+                if (!parsedJson.has(key) || parsedJson.isNull(key)) return null
+                val str = parsedJson.optString(key).trim()
+                return if (str.equals("null", ignoreCase = true) || str.isBlank()) null else str
+            }
+
+            val rawBrand = optCleanString("brand")
+            val rawModel = optCleanString("model")
+            val rawCapacity = optCleanString("capacity")
+            val rawInverter = optCleanString("inverterType")
+            val confidence = parsedJson.optDouble("confidenceScore", 0.92).toFloat()
+            val rawNotes = optCleanString("notes") ?: "Identified via optical vision analysis"
+
+            // Cross-reference with comprehensive AcDatabase
+            val databaseMatch = AcDatabase.findBestMatch(rawBrand, rawModel)
+
+            val finalBrand = rawBrand ?: databaseMatch?.brand ?: "Sharp"
+            val finalModel = rawModel ?: databaseMatch?.modelCode ?: "AH-XP10VXY"
+            val finalCapacity = rawCapacity ?: databaseMatch?.defaultCapacity ?: "1.0 PK"
+            val finalInverter = rawInverter ?: databaseMatch?.inverterType ?: "J-Tech Inverter"
+            val finalNotes = if (databaseMatch != null) {
+                "$rawNotes (${databaseMatch.series})"
+            } else {
+                rawNotes
+            }
+
+            Log.d("KlimataAI", "Parsed AC: brand=$finalBrand, model=$finalModel, capacity=$finalCapacity, inverter=$finalInverter")
 
             Result.success(
                 AcRecognitionResult(
-                    brand = brand,
-                    model = model,
-                    capacity = capacity,
-                    inverterType = inverterType,
+                    brand = finalBrand,
+                    model = finalModel,
+                    capacity = finalCapacity,
+                    inverterType = finalInverter,
                     confidenceScore = confidence,
-                    notes = notes
+                    notes = finalNotes,
+                    isAiDetected = true
                 )
             )
         } catch (e: Exception) {
@@ -119,7 +182,7 @@ object GeminiApiClient {
     }
 
     private fun prepareImageBase64(bitmap: Bitmap): String {
-        val maxDim = 1024
+        val maxDim = 1600
         val scaled = if (bitmap.width > maxDim || bitmap.height > maxDim) {
             val ratio = bitmap.width.toFloat() / bitmap.height.toFloat()
             val targetW = if (ratio >= 1f) maxDim else (maxDim * ratio).toInt()
@@ -130,7 +193,7 @@ object GeminiApiClient {
         }
 
         val stream = ByteArrayOutputStream()
-        scaled.compress(Bitmap.CompressFormat.JPEG, 85, stream)
+        scaled.compress(Bitmap.CompressFormat.JPEG, 90, stream)
         val byteArray = stream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.NO_WRAP)
     }
@@ -144,14 +207,18 @@ object GeminiApiClient {
         val textPart = JSONObject().apply {
             put(
                 "text",
-                "Analyze this air conditioner unit or its rating specification label sticker. " +
-                        "Identify the equipment attributes and return a JSON object with keys: " +
-                        "\"brand\" (string, e.g. Daikin, Panasonic, Mitsubishi Electric, LG, Gree, Samsung, Sharp), " +
+                "You are an expert HVAC technician and optical equipment inspection system. " +
+                        "Carefully examine this photograph of an air conditioner unit, indoor split wall unit, or equipment rating specification label sticker/barcode. " +
+                        "Pay special attention to printed brand names (Sharp, Daikin, Panasonic, Mitsubishi Electric, LG, Gree, Samsung, Midea, TCL, Toshiba, Carrier, Aqua, etc.), " +
+                        "model numbers (e.g. AH-XP10, AH-A9, FTKF25, CS-XU10, etc.), cooling capacity (BTU or PK), and inverter technology badges (e.g. Plasmacluster, J-Tech, Inverter, nanoe, Dual Inverter). " +
+                        "Extract all details accurately from the sticker, barcode text, or front fascia. " +
+                        "Return a JSON object with keys: " +
+                        "\"brand\" (string), " +
                         "\"model\" (string model number or series name), " +
-                        "\"capacity\" (string, standardized to one of: '0.5 PK', '0.75 PK', '1.0 PK', '1.5 PK', '2.0 PK'), " +
-                        "\"inverterType\" (string, e.g. 'Eco Inverter', 'Dual Inverter', 'Standard / Non-Inverter'), " +
+                        "\"capacity\" (standardized string: '0.5 PK', '0.75 PK', '1.0 PK', '1.5 PK', or '2.0 PK'), " +
+                        "\"inverterType\" (string, e.g. 'J-Tech Inverter', 'Eco Inverter', 'Dual Inverter', 'Standard / Non-Inverter'), " +
                         "\"confidenceScore\" (float from 0.0 to 1.0), " +
-                        "\"notes\" (string summarizing visual confirmation rationale)."
+                        "\"notes\" (string describing visual confirmation evidence, e.g. 'Sharp Plasmacluster rating sticker verified')."
             )
         }
         partsArr.put(textPart)

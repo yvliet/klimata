@@ -37,6 +37,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.core.content.FileProvider
+import com.example.klimata.data.models.AcDatabase
+import com.example.klimata.data.models.AcModelInfo
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
@@ -178,6 +185,8 @@ fun AddRoomWizardScreen(
     var acPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var isAnalyzingPhoto by remember { mutableStateOf(false) }
     var isAiVerified by remember { mutableStateOf(false) }
+    var showModelPicker by remember { mutableStateOf(false) }
+    var tempPhotoUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     // Location state
     var selectedLocation by remember { mutableStateOf("South Jakarta") }
@@ -264,20 +273,54 @@ fun AddRoomWizardScreen(
         }
     }
 
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
-        if (bmp != null) {
-            acPhotoBitmap = bmp
-            isAnalyzingPhoto = true
-            currentStage = WizardStage.CONFIRM_AC
-            coroutineScope.launch {
-                val result = AcRecognitionService.analyzeAcPhoto(bmp, areaSquareMeters)
-                acBrand = result.brand
-                acModel = result.model
-                acCapacity = result.capacity
-                acInverterType = result.inverterType
-                isAiVerified = result.isAiDetected
-                isAnalyzingPhoto = false
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+        val uri = tempPhotoUri
+        if (success && uri != null) {
+            val bmp = try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    val source = android.graphics.ImageDecoder.createSource(context.contentResolver, uri)
+                    android.graphics.ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                        decoder.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                        decoder.isMutableRequired = true
+                    }
+                } else {
+                    @Suppress("DEPRECATION")
+                    android.provider.MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+                }
+            } catch (e: Exception) {
+                null
             }
+            if (bmp != null) {
+                acPhotoBitmap = bmp
+                isAnalyzingPhoto = true
+                currentStage = WizardStage.CONFIRM_AC
+                coroutineScope.launch {
+                    val result = AcRecognitionService.analyzeAcPhoto(bmp, areaSquareMeters)
+                    acBrand = result.brand
+                    acModel = result.model
+                    acCapacity = result.capacity
+                    acInverterType = result.inverterType
+                    isAiVerified = result.isAiDetected
+                    isAnalyzingPhoto = false
+                }
+            }
+        }
+    }
+
+    fun launchHighResCamera() {
+        try {
+            val photoFile = java.io.File.createTempFile("klimata_ac_", ".jpg", context.cacheDir)
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            tempPhotoUri = uri
+            cameraLauncher.launch(uri)
+        } catch (e: Exception) {
+            try {
+                galleryLauncher.launch("image/*")
+            } catch (ignored: Exception) {}
         }
     }
 
@@ -285,13 +328,7 @@ fun AddRoomWizardScreen(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            try {
-                cameraLauncher.launch(null)
-            } catch (e: Exception) {
-                try {
-                    galleryLauncher.launch("image/*")
-                } catch (ignored: Exception) {}
-            }
+            launchHighResCamera()
         } else {
             try {
                 galleryLauncher.launch("image/*")
@@ -1187,7 +1224,7 @@ fun AddRoomWizardScreen(
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(DetailCardSurface)
                                         .padding(18.dp),
-                                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
@@ -1226,7 +1263,7 @@ fun AddRoomWizardScreen(
                                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Text(
-                                            text = acCapacity,
+                                            text = acInverterType,
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.Medium,
@@ -1241,14 +1278,62 @@ fun AddRoomWizardScreen(
                                                 .background(DetailTextMuted.copy(alpha = 0.40f))
                                         )
                                         Text(
-                                            text = acInverterType,
+                                            text = "Hardware IR Ready",
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.Medium,
                                                 fontSize = 13.sp,
-                                                color = DetailTextSecondary
+                                                color = diurnal.accentColor
                                             )
                                         )
+                                    }
+
+                                    // Capacity adjustment chips
+                                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Text(
+                                            text = "Capacity (Tonnage)",
+                                            style = TextStyle(
+                                                fontFamily = JakartaFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 11.5.sp,
+                                                color = DetailTextMuted
+                                            )
+                                        )
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            listOf("0.5 PK", "0.75 PK", "1.0 PK", "1.5 PK", "2.0 PK").forEach { cap ->
+                                                val isCapSelected = acCapacity == cap
+                                                Box(
+                                                    contentAlignment = Alignment.Center,
+                                                    modifier = Modifier
+                                                        .weight(1f)
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(if (isCapSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
+                                                        .border(
+                                                            width = 1.dp,
+                                                            color = if (isCapSelected) diurnal.accentColor else DetailCardBorder.copy(alpha = 0.4f),
+                                                            shape = RoundedCornerShape(8.dp)
+                                                        )
+                                                        .bouncyClickable(
+                                                            shape = RoundedCornerShape(8.dp),
+                                                            onClick = { acCapacity = cap }
+                                                        )
+                                                        .padding(vertical = 7.dp)
+                                                ) {
+                                                    Text(
+                                                        text = cap,
+                                                        style = TextStyle(
+                                                            fontFamily = JakartaFamily,
+                                                            fontWeight = if (isCapSelected) FontWeight.Bold else FontWeight.Medium,
+                                                            fontSize = 11.sp,
+                                                            color = if (isCapSelected) diurnal.accentColor else DetailTextSecondary
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
 
                                     Text(
@@ -1274,41 +1359,18 @@ fun AddRoomWizardScreen(
                                             .height(48.dp)
                                             .bouncyClickable(
                                                 shape = RoundedCornerShape(14.dp),
-                                                onClick = {
-                                                    acBrand = when (acBrand) {
-                                                        "Sharp" -> "Daikin"
-                                                        "Daikin" -> "Panasonic"
-                                                        "Panasonic" -> "Mitsubishi"
-                                                        "Mitsubishi" -> "LG"
-                                                        "LG" -> "Gree"
-                                                        else -> "Sharp"
-                                                    }
-                                                    acModel = when (acBrand) {
-                                                        "Sharp" -> "AH-XP10"
-                                                        "Daikin" -> "FTKF25"
-                                                        "Panasonic" -> "CS-XU18XKH"
-                                                        "Mitsubishi" -> "MSY-GR13VF"
-                                                        "LG" -> "DualCool"
-                                                        else -> "Eco Series"
-                                                    }
-                                                    acCapacity = when (acCapacity) {
-                                                        "0.5 PK" -> "0.75 PK"
-                                                        "0.75 PK" -> "1.0 PK"
-                                                        "1.0 PK" -> "1.5 PK"
-                                                        "1.5 PK" -> "2.0 PK"
-                                                        else -> "0.5 PK"
-                                                    }
-                                                }
+                                                onClick = { showModelPicker = true }
                                             )
                                             .background(DetailCardSurface)
+                                            .border(1.dp, DetailCardBorder.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
                                     ) {
                                         Text(
-                                            text = "Change Specs",
+                                            text = "Browse Catalog",
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
-                                                fontWeight = FontWeight.Medium,
+                                                fontWeight = FontWeight.SemiBold,
                                                 fontSize = 13.sp,
-                                                color = DetailTextSecondary
+                                                color = DetailTextPrimary
                                             )
                                         )
                                     }
@@ -1575,6 +1637,21 @@ fun AddRoomWizardScreen(
                     }
                 }
             }
+        }
+
+        if (showModelPicker) {
+            AcCatalogBrowserModal(
+                onDismiss = { showModelPicker = false },
+                onModelSelected = { selected ->
+                    acBrand = selected.brand
+                    acModel = selected.modelCode
+                    acCapacity = selected.defaultCapacity
+                    acInverterType = selected.inverterType
+                    isAiVerified = false
+                    showModelPicker = false
+                },
+                accentColor = diurnal.accentColor
+            )
         }
     }
 }
@@ -1866,6 +1943,248 @@ private fun ImpactStatCard(
                     color = DetailTextMuted
                 )
             )
+        }
+    }
+}
+
+@Composable
+private fun AcCatalogBrowserModal(
+    onDismiss: () -> Unit,
+    onModelSelected: (AcModelInfo) -> Unit,
+    accentColor: Color
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    var selectedBrand by remember { mutableStateOf("All") }
+    val brands = remember { AcDatabase.getBrands() }
+    val filteredModels = remember(selectedBrand, searchQuery) {
+        AcDatabase.filter(selectedBrand, searchQuery)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.78f))
+            .clickable(onClick = onDismiss),
+        contentAlignment = Alignment.BottomCenter
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.88f)
+                .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                .background(DetailBlackBackground)
+                .clickable(enabled = false, onClick = {})
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .width(44.dp)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(DetailCardBorder)
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "AC Model Catalog",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = DetailTextPrimary
+                        )
+                    )
+                    Text(
+                        text = "40+ residential split units with pre-mapped IR codes",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontSize = 12.sp,
+                            color = DetailTextSecondary
+                        )
+                    )
+                }
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(DetailCardSurface)
+                        .bouncyClickable(shape = CircleShape, onClick = onDismiss)
+                ) {
+                    Text("✕", color = DetailTextSecondary, fontSize = 14.sp)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            TextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = {
+                    Text(
+                        "Search model (e.g. AH-A9, FTKF, Plasmacluster...)",
+                        style = TextStyle(fontFamily = JakartaFamily, fontSize = 13.sp, color = DetailTextMuted)
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = DetailCardSurface,
+                    unfocusedContainerColor = DetailCardSurface,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = DetailTextPrimary,
+                    unfocusedTextColor = DetailTextPrimary
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                items(brands) { brand ->
+                    val isSelected = brand.equals(selectedBrand, ignoreCase = true)
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) accentColor.copy(alpha = 0.20f) else DetailCardSurface)
+                            .border(
+                                width = 1.dp,
+                                color = if (isSelected) accentColor.copy(alpha = 0.5f) else DetailCardBorder.copy(alpha = 0.4f),
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .bouncyClickable(
+                                shape = RoundedCornerShape(10.dp),
+                                onClick = { selectedBrand = brand }
+                            )
+                            .padding(horizontal = 14.dp, vertical = 7.dp)
+                    ) {
+                        Text(
+                            text = brand,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = if (isSelected) accentColor else DetailTextSecondary
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            ) {
+                items(filteredModels) { modelInfo ->
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(DetailCardSurface)
+                            .border(1.dp, DetailCardBorder.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
+                            .bouncyClickable(
+                                shape = RoundedCornerShape(16.dp),
+                                onClick = { onModelSelected(modelInfo) }
+                            )
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "${modelInfo.brand} ${modelInfo.modelCode}",
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = DetailTextPrimary
+                                )
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(accentColor.copy(alpha = 0.15f))
+                                    .padding(horizontal = 7.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = modelInfo.defaultCapacity,
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 11.sp,
+                                        color = accentColor
+                                    )
+                                )
+                            }
+                        }
+
+                        Text(
+                            text = modelInfo.series,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.5.sp,
+                                color = DetailTextSecondary
+                            )
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = modelInfo.inverterType,
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontSize = 11.sp,
+                                    color = DetailTextMuted
+                                )
+                            )
+                            Text(
+                                text = "·",
+                                style = TextStyle(fontSize = 11.sp, color = DetailTextMuted)
+                            )
+                            Text(
+                                text = modelInfo.irProtocol.replace("_", " "),
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontSize = 11.sp,
+                                    color = DetailTextMuted
+                                )
+                            )
+                        }
+
+                        Text(
+                            text = modelInfo.notes,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontSize = 11.sp,
+                                color = DetailTextMuted.copy(alpha = 0.8f)
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
 }
