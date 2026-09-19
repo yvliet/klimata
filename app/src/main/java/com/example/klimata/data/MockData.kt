@@ -132,7 +132,7 @@ object MockData {
         capacity = "1.0 PK",
         inverterType = "Eco Inverter",
         currentSetpoint = 24,
-        mode = "Eco Flow",
+        mode = "Cool",
     )
 
     val thermalSteps = listOf(
@@ -256,7 +256,7 @@ object MockData {
             capacity = "2.0 PK",
             inverterType = "Inverter Aero",
             currentSetpoint = 23,
-            mode = "Powerful Cool",
+            mode = "Cool",
         ),
         currentTemp = 23,
         targetTemp = 23,
@@ -361,7 +361,7 @@ object MockData {
             capacity = "1.5 PK",
             inverterType = "Mr. Slim Inverter",
             currentSetpoint = 25,
-            mode = "Quiet Eco",
+            mode = "Auto",
         ),
         currentTemp = 25,
         targetTemp = 25,

@@ -8,7 +8,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -74,13 +73,6 @@ fun RoomThermalVisualizerCard(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
-                ),
-                shape = RoundedCornerShape(24.dp)
-            )
             .background(diurnal.frostedCardBackground)
             .padding(18.dp)
     ) {
@@ -131,7 +123,7 @@ fun RoomThermalVisualizerCard(
             ) { curRoom ->
                 Column {
                     Text(
-                        text = "${curRoom.areaSquareMeters} m² • ${curRoom.volumeCubicMeters} m³",
+                        text = "${curRoom.areaSquareMeters} m² × ${curRoom.volumeCubicMeters} m³",
                         style = TextStyle(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Bold,
@@ -162,7 +154,7 @@ fun RoomThermalVisualizerCard(
                 heightM = room.ceilingHeightMeters,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(118.dp)
+                    .height(124.dp)
             )
         }
     }
@@ -206,16 +198,28 @@ private fun IsometricRoomCanvas(
         val w = size.width
         val h = size.height
 
-        val originX = w * 0.50f
-        val originY = h * 0.84f
-
         val isoAngleRad = 0.488f // ~28 degrees
         val cosA = cos(isoAngleRad)
         val sinA = sin(isoAngleRad)
 
-        val roomW = (w * 0.38f) * (0.65f + animatedArea * 0.35f)
-        val roomD = (w * 0.32f) * (0.65f + animatedArea * 0.35f)
-        val roomH = (h * 0.54f) * (0.75f + animatedHeight * 0.25f)
+        val maxVerticalSpan = h * 0.74f
+        val baseRoomH = maxVerticalSpan * 0.38f * (0.80f + animatedHeight * 0.20f)
+        val baseGroundSpan = (maxVerticalSpan - baseRoomH) / sinA
+        val areaScale = (0.75f + animatedArea * 0.25f)
+        val roomW = baseGroundSpan * 0.53f * areaScale
+        val roomD = baseGroundSpan * 0.47f * areaScale
+        val roomH = baseRoomH
+        val acDepth = 6.dp.toPx()
+
+        val minRelX = -roomD * cosA - acDepth * cosA
+        val maxRelX = roomW * cosA
+        val relCenterX = (minRelX + maxRelX) / 2f
+        val originX = (w / 2f) - relCenterX
+
+        val minRelY = -(roomW + roomD) * sinA - roomH
+        val maxRelY = 0f
+        val relCenterY = (minRelY + maxRelY) / 2f
+        val originY = (h / 2f) - relCenterY
 
         fun iso(x: Float, y: Float, z: Float): Offset {
             val px = originX + (x - y) * cosA
@@ -330,7 +334,6 @@ private fun IsometricRoomCanvas(
         val acYEnd = roomD * 0.72f
         val acZBottom = roomH * 0.68f
         val acZTop = roomH * 0.88f
-        val acDepth = 7.dp.toPx()
 
         val acBack1 = iso(roomW, acYStart, acZBottom)
         val acBack2 = iso(roomW, acYEnd, acZBottom)

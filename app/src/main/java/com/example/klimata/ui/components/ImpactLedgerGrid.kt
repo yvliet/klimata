@@ -7,7 +7,6 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -109,13 +108,6 @@ private fun FrostedMetricCard(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
-                ),
-                shape = RoundedCornerShape(24.dp)
-            )
             .background(diurnal.frostedCardBackground)
             .clickable(onClick = onClick)
             .padding(18.dp)

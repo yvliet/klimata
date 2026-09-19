@@ -4,11 +4,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // Diurnal Sky Gradient Stops
-val DaySkyStop1 = Color(0xFF1E6DEB)
-val DaySkyStop2 = Color(0xFF388BF2)
-val DaySkyStop3 = Color(0xFF5CA4F8)
-val DaySkyStop4 = Color(0xFF8AC1FB)
-val DaySkyStop5 = Color(0xFF8AC1FB)
+val DaySkyStop1 = Color(0xFF1956CE)
+val DaySkyStop2 = Color(0xFF2568E2)
+val DaySkyStop3 = Color(0xFF3B7EF0)
+val DaySkyStop4 = Color(0xFF5294F7)
+val DaySkyStop5 = Color(0xFF68A4F8)
 
 val EveningSkyStop1 = Color(0xFF1A237E)
 val EveningSkyStop2 = Color(0xFFAD1457)
@@ -144,4 +144,4 @@ fun glassBorderBrush(): Brush = Brush.verticalGradient(
 
 fun darkGlassBorderBrush(): Brush = Brush.verticalGradient(
     colors = listOf(Color(0x66475569), Color(0x1A1E293B))
-)
+)

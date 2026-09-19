@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -99,13 +98,6 @@ fun ScheduleChart(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(
-                    listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
-                ),
-                shape = RoundedCornerShape(24.dp)
-            )
             .background(diurnal.frostedCardBackground)
             .clickable(onClick = onClick)
             .padding(18.dp)
@@ -126,12 +118,26 @@ fun ScheduleChart(
                     )
                 )
 
-                Icon(
-                    imageVector = safeCaretRightIcon(),
-                    contentDescription = "Open schedule details",
-                    tint = Color.White.copy(alpha = 0.50f),
-                    modifier = Modifier.size(14.dp)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    Text(
+                        text = "More Details",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.60f)
+                        )
+                    )
+                    Icon(
+                        imageVector = safeCaretRightIcon(),
+                        contentDescription = "Open schedule details",
+                        tint = Color.White.copy(alpha = 0.50f),
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(3.dp))
@@ -217,16 +223,16 @@ fun ScheduleChart(
                 val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f) }
                 val fillGradientColors = remember {
                     listOf(
-                        Color.White.copy(alpha = 0.12f),
-                        Color.White.copy(alpha = 0.03f),
+                        Color(0xFFF59E0B).copy(alpha = 0.16f),
+                        Color(0xFFF59E0B).copy(alpha = 0.04f),
                         Color.Transparent
                     )
                 }
                 val lineGradientColors = remember {
                     listOf(
-                        Color.White.copy(alpha = 0.95f),
-                        Color.White.copy(alpha = 0.85f),
-                        Color.White.copy(alpha = 0.70f)
+                        Color(0xFFFDBA74),
+                        Color(0xFFF59E0B),
+                        Color(0xFFEA580C)
                     )
                 }
 
@@ -234,10 +240,13 @@ fun ScheduleChart(
                     val w = size.width
                     val h = size.height
 
+                    val activeIndex = phases.indexOfFirst { it.isActive }.takeIf { it >= 0 } ?: 0
+                    val activePoint = points.getOrElse(activeIndex) { points.first() }
+
                     drawLine(
                         color = Color.White.copy(alpha = 0.28f),
-                        start = Offset(x0, animY0),
-                        end = Offset(x0, h),
+                        start = Offset(activePoint.x, activePoint.y),
+                        end = Offset(activePoint.x, h),
                         strokeWidth = 1.2.dp.toPx(),
                         pathEffect = dashEffect
                     )
@@ -293,7 +302,7 @@ fun ScheduleChart(
                         val isActive = phases.getOrNull(index)?.isActive == true
                         if (isActive) {
                             drawCircle(
-                                color = com.example.klimata.ui.theme.MineralMintGlow,
+                                color = Color(0xFFF59E0B).copy(alpha = 0.35f),
                                 radius = 8.5.dp.toPx(),
                                 center = point
                             )
@@ -303,19 +312,8 @@ fun ScheduleChart(
                                 center = point
                             )
                             drawCircle(
-                                color = com.example.klimata.ui.theme.MineralMintActive,
-                                radius = 2.5.dp.toPx(),
-                                center = point
-                            )
-                        } else {
-                            drawCircle(
-                                color = Color.White.copy(alpha = 0.25f),
-                                radius = 5.dp.toPx(),
-                                center = point
-                            )
-                            drawCircle(
-                                color = Color.White,
-                                radius = 3.5.dp.toPx(),
+                                color = Color(0xFFEA580C),
+                                radius = 2.dp.toPx(),
                                 center = point
                             )
                         }

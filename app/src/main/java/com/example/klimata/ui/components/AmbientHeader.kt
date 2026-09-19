@@ -19,12 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.TextStyle
@@ -49,7 +45,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 
@@ -93,12 +91,7 @@ fun RoomIndicator(
                     fontFamily = JakartaFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 20.sp,
-                    lineHeight = 24.sp,
-                    shadow = Shadow(
-                        color = Color(0x300F172A),
-                        offset = Offset(0f, 2f),
-                        blurRadius = 8f
-                    )
+                    lineHeight = 24.sp
                 ),
                 color = OnSkyPrimary
             )
@@ -109,23 +102,12 @@ fun RoomIndicator(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 2.dp)
         ) {
-            Box {
-                Icon(
-                    imageVector = SimpleArrowIcon,
-                    contentDescription = null,
-                    tint = Color(0x300F172A),
-                    modifier = Modifier
-                        .size(9.dp)
-                        .offset(y = 1.5.dp)
-                        .blur(2.dp)
-                )
-                Icon(
-                    imageVector = SimpleArrowIcon,
-                    contentDescription = null,
-                    tint = OnSkySecondary,
-                    modifier = Modifier.size(9.dp)
-                )
-            }
+            Icon(
+                imageVector = SimpleArrowIcon,
+                contentDescription = null,
+                tint = OnSkySecondary,
+                modifier = Modifier.size(9.dp)
+            )
 
             Spacer(modifier = Modifier.width(2.dp))
 
@@ -144,23 +126,13 @@ fun RoomIndicator(
                 Box(
                     modifier = Modifier
                         .size(dotSize)
-                        .clickable { onRoomSelected(i) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(dotSize)
-                            .offset(y = 1.5.dp)
-                            .blur(2.5.dp)
-                            .background(Color(0x350F172A), CircleShape)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(dotSize)
-                            .clip(CircleShape)
-                            .background(dotColor)
-                    )
-                }
+                        .clip(CircleShape)
+                        .background(dotColor)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) { onRoomSelected(i) }
+                )
             }
         }
     }
@@ -184,46 +156,24 @@ fun AmbientTopBarActions(
             onClick = onAddRoomClick,
             modifier = Modifier.size(36.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = PlusIcon,
-                    contentDescription = null,
-                    tint = Color(0x300F172A),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .offset(y = 2.dp)
-                        .blur(3.5.dp)
-                )
-                Icon(
-                    imageVector = PlusIcon,
-                    contentDescription = "Add Room",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                imageVector = PlusIcon,
+                contentDescription = "Add Room",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
 
         IconButton(
             onClick = onMenuClick,
             modifier = Modifier.size(36.dp)
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = MoreVerticalIcon,
-                    contentDescription = null,
-                    tint = Color(0x300F172A),
-                    modifier = Modifier
-                        .size(20.dp)
-                        .offset(y = 2.dp)
-                        .blur(3.5.dp)
-                )
-                Icon(
-                    imageVector = MoreVerticalIcon,
-                    contentDescription = "More Options",
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+            Icon(
+                imageVector = MoreVerticalIcon,
+                contentDescription = "More Options",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

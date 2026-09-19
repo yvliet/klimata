@@ -117,7 +117,11 @@ fun AtmosphericSkyCanvas(
     )
 
     val isOvercast = true
-    val targetCloudAlpha = 1.0f
+    val targetCloudAlpha = when (phase) {
+        DiurnalPhase.DAY -> 0.40f
+        DiurnalPhase.EVENING -> 0.75f
+        DiurnalPhase.NIGHT -> 0.90f
+    }
     val starAlphaMultiplier = 0.0f
 
     val cloudBlurProgress = (animatedScroll / 260f).coerceIn(0f, 1f)

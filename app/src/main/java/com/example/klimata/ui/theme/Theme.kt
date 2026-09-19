@@ -58,7 +58,7 @@ val LocalDiurnalColors = staticCompositionLocalOf {
 fun diurnalColorsFor(phase: DiurnalPhase): DiurnalColors = when (phase) {
     DiurnalPhase.DAY -> DiurnalColors(
         skyGradient = Brush.verticalGradient(
-            listOf(DaySkyStop1, DaySkyStop2, DaySkyStop3, DaySkyStop4),
+            listOf(DaySkyStop1, DaySkyStop2, DaySkyStop3, DaySkyStop4, DaySkyStop5),
         ),
         celestialBloom = DaySunBloom,
         celestialCoreColor = DaySunCore,

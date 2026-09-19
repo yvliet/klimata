@@ -13,11 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
@@ -36,8 +33,7 @@ import androidx.compose.animation.core.tween
 
 /**
  * Large ambient temperature readout.
- * Uses hardware-accelerated [TextStyle.brush] vertical gradients to reflect the sky's
- * chromatic tone without offscreen layer allocations.
+ * Uses hardware-accelerated [TextStyle.brush] vertical gradients to reflect the sky's chromatic tone.
  */
 @Composable
 fun HeroTemperatureDisplay(
@@ -69,23 +65,6 @@ fun HeroTemperatureDisplay(
         )
     }
 
-    val isDayOrEvening = phase == DiurnalPhase.DAY || phase == DiurnalPhase.EVENING
-    val ambientShadowTint = if (phase == DiurnalPhase.DAY) Color(0x300F172A) else Color(0x281C1917)
-
-    val conditionShadow = when (phase) {
-        DiurnalPhase.DAY -> Shadow(
-            color = Color(0x300F172A),
-            offset = Offset(0f, 2f),
-            blurRadius = 8f
-        )
-        DiurnalPhase.EVENING -> Shadow(
-            color = Color(0x251C1917),
-            offset = Offset(0f, 2f),
-            blurRadius = 6f
-        )
-        DiurnalPhase.NIGHT -> null
-    }
-
     Crossfade(
         targetState = Pair(temperature, condition),
         animationSpec = tween(220),
@@ -110,63 +89,29 @@ fun HeroTemperatureDisplay(
                     transformOrigin = TransformOrigin.Center
                 }
             ) {
-                Box {
-                    if (isDayOrEvening) {
-                        Text(
-                            text = animTemp.toString(),
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Light,
-                                fontSize = 122.sp,
-                                lineHeight = 126.sp,
-                                letterSpacing = (-3.5).sp,
-                                color = ambientShadowTint
-                            ),
-                            modifier = Modifier
-                                .offset(y = 3.dp)
-                                .blur(14.dp)
-                        )
-                    }
-                    Text(
-                        text = animTemp.toString(),
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Light,
-                            fontSize = 122.sp,
-                            lineHeight = 126.sp,
-                            letterSpacing = (-3.5).sp,
-                            brush = reflectionGradient
-                        )
+                Text(
+                    text = animTemp.toString(),
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Light,
+                        fontSize = 140.sp,
+                        lineHeight = 144.sp,
+                        letterSpacing = (-4).sp,
+                        brush = reflectionGradient
                     )
-                }
+                )
 
-                Box(modifier = Modifier.padding(top = 10.dp)) {
-                    if (isDayOrEvening) {
-                        Text(
-                            text = "°",
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Light,
-                                fontSize = 64.sp,
-                                lineHeight = 68.sp,
-                                color = ambientShadowTint
-                            ),
-                            modifier = Modifier
-                                .offset(y = 2.dp)
-                                .blur(8.dp)
-                        )
-                    }
-                    Text(
-                        text = "°",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Light,
-                            fontSize = 64.sp,
-                            lineHeight = 68.sp,
-                            brush = reflectionGradient
-                        )
-                    )
-                }
+                Text(
+                    text = "°",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Light,
+                        fontSize = 74.sp,
+                        lineHeight = 78.sp,
+                        brush = reflectionGradient
+                    ),
+                    modifier = Modifier.padding(top = 12.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -184,8 +129,7 @@ fun HeroTemperatureDisplay(
                     fontWeight = FontWeight.Normal,
                     fontSize = 17.sp,
                     lineHeight = 22.sp,
-                    letterSpacing = 0.sp,
-                    shadow = conditionShadow
+                    letterSpacing = 0.sp
                 ),
                 color = if (phase == DiurnalPhase.DAY) Color.White else OnSkySecondary
             )
