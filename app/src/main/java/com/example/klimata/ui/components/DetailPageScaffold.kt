@@ -25,6 +25,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -37,6 +39,18 @@ import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
+
+val DetailPageShape = RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp)
+
+fun Modifier.detailPageContainer(
+    backgroundColor: Color = DetailBlackBackground,
+    shape: Shape = DetailPageShape,
+): Modifier = this
+    .fillMaxSize()
+    .clip(shape)
+    .background(backgroundColor)
+    .statusBarsPadding()
+    .navigationBarsPadding()
 
 /**
  * Shared structural layout for detail screens in minimalist OLED black styling.
@@ -54,12 +68,7 @@ fun DetailPageScaffold(
     val scrollState = rememberScrollState()
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .clip(RoundedCornerShape(topStart = 32.dp, bottomStart = 32.dp))
-            .background(DetailBlackBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier = modifier.detailPageContainer()
     ) {
         // Minimalist top action row
         Row(

@@ -83,6 +83,7 @@ import com.example.klimata.data.LocationHelper
 import com.example.klimata.data.RoomFactory
 import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.bouncyClickable
+import com.example.klimata.ui.components.detailPageContainer
 import com.example.klimata.ui.theme.DetailBlackBackground
 import com.example.klimata.ui.theme.DetailCardBorder
 import com.example.klimata.ui.theme.DetailCardSurface
@@ -123,7 +124,8 @@ private fun shoelaceAreaM2(vertices: List<Offset>, pixelsPerMeter: Float): Float
 fun AddRoomWizardScreen(
     isOnboarding: Boolean = true,
     onBackClick: () -> Unit = {},
-    onRoomCreated: (RoomState) -> Unit = {}
+    onRoomCreated: (RoomState) -> Unit = {},
+    modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
@@ -316,11 +318,7 @@ fun AddRoomWizardScreen(
     }
 
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DetailBlackBackground)
-            .statusBarsPadding()
-            .navigationBarsPadding()
+        modifier = modifier.detailPageContainer()
     ) {
         val screenHeight = maxHeight
 
@@ -340,20 +338,19 @@ fun AddRoomWizardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    contentAlignment = Alignment.Center,
+                    contentAlignment = Alignment.CenterStart,
                     modifier = Modifier
                         .size(40.dp)
                         .bouncyClickable(
                             shape = CircleShape,
                             onClick = { handleBack() }
                         )
-                        .background(DetailCardSurface)
                 ) {
                     Icon(
                         imageVector = PhosphorIcons.Light.CaretLeft,
                         contentDescription = "Back",
                         tint = DetailTextPrimary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 
