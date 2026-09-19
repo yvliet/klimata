@@ -5,12 +5,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -20,7 +15,6 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -57,7 +52,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -66,27 +60,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.ArrowsClockwise
 import com.adamglin.phosphoricons.light.Camera
 import com.adamglin.phosphoricons.light.CaretLeft
 import com.adamglin.phosphoricons.light.Check
-import com.adamglin.phosphoricons.light.Cube
-import com.adamglin.phosphoricons.light.CurrencyDollar
-import com.adamglin.phosphoricons.light.DeviceMobile
-import com.adamglin.phosphoricons.light.Image as ImageIcon
-import com.adamglin.phosphoricons.light.Leaf
 import com.adamglin.phosphoricons.light.MapPin
-import com.adamglin.phosphoricons.light.NavigationArrow
-import com.adamglin.phosphoricons.light.Sparkle
-import com.adamglin.phosphoricons.light.Tree
-import com.adamglin.phosphoricons.light.Wind
-import com.example.klimata.data.AcMatchAssessment
-import com.example.klimata.data.AcRecognitionResult
 import com.example.klimata.data.AcRecognitionService
+import com.example.klimata.data.LocationHelper
 import com.example.klimata.data.RoomFactory
 import com.example.klimata.data.RoomState
 import com.example.klimata.sensor.RoomWalkerSensorManager
+import com.example.klimata.sensor.WalkerSnapshot
 import com.example.klimata.ui.components.bouncyClickable
 import com.example.klimata.ui.theme.DetailBlackBackground
 import com.example.klimata.ui.theme.DetailCardBorder
@@ -97,7 +84,6 @@ import com.example.klimata.ui.theme.DetailTextMuted
 import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
-import com.example.klimata.ui.theme.MineralMint
 import com.example.klimata.ui.theme.MineralMintActive
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -142,12 +128,62 @@ fun AddRoomWizardScreen(
 
     // Location state
     var selectedLocation by remember { mutableStateOf("South Jakarta") }
+    var isDetectingGps by remember { mutableStateOf(false) }
+    var gpsStatusMessage by remember { mutableStateOf<String?>(null) }
 
-    // Sensor walker manager
-    var sensorStateTicker by remember { mutableIntStateOf(0) }
+    // Sensor walker reactive state
+    var walkerSnapshot by remember { mutableStateOf(WalkerSnapshot()) }
     val walkerManager = remember {
-        RoomWalkerSensorManager(context = context) {
-            sensorStateTicker++
+        RoomWalkerSensorManager(context = context) { snap ->
+            walkerSnapshot = snap
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            walkerManager.stopTracking()
+        }
+    }
+
+    // GPS location detection logic
+    fun runGpsDetection() {
+        coroutineScope.launch {
+            isDetectingGps = true
+            gpsStatusMessage = "Checking GPS location..."
+            val detected = LocationHelper.detectCity(context)
+            if (!detected.isNullOrBlank()) {
+                selectedLocation = detected
+                gpsStatusMessage = "Location synchronized: $detected"
+            } else {
+                gpsStatusMessage = "Using selected city microclimate"
+            }
+            isDetectingGps = false
+        }
+    }
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            runGpsDetection()
+        } else {
+            gpsStatusMessage = "Using manual city selection"
+        }
+    }
+
+    // Auto-detect GPS when entering location sync stage
+    LaunchedEffect(currentStage) {
+        if (currentStage == WizardStage.LOCATION_SYNC) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+
+            if (hasPermission) {
+                runGpsDetection()
+            } else {
+                locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+            }
         }
     }
 
@@ -279,7 +315,7 @@ fun AddRoomWizardScreen(
                 }
 
                 Text(
-                    text = if (isOnboarding) "Welcome to Klimata" else "New Room",
+                    text = if (isOnboarding) "Room Setup" else "Add Room",
                     style = TextStyle(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Medium,
@@ -288,21 +324,19 @@ fun AddRoomWizardScreen(
                     )
                 )
 
-                // Placeholder to balance top row centering
                 Spacer(modifier = Modifier.size(40.dp))
             }
 
-            // Stage-by-stage content switcher
             AnimatedContent(
                 targetState = currentStage,
                 transitionSpec = {
                     val forward = targetState.ordinal > initialState.ordinal
                     if (forward) {
-                        (slideInHorizontally { width -> width / 3 } + fadeIn(tween(240)))
-                            .togetherWith(slideOutHorizontally { width -> -width / 3 } + fadeOut(tween(240)))
+                        (slideInHorizontally { width -> width / 3 } + fadeIn(tween(200)))
+                            .togetherWith(slideOutHorizontally { width -> -width / 3 } + fadeOut(tween(200)))
                     } else {
-                        (slideInHorizontally { width -> -width / 3 } + fadeIn(tween(240)))
-                            .togetherWith(slideOutHorizontally { width -> width / 3 } + fadeOut(tween(240)))
+                        (slideInHorizontally { width -> -width / 3 } + fadeIn(tween(200)))
+                            .togetherWith(slideOutHorizontally { width -> width / 3 } + fadeOut(tween(200)))
                     }
                 },
                 label = "WizardStageTransition"
@@ -313,7 +347,7 @@ fun AddRoomWizardScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     when (stage) {
-                        // Stage 1: Friendly Room Naming
+                        // Stage 1: Room Naming
                         WizardStage.NAME_ROOM -> {
                             Spacer(modifier = Modifier.height(16.dp))
 
@@ -330,7 +364,7 @@ fun AddRoomWizardScreen(
                             )
 
                             Text(
-                                text = "Choose a suggestion or type your own.",
+                                text = "Choose a name or create your own.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -342,7 +376,6 @@ fun AddRoomWizardScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            // Custom Input
                             TextField(
                                 value = roomName,
                                 onValueChange = { roomName = it },
@@ -380,9 +413,8 @@ fun AddRoomWizardScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // Centered quick chips
                             Text(
-                                text = "Quick suggestions",
+                                text = "Suggestions",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -448,22 +480,24 @@ fun AddRoomWizardScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(32.dp))
+                            Spacer(modifier = Modifier.height(28.dp))
 
-                            // Primary proceed button
                             PrimaryActionButton(
                                 label = "Continue to Sizing",
                                 enabled = roomName.isNotBlank(),
-                                onClick = { currentStage = WizardStage.MAP_PERIMETER }
+                                onClick = {
+                                    walkerManager.startTracking()
+                                    currentStage = WizardStage.MAP_PERIMETER
+                                }
                             )
                         }
 
-                        // Stage 2: Walk the perimeter or quick sliders
+                        // Stage 2: Hybrid Smart Walker
                         WizardStage.MAP_PERIMETER -> {
-                            var mappingMode by remember { mutableStateOf("walk") } // "walk" or "manual"
+                            var mappingMode by remember { mutableStateOf("walk") }
 
                             Text(
-                                text = "Map your room size",
+                                text = "Map room boundaries",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Bold,
@@ -476,9 +510,9 @@ fun AddRoomWizardScreen(
 
                             Text(
                                 text = if (mappingMode == "walk") {
-                                    "Stand at any corner, tap start, and walk along the walls."
+                                    "Walk along walls or tap corner buttons to plot your room."
                                 } else {
-                                    "Select standard dimensions or fine-tune with sliders."
+                                    "Select dimensions with precision sliders."
                                 },
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
@@ -489,7 +523,7 @@ fun AddRoomWizardScreen(
                                 )
                             )
 
-                            // Centered Tab switch
+                            // Mode Switcher
                             Row(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(14.dp))
@@ -508,7 +542,7 @@ fun AddRoomWizardScreen(
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Text(
-                                        text = "Walk Perimeter",
+                                        text = "Smart Walker",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.SemiBold,
@@ -529,7 +563,7 @@ fun AddRoomWizardScreen(
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Text(
-                                        text = "Quick Sizers",
+                                        text = "Dimension Sliders",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.SemiBold,
@@ -541,26 +575,27 @@ fun AddRoomWizardScreen(
                             }
 
                             if (mappingMode == "walk") {
-                                // Live radar canvas
+                                // Crisp Architectural Radar
                                 WalkPerimeterCanvas(
-                                    corners = walkerManager.corners,
-                                    walkedCorners = walkerManager.walkedCorners,
-                                    currentWalkerPos = walkerManager.currentPosition,
-                                    currentHeadingDeg = walkerManager.currentHeadingDeg,
-                                    isClosed = walkerManager.corners.size >= 4,
+                                    corners = walkerSnapshot.corners,
+                                    walkedCorners = walkerSnapshot.walkedCorners,
+                                    currentWalkerPos = walkerSnapshot.currentPosition,
+                                    currentHeadingDeg = walkerSnapshot.currentHeadingDeg,
+                                    isClosed = walkerSnapshot.corners.size >= 4,
                                     modifier = Modifier
                                         .size(240.dp)
                                         .padding(vertical = 4.dp)
                                 )
 
-                                // Live metrics
+                                // Real-time reactive metrics readout
+                                val currentArea = walkerSnapshot.calculatedAreaM2.coerceAtLeast(12)
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.Center,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "${walkerManager.totalSteps} steps walked",
+                                        text = "${walkerSnapshot.totalSteps} steps walked",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Normal,
@@ -568,12 +603,9 @@ fun AddRoomWizardScreen(
                                             color = DetailTextSecondary
                                         )
                                     )
+                                    Text(text = " • ", color = DetailTextMuted)
                                     Text(
-                                        text = " • ",
-                                        color = DetailTextMuted
-                                    )
-                                    Text(
-                                        text = "${walkerManager.calculatedAreaM2.coerceAtLeast(12)} m² estimated",
+                                        text = "~$currentArea m² estimated",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Bold,
@@ -583,46 +615,80 @@ fun AddRoomWizardScreen(
                                     )
                                 }
 
+                                // Active wall distance fine-tuning row
+                                val activeDist = walkerSnapshot.currentWallDistanceMeters.takeIf { it > 0.1f } ?: 4.0f
+                                Row(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(DetailCardSurface)
+                                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Text(
+                                        text = "Wall: ${String.format(java.util.Locale.US, "%.1f", activeDist)} m",
+                                        style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = DetailTextPrimary)
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(DetailCardSurfaceElevated)
+                                            .clickable { walkerManager.adjustCurrentWall(-0.5f) }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(text = "-0.5m", style = TextStyle(fontFamily = JakartaFamily, fontSize = 11.sp, color = DetailTextSecondary))
+                                    }
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(DetailCardSurfaceElevated)
+                                            .clickable { walkerManager.adjustCurrentWall(0.5f) }
+                                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                                    ) {
+                                        Text(text = "+0.5m", style = TextStyle(fontFamily = JakartaFamily, fontSize = 11.sp, color = MineralMintActive))
+                                    }
+                                }
+
                                 // Interactive action buttons
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    val cornerCount = walkerSnapshot.corners.size
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(44.dp)
+                                            .height(48.dp)
                                             .clip(RoundedCornerShape(14.dp))
                                             .background(DetailCardSurface)
                                             .bouncyClickable {
-                                                if (!walkerManager.isTracking) {
-                                                    walkerManager.startTracking()
-                                                }
-                                                walkerManager.markCorner()
+                                                walkerSnapshot = walkerManager.markCorner()
+                                                areaSquareMeters = walkerSnapshot.calculatedAreaM2.coerceIn(10, 80)
                                             }
                                     ) {
                                         Text(
-                                            text = "Mark Corner (${walkerManager.corners.size})",
+                                            text = "Mark Corner ($cornerCount)",
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.SemiBold,
-                                                fontSize = 12.5.sp,
+                                                fontSize = 13.sp,
                                                 color = DetailTextPrimary
                                             )
                                         )
                                     }
 
+                                    val isReadyToFinish = walkerSnapshot.corners.size >= 3
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier
                                             .weight(1f)
-                                            .height(44.dp)
+                                            .height(48.dp)
                                             .clip(RoundedCornerShape(14.dp))
-                                            .background(if (walkerManager.corners.size >= 3) MineralMintActive else DetailCardSurfaceElevated)
-                                            .bouncyClickable(enabled = walkerManager.corners.size >= 3) {
+                                            .background(if (isReadyToFinish) MineralMintActive else DetailCardSurfaceElevated)
+                                            .bouncyClickable(enabled = isReadyToFinish) {
                                                 val area = walkerManager.finishRoom()
-                                                areaSquareMeters = area.coerceIn(10, 60)
+                                                areaSquareMeters = area.coerceIn(10, 80)
                                                 currentStage = WizardStage.CONSTRUCTION_ANIMATION
                                             }
                                     ) {
@@ -631,34 +697,14 @@ fun AddRoomWizardScreen(
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 12.5.sp,
-                                                color = if (walkerManager.corners.size >= 3) Color(0xFF0F172A) else DetailTextMuted
+                                                fontSize = 13.sp,
+                                                color = if (isReadyToFinish) Color(0xFF0F172A) else DetailTextMuted
                                             )
                                         )
                                     }
                                 }
-
-                                // Quick test simulator helper for desktop / testing
-                                Text(
-                                    text = "Walking test helper (tap to simulate 4 corners)",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontSize = 11.sp,
-                                        color = DetailTextMuted
-                                    ),
-                                    modifier = Modifier
-                                        .clickable {
-                                            walkerManager.startTracking()
-                                            walkerManager.simulateWalkCorner(4.5f)
-                                            walkerManager.simulateWalkCorner(4.0f)
-                                            walkerManager.simulateWalkCorner(4.5f)
-                                            walkerManager.simulateWalkCorner(4.0f)
-                                            areaSquareMeters = 18
-                                        }
-                                        .padding(top = 2.dp)
-                                )
                             } else {
-                                // Manual sliders
+                                // Manual sliders panel
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -667,7 +713,6 @@ fun AddRoomWizardScreen(
                                         .padding(18.dp),
                                     verticalArrangement = Arrangement.spacedBy(12.dp)
                                 ) {
-                                    // Dimension presets
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -701,12 +746,8 @@ fun AddRoomWizardScreen(
                                         }
                                     }
 
-                                    // Width Slider
                                     Column {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Text(text = "Width", style = TextStyle(fontFamily = JakartaFamily, fontSize = 12.sp, color = DetailTextSecondary))
                                             Text(text = "${String.format(java.util.Locale.US, "%.1f", manualWidth)} m", style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
                                         }
@@ -725,12 +766,8 @@ fun AddRoomWizardScreen(
                                         )
                                     }
 
-                                    // Length Slider
                                     Column {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
+                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Text(text = "Length", style = TextStyle(fontFamily = JakartaFamily, fontSize = 12.sp, color = DetailTextSecondary))
                                             Text(text = "${String.format(java.util.Locale.US, "%.1f", manualLength)} m", style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
                                         }
@@ -756,7 +793,7 @@ fun AddRoomWizardScreen(
                                 )
                             }
 
-                            // Ceiling Height & Wall Structure (Shared)
+                            // Wall Thermal Material Selection
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -800,12 +837,12 @@ fun AddRoomWizardScreen(
                             }
                         }
 
-                        // Stage 3: Room Construction Animation (Line-by-line SVG/Canvas wireframe)
+                        // Stage 3: Room Construction Animation
                         WizardStage.CONSTRUCTION_ANIMATION -> {
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
-                                text = "Constructing your space",
+                                text = "Constructing room wireframe",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Bold,
@@ -817,7 +854,7 @@ fun AddRoomWizardScreen(
                             )
 
                             Text(
-                                text = "Tracing boundaries and thermal air volume...",
+                                text = "Synthesizing spatial geometry and thermal volume...",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -827,7 +864,6 @@ fun AddRoomWizardScreen(
                                 )
                             )
 
-                            // Line-by-line animated construction canvas
                             RoomConstructionCanvas(
                                 areaM2 = areaSquareMeters,
                                 heightM = ceilingHeight,
@@ -851,12 +887,12 @@ fun AddRoomWizardScreen(
                             Spacer(modifier = Modifier.height(16.dp))
 
                             PrimaryActionButton(
-                                label = "Next: Pair AC Hardware",
+                                label = "Next: Pair AC Unit",
                                 onClick = { currentStage = WizardStage.CAPTURE_AC }
                             )
                         }
 
-                        // Stage 4: Photograph AC or Upload Image
+                        // Stage 4: Photograph AC or Choose from Gallery
                         WizardStage.CAPTURE_AC -> {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -873,7 +909,7 @@ fun AddRoomWizardScreen(
                             )
 
                             Text(
-                                text = "Snap a photo of your indoor split unit or its side label.",
+                                text = "Take a picture of the indoor AC unit or its model sticker.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -883,13 +919,12 @@ fun AddRoomWizardScreen(
                                 )
                             )
 
-                            // Camera trigger button
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(160.dp)
-                                    .clip(RoundedCornerShape(24.dp))
+                                    .height(150.dp)
+                                    .clip(RoundedCornerShape(22.dp))
                                     .background(DetailCardSurface)
                                     .bouncyClickable {
                                         val hasCameraPermission = ContextCompat.checkSelfPermission(
@@ -917,7 +952,7 @@ fun AddRoomWizardScreen(
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier
-                                            .size(54.dp)
+                                            .size(52.dp)
                                             .clip(CircleShape)
                                             .background(MineralMintActive.copy(alpha = 0.16f))
                                     ) {
@@ -925,7 +960,7 @@ fun AddRoomWizardScreen(
                                             imageVector = PhosphorIcons.Light.Camera,
                                             contentDescription = "Take Photo",
                                             tint = MineralMintActive,
-                                            modifier = Modifier.size(26.dp)
+                                            modifier = Modifier.size(24.dp)
                                         )
                                     }
                                     Text(
@@ -940,7 +975,6 @@ fun AddRoomWizardScreen(
                                 }
                             }
 
-                            // Gray secondary text for gallery upload as requested
                             Text(
                                 text = "or choose a photo from your gallery",
                                 style = TextStyle(
@@ -957,7 +991,6 @@ fun AddRoomWizardScreen(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Manual entry fallback
                             Text(
                                 text = "Skip and choose AC model manually",
                                 style = TextStyle(
@@ -967,14 +1000,12 @@ fun AddRoomWizardScreen(
                                     color = DetailTextMuted
                                 ),
                                 modifier = Modifier
-                                    .clickable {
-                                        currentStage = WizardStage.CONFIRM_AC
-                                    }
+                                    .clickable { currentStage = WizardStage.CONFIRM_AC }
                                     .padding(4.dp)
                             )
                         }
 
-                        // Stage 5: AI Recognition & Friendly "Is this right?" Confirmation
+                        // Stage 5: AC Confirmation
                         WizardStage.CONFIRM_AC -> {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -992,9 +1023,9 @@ fun AddRoomWizardScreen(
 
                             Text(
                                 text = if (isAnalyzingPhoto) {
-                                    "Reading unit badge, louver geometry, and capacity profile."
+                                    "Reading unit badge and capacity profile..."
                                 } else {
-                                    "We detected this AC profile from your unit."
+                                    "Verify your AC specifications below."
                                 },
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
@@ -1010,21 +1041,20 @@ fun AddRoomWizardScreen(
                                     contentAlignment = Alignment.Center,
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(180.dp)
+                                        .height(160.dp)
                                         .clip(RoundedCornerShape(20.dp))
                                         .background(DetailCardSurface)
                                 ) {
                                     CircularProgressIndicator(
                                         color = MineralMintActive,
-                                        modifier = Modifier.size(36.dp)
+                                        modifier = Modifier.size(32.dp)
                                     )
                                 }
                             } else {
-                                // Photo preview if available
                                 acPhotoBitmap?.let { bmp ->
                                     Box(
                                         modifier = Modifier
-                                            .size(100.dp)
+                                            .size(96.dp)
                                             .clip(RoundedCornerShape(16.dp))
                                             .background(DetailCardSurface)
                                     ) {
@@ -1036,7 +1066,6 @@ fun AddRoomWizardScreen(
                                     }
                                 }
 
-                                // Recognized Specs Card
                                 val assessment = RoomFactory.assessAcMatch(acCapacity, areaSquareMeters)
                                 Column(
                                     modifier = Modifier
@@ -1100,7 +1129,6 @@ fun AddRoomWizardScreen(
                                     )
                                 }
 
-                                // Interactive confirmation
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -1113,7 +1141,6 @@ fun AddRoomWizardScreen(
                                             .clip(RoundedCornerShape(14.dp))
                                             .background(DetailCardSurface)
                                             .bouncyClickable {
-                                                // Cycle to next sample brand/model if adjusting
                                                 acBrand = when (acBrand) {
                                                     "Daikin" -> "Panasonic"
                                                     "Panasonic" -> "Mitsubishi"
@@ -1163,7 +1190,7 @@ fun AddRoomWizardScreen(
                             }
                         }
 
-                        // Stage 6: Location & Climate sync
+                        // Stage 6: GPS & Weather Microclimate Sync
                         WizardStage.LOCATION_SYNC -> {
                             Spacer(modifier = Modifier.height(8.dp))
 
@@ -1180,7 +1207,7 @@ fun AddRoomWizardScreen(
                             )
 
                             Text(
-                                text = "Klimata synchronizes cooling curves with outdoor temperature patterns.",
+                                text = "Klimata balances indoor thermal inertia against outdoor midnight temperature troughs.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
@@ -1190,33 +1217,102 @@ fun AddRoomWizardScreen(
                                 )
                             )
 
+                            // Live GPS Status Card
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(DetailCardSurface)
+                                    .padding(16.dp)
+                            ) {
+                                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = PhosphorIcons.Light.MapPin,
+                                                contentDescription = null,
+                                                tint = MineralMintActive,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                            Text(
+                                                text = "Current Microclimate: $selectedLocation",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = DetailTextPrimary
+                                                )
+                                            )
+                                        }
+
+                                        if (isDetectingGps) {
+                                            CircularProgressIndicator(
+                                                color = MineralMintActive,
+                                                modifier = Modifier.size(18.dp),
+                                                strokeWidth = 2.dp
+                                            )
+                                        } else {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier
+                                                    .size(32.dp)
+                                                    .clip(CircleShape)
+                                                    .background(DetailCardSurfaceElevated)
+                                                    .clickable { runGpsDetection() }
+                                            ) {
+                                                Icon(
+                                                    imageVector = PhosphorIcons.Light.ArrowsClockwise,
+                                                    contentDescription = "Refresh GPS",
+                                                    tint = MineralMintActive,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+
+                                    gpsStatusMessage?.let { status ->
+                                        Text(
+                                            text = status,
+                                            style = TextStyle(
+                                                fontFamily = JakartaFamily,
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 12.sp,
+                                                color = DetailTextSecondary
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Quick city selector chips
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(20.dp))
                                     .background(DetailCardSurface)
-                                    .padding(18.dp),
-                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    .padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = PhosphorIcons.Light.MapPin,
-                                        contentDescription = null,
-                                        tint = DetailCurveAmbient,
-                                        modifier = Modifier.size(18.dp)
+                                Text(
+                                    text = "City Presets",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 12.sp,
+                                        color = DetailTextSecondary
                                     )
-                                    Text(
-                                        text = "Select City Microclimate",
-                                        style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = DetailTextPrimary)
-                                    )
-                                }
+                                )
 
                                 val cities = listOf("South Jakarta", "Bandung", "Surabaya", "Singapore")
                                 cities.forEach { city ->
-                                    val isSelected = selectedLocation == city
+                                    val isSelected = selectedLocation.equals(city, ignoreCase = true)
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -1266,7 +1362,7 @@ fun AddRoomWizardScreen(
                             )
                         }
 
-                        // Stage 7: Professional Quiet-Confidence Impact Reveal (First-run Onboarding only)
+                        // Stage 7: Quiet-Confidence Impact Reveal (First-run Onboarding only)
                         WizardStage.IMPACT_REVEAL -> {
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1293,7 +1389,6 @@ fun AddRoomWizardScreen(
                                 )
                             )
 
-                            // Hero Metric Card
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -1336,7 +1431,6 @@ fun AddRoomWizardScreen(
                                 }
                             }
 
-                            // Quiet staggered ecological equivalents
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)

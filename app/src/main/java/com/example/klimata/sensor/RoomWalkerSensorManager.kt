@@ -8,6 +8,7 @@ import android.hardware.SensorManager
 import androidx.compose.ui.geometry.Offset
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -18,10 +19,22 @@ data class WalkedCorner(
     val cornerIndex: Int
 )
 
+data class WalkerSnapshot(
+    val isTracking: Boolean = false,
+    val totalSteps: Int = 0,
+    val currentWallSteps: Int = 0,
+    val currentWallDistanceMeters: Float = 0f,
+    val currentHeadingDeg: Float = 0f,
+    val currentPosition: Offset = Offset.Zero,
+    val corners: List<Offset> = listOf(Offset.Zero),
+    val walkedCorners: List<WalkedCorner> = emptyList(),
+    val calculatedAreaM2: Int = 0
+)
+
 class RoomWalkerSensorManager(
     private val context: Context,
     val strideLengthMeters: Float = 0.70f,
-    val onStateUpdate: () -> Unit = {}
+    var onSnapshotChanged: (WalkerSnapshot) -> Unit = {}
 ) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
@@ -30,37 +43,44 @@ class RoomWalkerSensorManager(
     private val rotationVector = sensorManager?.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
     private val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
 
-    var isTracking = false
-        private set
+    private var isTracking = false
+    private var totalSteps = 0
+    private var currentWallSteps = 0
+    private var manualWallDistance = 0f
+    private var currentHeadingDeg = 0f
+    private var currentPosition = Offset.Zero
+    private val cornersList = mutableListOf<Offset>(Offset.Zero)
+    private val walkedCornersList = mutableListOf<WalkedCorner>()
+    private var calculatedArea = 0
 
-    var totalSteps = 0
-        private set
-
-    var currentWallSteps = 0
-        private set
-
-    var currentHeadingDeg = 0f
-        private set
-
-    var currentPosition = Offset.Zero
-        private set
-
-    private val _corners = mutableListOf<Offset>()
-    val corners: List<Offset> get() = _corners
-
-    private val _walkedCorners = mutableListOf<WalkedCorner>()
-    val walkedCorners: List<WalkedCorner> get() = _walkedCorners
-
-    var calculatedAreaM2 = 0
-        private set
-
-    // Accelerometer peak detection fallback for devices/emulators without dedicated step detectors
     private var lastAccelMagnitude = 9.8f
     private var lastStepTime = 0L
 
+    fun getSnapshot(): WalkerSnapshot {
+        val wallDist = if (manualWallDistance > 0f) {
+            manualWallDistance
+        } else {
+            (currentWallSteps * strideLengthMeters * 10f).roundToInt() / 10f
+        }
+        return WalkerSnapshot(
+            isTracking = isTracking,
+            totalSteps = totalSteps,
+            currentWallSteps = currentWallSteps,
+            currentWallDistanceMeters = wallDist,
+            currentHeadingDeg = currentHeadingDeg,
+            currentPosition = currentPosition,
+            corners = cornersList.toList(),
+            walkedCorners = walkedCornersList.toList(),
+            calculatedAreaM2 = calculatedArea
+        )
+    }
+
+    private fun emit() {
+        onSnapshotChanged(getSnapshot())
+    }
+
     fun startTracking() {
         if (isTracking) return
-        reset()
         isTracking = true
 
         stepDetector?.let {
@@ -74,102 +94,105 @@ class RoomWalkerSensorManager(
                 sensorManager?.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
             }
         }
-        onStateUpdate()
+        emit()
     }
 
     fun stopTracking() {
         if (!isTracking) return
         isTracking = false
         sensorManager?.unregisterListener(this)
-        onStateUpdate()
+        emit()
     }
 
     fun reset() {
         totalSteps = 0
         currentWallSteps = 0
+        manualWallDistance = 0f
         currentPosition = Offset.Zero
-        _corners.clear()
-        _walkedCorners.clear()
-        _corners.add(Offset.Zero)
-        calculatedAreaM2 = 0
-        onStateUpdate()
+        cornersList.clear()
+        walkedCornersList.clear()
+        cornersList.add(Offset.Zero)
+        calculatedArea = 0
+        emit()
     }
 
-    fun markCorner(): Boolean {
-        if (!isTracking) return false
-        val wallLength = currentWallSteps * strideLengthMeters
+    fun adjustCurrentWall(deltaMeters: Float) {
+        val currentDist = if (manualWallDistance > 0f) manualWallDistance else currentWallSteps * strideLengthMeters
+        val newDist = (currentDist + deltaMeters).coerceIn(1.0f, 15.0f)
+        manualWallDistance = (newDist * 10f).roundToInt() / 10f
 
-        val newCorner = currentPosition
-        _corners.add(newCorner)
-        _walkedCorners.add(
+        val rad = Math.toRadians((currentHeadingDeg - 90.0))
+        val lastCorner = cornersList.lastOrNull() ?: Offset.Zero
+        currentPosition = Offset(
+            x = lastCorner.x + (manualWallDistance * cos(rad)).toFloat(),
+            y = lastCorner.y + (manualWallDistance * sin(rad)).toFloat()
+        )
+        updateArea()
+        emit()
+    }
+
+    fun markCorner(fallbackDistanceMeters: Float = 4.0f): WalkerSnapshot {
+        if (!isTracking) {
+            startTracking()
+        }
+
+        val wallDistance = when {
+            manualWallDistance > 0f -> manualWallDistance
+            currentWallSteps > 0 -> (currentWallSteps * strideLengthMeters * 10f).roundToInt() / 10f
+            else -> fallbackDistanceMeters
+        }
+
+        // If stationary, advance along heading by wall distance
+        if (currentPosition == (cornersList.lastOrNull() ?: Offset.Zero)) {
+            val rad = Math.toRadians((currentHeadingDeg - 90.0))
+            val last = cornersList.lastOrNull() ?: Offset.Zero
+            currentPosition = Offset(
+                x = last.x + (wallDistance * cos(rad)).toFloat(),
+                y = last.y + (wallDistance * sin(rad)).toFloat()
+            )
+        }
+
+        cornersList.add(currentPosition)
+        walkedCornersList.add(
             WalkedCorner(
-                position = newCorner,
-                wallLengthMeters = (wallLength * 10f).roundToInt() / 10f,
-                cornerIndex = _corners.size - 1
+                position = currentPosition,
+                wallLengthMeters = wallDistance,
+                cornerIndex = cornersList.size - 1
             )
         )
+
+        // Advance heading by 90 degrees for standard room layouts
+        currentHeadingDeg = (currentHeadingDeg + 90f) % 360f
         currentWallSteps = 0
-        updateEstimatedArea()
-        onStateUpdate()
-        return true
+        manualWallDistance = 0f
+
+        updateArea()
+        val snap = getSnapshot()
+        emit()
+        return snap
     }
 
     fun finishRoom(): Int {
-        if (_corners.size >= 3) {
-            val lastWallLength = currentWallSteps * strideLengthMeters
-            if (lastWallLength > 0.5f) {
-                _walkedCorners.add(
-                    WalkedCorner(
-                        position = Offset.Zero,
-                        wallLengthMeters = (lastWallLength * 10f).roundToInt() / 10f,
-                        cornerIndex = _corners.size
-                    )
-                )
-            }
-            updateEstimatedArea()
+        if (cornersList.size >= 3) {
+            updateArea()
         }
         stopTracking()
-        return calculatedAreaM2.coerceAtLeast(10)
+        val finalArea = calculatedArea.coerceIn(10, 80)
+        emit()
+        return finalArea
     }
 
-    fun simulateStep() {
-        processStep()
-    }
-
-    fun simulateWalkCorner(lengthMeters: Float) {
-        val steps = (lengthMeters / strideLengthMeters).roundToInt().coerceAtLeast(1)
-        for (i in 0 until steps) {
-            processStep()
-        }
-        markCorner()
-        currentHeadingDeg = (currentHeadingDeg + 90f) % 360f
-    }
-
-    private fun processStep() {
-        totalSteps++
-        currentWallSteps++
-
-        val rad = Math.toRadians(currentHeadingDeg.toDouble())
-        val dx = (strideLengthMeters * sin(rad)).toFloat()
-        val dy = -(strideLengthMeters * cos(rad)).toFloat()
-
-        currentPosition = Offset(currentPosition.x + dx, currentPosition.y + dy)
-        updateEstimatedArea()
-        onStateUpdate()
-    }
-
-    private fun updateEstimatedArea() {
-        if (_corners.size < 3) {
-            val currentWallLength = currentWallSteps * strideLengthMeters
-            val firstWallLength = _walkedCorners.firstOrNull()?.wallLengthMeters ?: currentWallLength
-            calculatedAreaM2 = (firstWallLength * currentWallLength).roundToInt().coerceIn(0, 80)
+    private fun updateArea() {
+        if (cornersList.size < 3) {
+            val d1 = walkedCornersList.firstOrNull()?.wallLengthMeters ?: 4.0f
+            val d2 = manualWallDistance.takeIf { it > 0f } ?: (currentWallSteps * strideLengthMeters).takeIf { it > 0f } ?: 4.0f
+            calculatedArea = (d1 * d2).roundToInt().coerceIn(10, 80)
             return
         }
 
-        // Polygon Shoelace area formula
         var areaSum = 0.0
-        val poly = _corners.toMutableList()
-        poly.add(poly.first()) // close polygon
+        val poly = cornersList.toMutableList()
+        poly.add(poly.first())
 
         for (i in 0 until poly.size - 1) {
             val p1 = poly[i]
@@ -177,17 +200,27 @@ class RoomWalkerSensorManager(
             areaSum += (p1.x * p2.y - p2.x * p1.y)
         }
 
-        val absArea = abs(areaSum / 2.0).toFloat()
-        calculatedAreaM2 = absArea.roundToInt().coerceIn(8, 120)
+        calculatedArea = abs(areaSum / 2.0).roundToInt().coerceIn(10, 100)
+    }
+
+    private fun processStep() {
+        totalSteps++
+        currentWallSteps++
+
+        val rad = Math.toRadians((currentHeadingDeg - 90.0))
+        val dx = (strideLengthMeters * cos(rad)).toFloat()
+        val dy = (strideLengthMeters * sin(rad)).toFloat()
+
+        currentPosition = Offset(currentPosition.x + dx, currentPosition.y + dy)
+        updateArea()
+        emit()
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event == null || !isTracking) return
 
         when (event.sensor.type) {
-            Sensor.TYPE_STEP_DETECTOR -> {
-                processStep()
-            }
+            Sensor.TYPE_STEP_DETECTOR -> processStep()
             Sensor.TYPE_ROTATION_VECTOR -> {
                 val rotationMatrix = FloatArray(9)
                 SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values)
@@ -195,10 +228,9 @@ class RoomWalkerSensorManager(
                 SensorManager.getOrientation(rotationMatrix, orientation)
                 val azimuthDeg = Math.toDegrees(orientation[0].toDouble()).toFloat()
                 currentHeadingDeg = (azimuthDeg + 360f) % 360f
-                onStateUpdate()
+                emit()
             }
             Sensor.TYPE_ACCELEROMETER -> {
-                // Accelerometer peak detection fallback
                 val x = event.values[0]
                 val y = event.values[1]
                 val z = event.values[2]

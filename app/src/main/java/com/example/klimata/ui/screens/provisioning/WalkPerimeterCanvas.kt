@@ -1,19 +1,12 @@
 package com.example.klimata.ui.screens.provisioning
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import android.graphics.Paint
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,14 +22,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.klimata.sensor.WalkedCorner
 import com.example.klimata.ui.theme.DetailCardBorder
 import com.example.klimata.ui.theme.DetailCardSurface
-import com.example.klimata.ui.theme.DetailTextPrimary
-import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.MineralMint
 import com.example.klimata.ui.theme.MineralMintActive
+import kotlin.math.cos
 import kotlin.math.max
+import kotlin.math.sin
 
 @Composable
 fun WalkPerimeterCanvas(
@@ -48,29 +42,18 @@ fun WalkPerimeterCanvas(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-
-    val infiniteTransition = rememberInfiniteTransition(label = "RadarPulse")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1.0f,
-        targetValue = 2.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1600, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "PulseScale"
-    )
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.55f,
-        targetValue = 0.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1600, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "PulseAlpha"
-    )
-
-    val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f) }
+    val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(5f, 5f), 0f) }
     val polyPath = remember { Path() }
+
+    val labelPaint = remember(density) {
+        Paint().apply {
+            color = android.graphics.Color.WHITE
+            textSize = with(density) { 11.sp.toPx() }
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+        }
+    }
 
     Box(
         modifier = modifier
@@ -80,14 +63,14 @@ fun WalkPerimeterCanvas(
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val maxRadius = size.minDimension / 2f * 0.88f
+            val maxRadius = size.minDimension / 2f * 0.86f
 
-            // Concentric radar guidance circles
+            // Concentric precision range rings (clean static architectural grid)
             val ringCount = 3
             for (i in 1..ringCount) {
                 val r = maxRadius * (i / ringCount.toFloat())
                 drawCircle(
-                    color = DetailCardBorder.copy(alpha = 0.45f),
+                    color = DetailCardBorder.copy(alpha = 0.50f),
                     radius = r,
                     center = center,
                     style = Stroke(width = 1.dp.toPx(), pathEffect = dashEffect)
@@ -96,13 +79,13 @@ fun WalkPerimeterCanvas(
 
             // Crosshair guide axes
             drawLine(
-                color = DetailCardBorder.copy(alpha = 0.35f),
+                color = DetailCardBorder.copy(alpha = 0.40f),
                 start = Offset(center.x, center.y - maxRadius),
                 end = Offset(center.x, center.y + maxRadius),
                 strokeWidth = 1f
             )
             drawLine(
-                color = DetailCardBorder.copy(alpha = 0.35f),
+                color = DetailCardBorder.copy(alpha = 0.40f),
                 start = Offset(center.x - maxRadius, center.y),
                 end = Offset(center.x + maxRadius, center.y),
                 strokeWidth = 1f
@@ -119,7 +102,7 @@ fun WalkPerimeterCanvas(
             val spanY = max(maxY - minY, 3.5f)
             val maxSpan = max(spanX, spanY)
 
-            val pxPerMeter = (maxRadius * 1.5f) / maxSpan
+            val pxPerMeter = (maxRadius * 1.4f) / maxSpan
             val midX = (minX + maxX) / 2f
             val midY = (minY + maxY) / 2f
 
@@ -160,7 +143,7 @@ fun WalkPerimeterCanvas(
                 drawPath(
                     path = polyPath,
                     color = MineralMintActive,
-                    style = Stroke(width = 2.4.dp.toPx(), cap = StrokeCap.Round)
+                    style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
                 )
 
                 // Draw dashed active leg to current walker position
@@ -168,24 +151,19 @@ fun WalkPerimeterCanvas(
                     val lastCornerCanvas = canvasPoints.last()
                     val walkerCanvas = mapToCanvas(currentWalkerPos)
                     drawLine(
-                        color = MineralMint.copy(alpha = 0.85f),
+                        color = MineralMint.copy(alpha = 0.80f),
                         start = lastCornerCanvas,
                         end = walkerCanvas,
-                        strokeWidth = 2.dp.toPx(),
+                        strokeWidth = 1.8.dp.toPx(),
                         pathEffect = dashEffect
                     )
                 }
 
-                // Draw corner nodes
+                // Draw corner nodes & badges
                 canvasPoints.forEachIndexed { index, nodePos ->
                     drawCircle(
-                        color = MineralMintActive.copy(alpha = 0.25f),
-                        radius = 12.dp.toPx(),
-                        center = nodePos
-                    )
-                    drawCircle(
-                        color = Color(0xFF0F172A),
-                        radius = 6.dp.toPx(),
+                        color = DetailCardSurface,
+                        radius = 8.dp.toPx(),
                         center = nodePos
                     )
                     drawCircle(
@@ -193,22 +171,43 @@ fun WalkPerimeterCanvas(
                         radius = 4.5.dp.toPx(),
                         center = nodePos
                     )
+
+                    // Draw corner number index
+                    drawContext.canvas.nativeCanvas.drawText(
+                        "${index + 1}",
+                        nodePos.x,
+                        nodePos.y - 12.dp.toPx(),
+                        labelPaint
+                    )
                 }
             }
 
-            // Draw current walker dot and animated pulse
+            // Draw current walker dot and directional heading pointer (static, no pulsing waves)
             val currentCanvasPos = mapToCanvas(currentWalkerPos)
             if (!isClosed) {
-                // Expanding pulse wave
+                // Directional heading arrow
+                val rad = Math.toRadians((currentHeadingDeg - 90.0)).toFloat()
+                val arrowEnd = Offset(
+                    currentCanvasPos.x + 16.dp.toPx() * cos(rad),
+                    currentCanvasPos.y + 16.dp.toPx() * sin(rad)
+                )
+                drawLine(
+                    color = MineralMintActive,
+                    start = currentCanvasPos,
+                    end = arrowEnd,
+                    strokeWidth = 2.dp.toPx(),
+                    cap = StrokeCap.Round
+                )
+
+                // Solid white position dot with clean dark halo
                 drawCircle(
-                    color = MineralMintActive.copy(alpha = pulseAlpha),
-                    radius = 8.dp.toPx() * pulseScale,
+                    color = Color.Black,
+                    radius = 6.dp.toPx(),
                     center = currentCanvasPos
                 )
-                // Center white point
                 drawCircle(
                     color = Color.White,
-                    radius = 5.dp.toPx(),
+                    radius = 4.5.dp.toPx(),
                     center = currentCanvasPos
                 )
             }
