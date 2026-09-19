@@ -29,7 +29,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -98,7 +96,6 @@ fun KlimataScreen(
     val restOffsetYPx = with(density) { 65.dp.toPx() }
 
     var scrollJob by remember { mutableStateOf<Job?>(null) }
-    var heroSectionHeightPx by remember { mutableFloatStateOf(0f) }
 
     // Real-time drag progress towards the 50% midpoint tipping line
     // Wrapped in derivedStateOf to prevent full screen recompositions on subpixel drag deltas
@@ -176,12 +173,25 @@ fun KlimataScreen(
             )
 
             val headerCutoffPx = with(density) { 62.dp.toPx() }
+            val heroFadeDistancePx = with(density) { 140.dp.toPx() }
 
             // Scrollable Content Layer
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
+                    .drawWithContent {
+                        val scrollOffset = scrollState.value.toFloat()
+                        val heroProgress = (scrollOffset / heroFadeDistancePx).coerceIn(0f, 1f)
+                        val clipTop = if (heroProgress >= 1f) headerCutoffPx else 0f
+                        if (clipTop > 0f) {
+                            clipRect(top = clipTop) {
+                                this@drawWithContent.drawContent()
+                            }
+                        } else {
+                            this@drawWithContent.drawContent()
+                        }
+                    }
                     .verticalScroll(scrollState)
                     .navigationBarsPadding()
             ) {
@@ -190,7 +200,6 @@ fun KlimataScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .onSizeChanged { heroSectionHeightPx = it.height.toFloat() }
                         .pointerInput(rooms.size) {
                             var accumulatedDrag = 0f
                             detectHorizontalDragGestures(
@@ -233,8 +242,7 @@ fun KlimataScreen(
                             .fillMaxWidth()
                             .graphicsLayer {
                                 val scrollOffset = scrollState.value.toFloat()
-                                val fadeDistancePx = 140.dp.toPx()
-                                val heroProgress = (scrollOffset / fadeDistancePx).coerceIn(0f, 1f)
+                                val heroProgress = (scrollOffset / heroFadeDistancePx).coerceIn(0f, 1f)
                                 alpha = (1f - heroProgress).coerceIn(0f, 1f)
                                 translationY = -scrollOffset * 0.15f
                                 val blurPx = heroProgress * 10.dp.toPx()
@@ -269,22 +277,7 @@ fun KlimataScreen(
                     pageSpacing = 8.dp,
                     contentPadding = PaddingValues(horizontal = 8.dp),
                     verticalAlignment = Alignment.Top,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .drawWithContent {
-                            val clipTop = if (heroSectionHeightPx > 0f) {
-                                (headerCutoffPx - (heroSectionHeightPx - scrollState.value)).coerceAtLeast(0f)
-                            } else {
-                                0f
-                            }
-                            if (clipTop > 0f) {
-                                clipRect(top = clipTop) {
-                                    this@drawWithContent.drawContent()
-                                }
-                            } else {
-                                this@drawWithContent.drawContent()
-                            }
-                        }
+                    modifier = Modifier.fillMaxWidth()
                 ) { pageIndex ->
                     val room = rooms[pageIndex]
 
