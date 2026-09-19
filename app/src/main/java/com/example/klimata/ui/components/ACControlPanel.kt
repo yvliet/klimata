@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -33,14 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -372,7 +367,7 @@ fun ACDigitalRemoteCard(
     )
 
     val modeBtnBgColor by animateColorAsState(
-        targetValue = if (isPowerOn) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.03f),
+        targetValue = if (isPowerOn) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.04f),
         animationSpec = tween(200),
         label = "RemoteModeBtnBgColor"
     )
@@ -418,80 +413,88 @@ fun ACDigitalRemoteCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Tactile Symmetrical Action Keys (Power and Eco Leaf)
+            // Tactile Action Keys (Power, Eco Leaf, Mode)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(powerButtonColor)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onPowerToggle(!isPowerOn)
+                        }
                 ) {
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(powerButtonColor)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                onPowerToggle(!isPowerOn)
-                            }
-                    ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Light.Power,
-                            contentDescription = "Toggle AC Power",
-                            tint = powerIconColor,
-                            modifier = Modifier.size(19.dp)
-                        )
-                    }
-
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(ecoButtonColor)
-                            .clickable(
-                                enabled = isPowerOn,
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                onEcoToggle(!isEcoEnabled)
-                            }
-                    ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Light.Leaf,
-                            contentDescription = "Toggle Eco Mode",
-                            tint = ecoIconColor,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = PhosphorIcons.Light.Power,
+                        contentDescription = "Toggle AC Power",
+                        tint = powerIconColor,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
 
                 Box(
-                    modifier = Modifier.width(32.dp),
-                    contentAlignment = Alignment.CenterEnd
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(ecoButtonColor)
+                        .clickable(
+                            enabled = isPowerOn,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onEcoToggle(!isEcoEnabled)
+                        }
+                ) {
+                    Icon(
+                        imageVector = PhosphorIcons.Light.Leaf,
+                        contentDescription = "Toggle Eco Mode",
+                        tint = ecoIconColor,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(modeBtnBgColor)
+                        .clickable(
+                            enabled = isPowerOn,
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            onModeCycle()
+                        }
                 ) {
                     Crossfade(
-                        targetState = isPowerOn,
+                        targetState = Pair(currentMode, isPowerOn),
                         animationSpec = tween(180),
-                        label = "PowerStateCrossfade",
-                        modifier = Modifier.fillMaxWidth()
-                    ) { powerState ->
-                        Text(
-                            text = if (powerState) "ON" else "OFF",
-                            textAlign = TextAlign.End,
-                            modifier = Modifier.fillMaxWidth(),
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.sp,
-                                color = if (powerState) MineralMintActive else Color.White.copy(alpha = 0.40f)
-                            )
+                        label = "RemoteModeIconCrossfade"
+                    ) { (mode, powerState) ->
+                        val (modeIcon, rawModeColor) = when (mode) {
+                            "Cool" -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
+                            "Dry" -> PhosphorIcons.Light.Drop to Color(0xFF38BDF8)
+                            "Fan" -> PhosphorIcons.Light.Fan to Color(0xFFFBBF24)
+                            "Auto" -> PhosphorIcons.Light.ArrowsClockwise to Color(0xFFA78BFA)
+                            else -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
+                        }
+                        val modeColor = if (powerState) rawModeColor else Color.White.copy(alpha = 0.25f)
+
+                        Icon(
+                            imageVector = modeIcon,
+                            contentDescription = "Cycle AC Mode (Current: $mode)",
+                            tint = modeColor,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -501,7 +504,10 @@ fun ACDigitalRemoteCard(
 
             // Tactile Temperature Rocker Keys
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .heightIn(min = 72.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -509,8 +515,8 @@ fun ACDigitalRemoteCard(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(14.dp))
                         .background(stepperBgColor)
                         .clickable(
                             enabled = isPowerOn,
@@ -526,7 +532,7 @@ fun ACDigitalRemoteCard(
                         imageVector = PhosphorIcons.Light.Minus,
                         contentDescription = "Decrease Temperature",
                         tint = stepperIconColor,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
@@ -534,8 +540,8 @@ fun ACDigitalRemoteCard(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp)
-                        .clip(RoundedCornerShape(12.dp))
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(14.dp))
                         .background(stepperBgColor)
                         .clickable(
                             enabled = isPowerOn,
@@ -551,83 +557,8 @@ fun ACDigitalRemoteCard(
                         imageVector = PhosphorIcons.Light.Plus,
                         contentDescription = "Increase Temperature",
                         tint = stepperIconColor,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier.size(18.dp)
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Tactile Mode Cycle Key with Mode Icon and Crossfade
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(36.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(modeBtnBgColor)
-                    .clickable(
-                        enabled = isPowerOn,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        onModeCycle()
-                    }
-            ) {
-                Crossfade(
-                    targetState = Pair(currentMode, isPowerOn),
-                    animationSpec = tween(180),
-                    label = "RemoteModeCrossfade"
-                ) { (mode, powerState) ->
-                    val (modeIcon, rawModeColor) = when (mode) {
-                        "Cool" -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
-                        "Dry" -> PhosphorIcons.Light.Drop to Color(0xFF38BDF8)
-                        "Fan" -> PhosphorIcons.Light.Fan to Color(0xFFFBBF24)
-                        "Auto" -> PhosphorIcons.Light.ArrowsClockwise to Color(0xFFA78BFA)
-                        else -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
-                    }
-                    val modeColor = if (powerState) rawModeColor else Color.White.copy(alpha = 0.25f)
-                    val modeLabelColor = if (powerState) Color.White.copy(alpha = 0.60f) else Color.White.copy(alpha = 0.20f)
-                    val dotColor = if (powerState) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.15f)
-                    val modeNameColor = if (powerState) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.25f)
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = "MODE",
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 10.sp,
-                                color = modeLabelColor,
-                                letterSpacing = 0.4.sp
-                            )
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(3.dp)
-                                .clip(CircleShape)
-                                .background(dotColor)
-                        )
-                        Icon(
-                            imageVector = modeIcon,
-                            contentDescription = null,
-                            tint = modeColor,
-                            modifier = Modifier.size(11.dp)
-                        )
-                        Text(
-                            text = mode.uppercase(),
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 10.sp,
-                                color = modeNameColor,
-                                letterSpacing = 0.3.sp
-                            )
-                        )
-                    }
                 }
             }
         }
