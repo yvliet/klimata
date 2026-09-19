@@ -1,7 +1,6 @@
 package com.example.klimata.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,10 +32,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.Coffee
 import com.adamglin.phosphoricons.light.CurrencyDollar
+import com.adamglin.phosphoricons.light.Fan
+import com.adamglin.phosphoricons.light.Heart
+import com.adamglin.phosphoricons.light.Moon
+import com.adamglin.phosphoricons.light.Sparkle
+import com.example.klimata.data.HumanEquivalents
 import com.example.klimata.data.ImpactPeriod
 import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
+import com.example.klimata.data.SavingsEquivalentFact
+import com.example.klimata.data.SavingsFactIcon
 import com.example.klimata.ui.components.DetailPageScaffold
 import com.example.klimata.ui.components.PeriodDropdown
 import com.example.klimata.ui.theme.DetailCardSurface
@@ -46,6 +53,7 @@ import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.WarmAmber
 
 @Composable
 fun SavingsDetailScreen(
@@ -55,10 +63,16 @@ fun SavingsDetailScreen(
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.savingsHistory.forPeriod(selectedPeriod)
     val breakdown = room.savingsBreakdown
+    val topHighlight = remember(selectedPeriod) {
+        HumanEquivalents.getSavingsTopHighlight(selectedPeriod)
+    }
+    val facts = remember(selectedPeriod) {
+        HumanEquivalents.getSavingsFacts(selectedPeriod)
+    }
 
     DetailPageScaffold(
         title = "${selectedPeriod.label} Savings",
-        subtitle = "${room.name} • Utility Ledger",
+        subtitle = "${room.name} • Utility Ledger & Daily Impact",
         onBackClick = onBackClick,
         trailingContent = {
             PeriodDropdown(
@@ -103,7 +117,7 @@ fun SavingsDetailScreen(
                             .padding(horizontal = 9.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "-38% kWh",
+                            text = topHighlight,
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.Bold,
@@ -130,7 +144,7 @@ fun SavingsDetailScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = currentMetric.subtitle,
+                    text = "${currentMetric.subtitle} (${selectedPeriod.label})",
                     style = TextStyle(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Normal,
@@ -138,10 +152,79 @@ fun SavingsDetailScreen(
                         color = DetailTextSecondary
                     )
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Quietly saved while you sleep without sacrificing room comfort.",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        color = DetailTextMuted
+                    )
+                )
             }
         }
 
-        // Mini Breakdown Bar Visualizer
+        // Did You Know: Real-World Pocket Equivalents
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Did You Know? Everyday Value",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = DetailTextPrimary
+                    ),
+                    modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+                )
+
+                Text(
+                    text = "What this quietly buys",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 11.5.sp,
+                        color = DetailTextMuted
+                    ),
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+            }
+
+            if (facts.size >= 2) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SavingsFactItemCard(
+                        fact = facts[0],
+                        modifier = Modifier.weight(1f)
+                    )
+                    SavingsFactItemCard(
+                        fact = facts[1],
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            if (facts.size >= 3) {
+                SavingsFactItemCard(
+                    fact = facts[2],
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        // The Nighttime Story: Realistic Breakdown
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -150,15 +233,27 @@ fun SavingsDetailScreen(
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Text(
-                    text = "Savings Distribution",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp,
-                        color = DetailTextPrimary
+                Column {
+                    Text(
+                        text = "The Nighttime Story",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = DetailTextPrimary
+                        )
                     )
-                )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Where the electricity cuts actually happened",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.5.sp,
+                            color = DetailTextMuted
+                        )
+                    )
+                }
 
                 // Segmented Ratio Bar
                 Box(
@@ -189,36 +284,59 @@ fun SavingsDetailScreen(
                     }
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                // Narrative Story Blocks
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
+                                .size(28.dp)
                                 .clip(CircleShape)
-                                .background(MineralMintActive)
-                        )
-                        Column {
-                            Text(
-                                text = "Compressor Throttling",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = DetailTextPrimary
-                                )
+                            .background(MineralMintActive.copy(alpha = 0.16f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = PhosphorIcons.Light.Moon,
+                                contentDescription = null,
+                                tint = MineralMintActive,
+                                modifier = Modifier.size(15.dp)
                             )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "The 2 AM Metabolic Drift",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.5.sp,
+                                        color = DetailTextPrimary
+                                    )
+                                )
+                                Text(
+                                    text = "${breakdown.compressorCyclingPercent}% savings",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 11.5.sp,
+                                        color = MineralMintActive
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${breakdown.compressorCyclingPercent}% of total savings",
+                                text = "As outdoor air cooled down to 26°C, your AC eased up from 24°C to 25°C. Deep sleep naturally lowers your body temperature, so you slept peacefully while the compressor rested for hours.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 11.sp,
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 16.sp,
                                     color = DetailTextSecondary
                                 )
                             )
@@ -226,31 +344,56 @@ fun SavingsDetailScreen(
                     }
 
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(8.dp)
+                                .size(28.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF636366))
-                        )
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "Thermal Coasting",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = DetailTextPrimary
-                                )
+                            .background(Color(0xFF636366).copy(alpha = 0.25f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = PhosphorIcons.Light.Fan,
+                                contentDescription = null,
+                                tint = Color(0xFFA1A1AA),
+                                modifier = Modifier.size(15.dp)
                             )
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Dawn Thermal Coasting",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.5.sp,
+                                        color = DetailTextPrimary
+                                    )
+                                )
+                                Text(
+                                    text = "${breakdown.fanCoastingPercent}% savings",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 11.5.sp,
+                                        color = DetailTextSecondary
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${breakdown.fanCoastingPercent}% of total savings",
+                                text = "From 5:30 AM to sunrise, cold air remained trapped in your room's thermal mass. Klimata disengaged the heavy compressor entirely and floated on gentle fan circulation.",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
-                                    fontSize = 11.sp,
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 16.sp,
                                     color = DetailTextSecondary
                                 )
                             )
@@ -260,7 +403,7 @@ fun SavingsDetailScreen(
             }
         }
 
-        // Calculation Transparency Card
+        // Realistic Math & Hardware Profile Card
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -270,7 +413,7 @@ fun SavingsDetailScreen(
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    text = "Tariff & Computational Basis",
+                    text = "Honest Math & Grid Reality",
                     style = TextStyle(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.SemiBold,
@@ -280,7 +423,7 @@ fun SavingsDetailScreen(
                 )
 
                 Text(
-                    text = "Computed from ~${breakdown.avgNightlyKwhSaved} kWh avoided per night against an unthrottled 20°C flat baseline, benchmarked at ${breakdown.localTariffPerKwh}/kWh (PLN R-1 residential tariff).",
+                    text = "Based on avoiding ~${breakdown.avgNightlyKwhSaved} kWh each night compared to a continuous flat 20°C freeze. Benchmarked at ${breakdown.localTariffPerKwh}/kWh (standard PLN R-1 residential tariff).",
                     style = TextStyle(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Normal,
@@ -290,7 +433,7 @@ fun SavingsDetailScreen(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -313,6 +456,25 @@ fun SavingsDetailScreen(
                             fontWeight = FontWeight.Medium,
                             fontSize = 12.sp,
                             color = DetailTextPrimary
+                        )
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(DetailCardSurfaceElevated)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "💡 Prolonged AC Lifespan: Reducing aggressive start-stop compressor bursts prevents motor overheating, helping your unit last years longer.",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.5.sp,
+                            lineHeight = 16.sp,
+                            color = DetailTextSecondary
                         )
                     )
                 }
@@ -381,6 +543,97 @@ fun SavingsDetailScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SavingsFactItemCard(
+    fact: SavingsEquivalentFact,
+    modifier: Modifier = Modifier,
+) {
+    val (icon, tint) = when (fact.iconType) {
+        SavingsFactIcon.COFFEE -> PhosphorIcons.Light.Coffee to WarmAmber
+        SavingsFactIcon.SUBSCRIPTION -> PhosphorIcons.Light.Sparkle to Color(0xFF38BDF8)
+        SavingsFactIcon.AC_HEALTH -> PhosphorIcons.Light.Heart to MineralMintActive
+        SavingsFactIcon.GETAWAY -> PhosphorIcons.Light.Sparkle to WarmAmber
+    }
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .background(DetailCardSurface)
+            .padding(14.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = fact.title,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = DetailTextSecondary
+                    )
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(tint.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = tint,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = fact.value,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = DetailTextPrimary
+                    )
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = fact.unit,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp,
+                        color = tint
+                    ),
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = fact.description,
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    lineHeight = 15.sp,
+                    color = DetailTextMuted
+                )
+            )
         }
     }
 }
