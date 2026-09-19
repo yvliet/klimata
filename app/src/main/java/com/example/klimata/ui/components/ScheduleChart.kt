@@ -158,12 +158,6 @@ fun ScheduleChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(
-                animationSpec = spring(
-                    dampingRatio = 0.85f,
-                    stiffness = Spring.StiffnessMediumLow
-                )
-            )
             .bouncyClickable(shape = RoundedCornerShape(24.dp), onClick = onClick)
             .background(diurnal.frostedCardBackground)
             .padding(vertical = 18.dp)

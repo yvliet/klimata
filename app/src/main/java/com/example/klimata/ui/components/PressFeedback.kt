@@ -1,74 +1,98 @@
 package com.example.klimata.ui.components
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 /**
- * Modifier applying a tactile bounce scale-down (to 0.97f) with responsive spring physics,
- * strict corner shape clipping, and a smooth luminous frosted white sheen overlay when pressed.
+ * GPU-accelerated press interaction applying a tactile 0.97f scale-down and soft luminous
+ * frosted sheen on touch, followed by a gentle, non-harsh spring release without triggering
+ * Compose layout or recomposition passes.
  */
 @Composable
 fun Modifier.bouncyClickable(
     enabled: Boolean = true,
     pressedScale: Float = 0.97f,
-    sheenAlpha: Float = 0.12f,
+    sheenAlpha: Float = 0.10f,
     shape: Shape = RoundedCornerShape(24.dp),
     onClick: () -> Unit,
 ): Modifier {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
+    if (!enabled) return this
 
-    val animatedScale by animateFloatAsState(
-        targetValue = if (isPressed && enabled) pressedScale else 1.0f,
-        animationSpec = spring(
-            dampingRatio = 0.75f,
-            stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "bouncyCardScale"
-    )
+    val coroutineScope = rememberCoroutineScope()
+    val scaleAnim = remember { Animatable(1.0f) }
+    val sheenAnim = remember { Animatable(0.0f) }
 
-    val animatedSheenAlpha by animateFloatAsState(
-        targetValue = if (isPressed && enabled) sheenAlpha else 0.0f,
-        animationSpec = spring(
-            dampingRatio = 0.75f,
+    val pressSpring = remember {
+        spring<Float>(
+            dampingRatio = 0.80f,
+            stiffness = Spring.StiffnessMedium
+        )
+    }
+
+    val releaseSpring = remember {
+        spring<Float>(
+            dampingRatio = 0.90f,
             stiffness = Spring.StiffnessMediumLow
-        ),
-        label = "bouncyCardSheen"
-    )
+        )
+    }
 
     return this
         .graphicsLayer {
-            scaleX = animatedScale
-            scaleY = animatedScale
+            scaleX = scaleAnim.value
+            scaleY = scaleAnim.value
             this.shape = shape
             clip = true
         }
         .clip(shape)
         .drawWithContent {
             drawContent()
-            if (animatedSheenAlpha > 0.001f) {
-                drawRect(color = Color.White.copy(alpha = animatedSheenAlpha))
+            val currentSheen = sheenAnim.value
+            if (currentSheen > 0.001f) {
+                drawRect(color = Color.White.copy(alpha = currentSheen))
             }
         }
-        .clickable(
-            interactionSource = interactionSource,
-            indication = null,
-            enabled = enabled,
-            onClick = onClick
-        )
+        .pointerInput(enabled, onClick) {
+            detectTapGestures(
+                onPress = {
+                    val pressJob = coroutineScope.launch {
+                        scaleAnim.animateTo(pressedScale, pressSpring)
+                    }
+                    val sheenJob = coroutineScope.launch {
+                        sheenAnim.animateTo(sheenAlpha, pressSpring)
+                    }
+                    val released = try {
+                        tryAwaitRelease()
+                        true
+                    } catch (e: Exception) {
+                        false
+                    }
+                    pressJob.cancel()
+                    sheenJob.cancel()
+                    coroutineScope.launch {
+                        scaleAnim.animateTo(1.0f, releaseSpring)
+                    }
+                    coroutineScope.launch {
+                        sheenAnim.animateTo(0.0f, releaseSpring)
+                    }
+                    if (released) {
+                        onClick()
+                    }
+                }
+            )
+        }
 }
