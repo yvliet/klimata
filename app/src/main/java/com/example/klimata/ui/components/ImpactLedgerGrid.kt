@@ -46,13 +46,16 @@ import com.example.klimata.data.MockData
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.LocalDiurnalColors
+import com.example.klimata.ui.theme.SavingsYellow
+import com.example.klimata.ui.theme.SavingsYellowDark
+import com.example.klimata.ui.theme.SavingsYellowLight
 import kotlin.math.cos
 import kotlin.math.sin
 
 private val SavingsGradients = listOf(
-    Color(0xFF6EE7B7),
-    Color(0xFF34D399),
-    Color(0xFF10B981)
+    SavingsYellowLight,
+    SavingsYellow,
+    SavingsYellowDark
 )
 
 private val CarbonGradients = listOf(
@@ -102,7 +105,7 @@ fun ImpactLedgerGrid(
             progressFraction = savingsProgress,
             centerIcon = PhosphorIcons.Light.CurrencyDollar,
             gradientColors = SavingsGradients,
-            iconTint = Color(0xFF34D399),
+            iconTint = SavingsYellow,
             onClick = onSavingsClick,
             modifier = Modifier
                 .weight(1f)

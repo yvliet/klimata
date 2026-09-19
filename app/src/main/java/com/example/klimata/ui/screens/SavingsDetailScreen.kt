@@ -52,6 +52,7 @@ import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.SavingsYellow
 import com.example.klimata.ui.theme.WarmAmber
 
 @Composable
@@ -92,13 +93,13 @@ fun SavingsDetailScreen(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(CircleShape)
-                        .background(MineralMintActive.copy(alpha = 0.18f)),
+                        .background(SavingsYellow.copy(alpha = 0.18f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = PhosphorIcons.Light.CurrencyDollar,
                         contentDescription = null,
-                        tint = MineralMintActive,
+                        tint = SavingsYellow,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -145,7 +146,7 @@ fun SavingsDetailScreen(
         // Dynamic Horizon Trend & Statistics Graph
         NightlyTrendCard(
             trendData = trendData,
-            accentColor = MineralMintActive,
+            accentColor = SavingsYellow,
             modifier = Modifier.fillMaxWidth()
         )
 
