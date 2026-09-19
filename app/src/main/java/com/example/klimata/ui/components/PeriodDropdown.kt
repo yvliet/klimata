@@ -32,6 +32,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CaretDown
+import com.adamglin.phosphoricons.light.Check
 import com.example.klimata.data.ImpactPeriod
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
@@ -69,7 +73,7 @@ fun PeriodDropdown(
                     )
                 )
                 Icon(
-                    imageVector = safeCaretDownIcon(),
+                    imageVector = PhosphorIcons.Light.CaretDown,
                     contentDescription = "Select time period",
                     tint = Color.White.copy(alpha = 0.85f),
                     modifier = Modifier.size(12.dp)
@@ -107,7 +111,7 @@ fun PeriodDropdown(
                         trailingIcon = if (isSelected) {
                             {
                                 Icon(
-                                    imageVector = safeCheckIcon(),
+                                    imageVector = PhosphorIcons.Light.Check,
                                     contentDescription = null,
                                     tint = MineralMintActive,
                                     modifier = Modifier.size(13.dp)
@@ -123,76 +127,4 @@ fun PeriodDropdown(
             }
         }
     }
-}
-
-private val FallbackCaretDownIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "CaretDown",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.2f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = StrokeJoin.Round
-        ) {
-            moveTo(6f, 9f)
-            lineTo(12f, 15f)
-            lineTo(18f, 9f)
-        }
-    }.build()
-}
-
-private val FallbackCheckIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Check",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.4f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = StrokeJoin.Round
-        ) {
-            moveTo(4f, 12f)
-            lineTo(9f, 17f)
-            lineTo(20f, 6f)
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeCaretDownIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCaretDownIcon
-    }
-    return getPhosphorLightIcon("CaretDown", FallbackCaretDownIcon)
-}
-
-@Composable
-private fun safeCheckIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCheckIcon
-    }
-    return getPhosphorLightIcon("Check", FallbackCheckIcon)
 }

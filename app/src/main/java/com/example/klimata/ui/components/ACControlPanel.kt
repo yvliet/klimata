@@ -44,6 +44,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.ArrowsClockwise
+import com.adamglin.phosphoricons.light.Broadcast
+import com.adamglin.phosphoricons.light.Drop
+import com.adamglin.phosphoricons.light.Fan
+import com.adamglin.phosphoricons.light.Leaf
+import com.adamglin.phosphoricons.light.Minus
+import com.adamglin.phosphoricons.light.Plus
+import com.adamglin.phosphoricons.light.Power
+import com.adamglin.phosphoricons.light.Snowflake
 import com.example.klimata.data.ACProfile
 import com.example.klimata.data.DispatchState
 import com.example.klimata.data.MockData
@@ -185,11 +196,11 @@ fun ACTelemetryCard(
                     label = "ACModeCrossfade"
                 ) { (mode, powerState) ->
                     val (modeIcon, modeColor) = when (mode) {
-                        "Cool" -> safeSnowflakeIcon() to Color(0xFF60A5FA)
-                        "Dry" -> safeWaterDropIcon() to Color(0xFF38BDF8)
-                        "Fan" -> safeFanBladeIcon() to Color(0xFFFBBF24)
-                        "Auto" -> safeAutoRefreshIcon() to Color(0xFFA78BFA)
-                        else -> safeSnowflakeIcon() to Color(0xFF60A5FA)
+                        "Cool" -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
+                        "Dry" -> PhosphorIcons.Light.Drop to Color(0xFF38BDF8)
+                        "Fan" -> PhosphorIcons.Light.Fan to Color(0xFFFBBF24)
+                        "Auto" -> PhosphorIcons.Light.ArrowsClockwise to Color(0xFFA78BFA)
+                        else -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
                     }
 
                     Row(
@@ -226,7 +237,7 @@ fun ACTelemetryCard(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Icon(
-                            imageVector = safeLeafIcon(),
+                            imageVector = PhosphorIcons.Light.Leaf,
                             contentDescription = null,
                             tint = if (powerState && isEco) MineralMintActive else Color.White.copy(alpha = 0.35f),
                             modifier = Modifier.size(12.dp)
@@ -281,7 +292,7 @@ fun ACTelemetryCard(
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
                     Icon(
-                        imageVector = safeBroadcastIcon(),
+                        imageVector = PhosphorIcons.Light.Broadcast,
                         contentDescription = null,
                         tint = Color.White.copy(alpha = 0.45f),
                         modifier = Modifier.size(10.dp)
@@ -424,7 +435,7 @@ fun ACDigitalRemoteCard(
                             }
                     ) {
                         Icon(
-                            imageVector = safePowerIcon(),
+                            imageVector = PhosphorIcons.Light.Power,
                             contentDescription = "Toggle AC Power",
                             tint = powerIconColor,
                             modifier = Modifier.size(18.dp)
@@ -446,7 +457,7 @@ fun ACDigitalRemoteCard(
                             }
                     ) {
                         Icon(
-                            imageVector = safeLeafIcon(),
+                            imageVector = PhosphorIcons.Light.Leaf,
                             contentDescription = "Toggle Eco Flow Mode",
                             tint = ecoIconColor,
                             modifier = Modifier.size(17.dp)
@@ -505,7 +516,7 @@ fun ACDigitalRemoteCard(
                         }
                 ) {
                     Icon(
-                        imageVector = safeMinusIcon(),
+                        imageVector = PhosphorIcons.Light.Minus,
                         contentDescription = "Decrease Temperature",
                         tint = stepperIconColor,
                         modifier = Modifier.size(14.dp)
@@ -530,7 +541,7 @@ fun ACDigitalRemoteCard(
                         }
                 ) {
                     Icon(
-                        imageVector = safePlusIcon(),
+                        imageVector = PhosphorIcons.Light.Plus,
                         contentDescription = "Increase Temperature",
                         tint = stepperIconColor,
                         modifier = Modifier.size(14.dp)
@@ -562,11 +573,11 @@ fun ACDigitalRemoteCard(
                     label = "RemoteModeCrossfade"
                 ) { (mode, powerState) ->
                     val (modeIcon, rawModeColor) = when (mode) {
-                        "Cool" -> safeSnowflakeIcon() to Color(0xFF60A5FA)
-                        "Dry" -> safeWaterDropIcon() to Color(0xFF38BDF8)
-                        "Fan" -> safeFanBladeIcon() to Color(0xFFFBBF24)
-                        "Auto" -> safeAutoRefreshIcon() to Color(0xFFA78BFA)
-                        else -> safeSnowflakeIcon() to Color(0xFF60A5FA)
+                        "Cool" -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
+                        "Dry" -> PhosphorIcons.Light.Drop to Color(0xFF38BDF8)
+                        "Fan" -> PhosphorIcons.Light.Fan to Color(0xFFFBBF24)
+                        "Auto" -> PhosphorIcons.Light.ArrowsClockwise to Color(0xFFA78BFA)
+                        else -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
                     }
                     val modeColor = if (powerState) rawModeColor else Color.White.copy(alpha = 0.25f)
                     val modeLabelColor = if (powerState) Color.White.copy(alpha = 0.60f) else Color.White.copy(alpha = 0.20f)
@@ -614,299 +625,6 @@ fun ACDigitalRemoteCard(
             }
         }
     }
-}
-
-private val FallbackPowerIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Power",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 3f); lineTo(12f, 11f)
-            moveTo(6.34f, 6.34f)
-            curveTo(3.7f, 8.98f, 3.7f, 13.26f, 6.34f, 15.9f)
-            curveTo(8.98f, 18.54f, 13.26f, 18.54f, 15.9f, 15.9f)
-            curveTo(18.54f, 13.26f, 18.54f, 8.98f, 15.9f, 6.34f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safePowerIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackPowerIcon
-    }
-    return getPhosphorLightIcon("Power", FallbackPowerIcon)
-}
-
-private val FallbackBroadcastIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Broadcast",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 13f)
-            lineTo(12f, 13.01f)
-            moveTo(8.5f, 9.5f)
-            curveTo(6.5f, 11.5f, 6.5f, 14.5f, 8.5f, 16.5f)
-            moveTo(15.5f, 9.5f)
-            curveTo(17.5f, 11.5f, 17.5f, 14.5f, 15.5f, 16.5f)
-            moveTo(5.5f, 6.5f)
-            curveTo(2.5f, 9.5f, 2.5f, 16.5f, 5.5f, 19.5f)
-            moveTo(18.5f, 6.5f)
-            curveTo(21.5f, 9.5f, 21.5f, 16.5f, 18.5f, 19.5f)
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeBroadcastIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackBroadcastIcon
-    }
-    return getPhosphorLightIcon("Broadcast", FallbackBroadcastIcon)
-}
-
-private val FallbackLeafIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Leaf",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(2f, 22f); lineTo(12f, 12f)
-            moveTo(20f, 4f)
-            curveTo(12f, 4f, 4f, 12f, 4f, 20f)
-            curveTo(12f, 20f, 20f, 12f, 20f, 4f)
-            close()
-        }
-    }.build()
-}
-
-@Composable
-private fun safeLeafIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackLeafIcon
-    }
-    return getPhosphorLightIcon("Leaf", FallbackLeafIcon)
-}
-
-private val FallbackMinusIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Minus",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.4f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(6f, 12f)
-            lineTo(18f, 12f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safeMinusIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackMinusIcon
-    }
-    return getPhosphorLightIcon("Minus", FallbackMinusIcon)
-}
-
-private val FallbackPlusIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Plus",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.4f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 6f)
-            lineTo(12f, 18f)
-            moveTo(6f, 12f)
-            lineTo(18f, 12f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safePlusIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackPlusIcon
-    }
-    return getPhosphorLightIcon("Plus", FallbackPlusIcon)
-}
-
-private val FallbackSnowflakeIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Snowflake",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 1.8f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 3f); lineTo(12f, 21f)
-            moveTo(3f, 12f); lineTo(21f, 12f)
-            moveTo(5.64f, 5.64f); lineTo(18.36f, 18.36f)
-            moveTo(18.36f, 5.64f); lineTo(5.64f, 18.36f)
-            moveTo(9.5f, 6f); lineTo(12f, 8.5f); lineTo(14.5f, 6f)
-            moveTo(9.5f, 18f); lineTo(12f, 15.5f); lineTo(14.5f, 18f)
-            moveTo(6f, 9.5f); lineTo(8.5f, 12f); lineTo(6f, 14.5f)
-            moveTo(18f, 9.5f); lineTo(15.5f, 12f); lineTo(18f, 14.5f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safeSnowflakeIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackSnowflakeIcon
-    }
-    return getPhosphorLightIcon("Snowflake", FallbackSnowflakeIcon)
-}
-
-private val FallbackWaterDropIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Drop",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 1.8f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 3f)
-            curveTo(12f, 3f, 6f, 10.5f, 6f, 15f)
-            curveTo(6f, 18.3f, 8.7f, 21f, 12f, 21f)
-            curveTo(15.3f, 21f, 18f, 18.3f, 18f, 15f)
-            curveTo(18f, 10.5f, 12f, 3f, 12f, 3f)
-            close()
-        }
-    }.build()
-}
-
-@Composable
-private fun safeWaterDropIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackWaterDropIcon
-    }
-    return getPhosphorLightIcon("Drop", FallbackWaterDropIcon)
-}
-
-private val FallbackFanBladeIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Fan",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 1.8f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 12f)
-            curveTo(12f, 7f, 16f, 4f, 18f, 6f)
-            curveTo(19f, 8f, 16f, 12f, 12f, 12f)
-            curveTo(7f, 12f, 4f, 16f, 6f, 18f)
-            curveTo(8f, 19f, 12f, 16f, 12f, 12f)
-            curveTo(12f, 17f, 8f, 20f, 6f, 18f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safeFanBladeIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackFanBladeIcon
-    }
-    return getPhosphorLightIcon("Fan", FallbackFanBladeIcon)
-}
-
-private val FallbackAutoRefreshIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "ArrowsClockwise",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 1.8f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 4f)
-            curveTo(16.4f, 4f, 20f, 7.6f, 20f, 12f)
-            curveTo(20f, 13.5f, 19.6f, 14.9f, 18.8f, 16f)
-            moveTo(10f, 2f); lineTo(12f, 4f); lineTo(10f, 6f)
-            moveTo(12f, 20f)
-            curveTo(7.6f, 20f, 4f, 16.4f, 4f, 12f)
-            curveTo(4f, 10.5f, 4.4f, 9.1f, 5.2f, 8f)
-            moveTo(14f, 22f); lineTo(12f, 20f); lineTo(14f, 18f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safeAutoRefreshIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackAutoRefreshIcon
-    }
-    return getPhosphorLightIcon("ArrowsClockwise", FallbackAutoRefreshIcon)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF1976D2)

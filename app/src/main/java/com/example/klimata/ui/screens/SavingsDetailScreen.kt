@@ -35,6 +35,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CurrencyDollar
 import com.example.klimata.data.ImpactPeriod
 import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
@@ -87,7 +90,7 @@ fun SavingsDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = safeCurrencyDollarIcon(),
+                            imageVector = PhosphorIcons.Light.CurrencyDollar,
                             contentDescription = null,
                             tint = MineralMintActive,
                             modifier = Modifier.size(20.dp)
@@ -381,51 +384,4 @@ fun SavingsDetailScreen(
             }
         }
     }
-}
-
-private val FallbackCurrencyDollarIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "CurrencyDollar",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 2f); lineTo(12f, 22f)
-            moveTo(17f, 6f); lineTo(10f, 6f)
-            curveTo(8.5f, 6f, 7.5f, 7f, 7.5f, 8.5f)
-            curveTo(7.5f, 10f, 8.5f, 11f, 10f, 11f)
-            lineTo(14f, 12f)
-            curveTo(15.5f, 12f, 16.5f, 13f, 16.5f, 14.5f)
-            curveTo(16.5f, 16f, 15.5f, 17f, 14f, 17f)
-            lineTo(7f, 17f)
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeCurrencyDollarIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCurrencyDollarIcon
-    }
-    return getPhosphorLightIcon("CurrencyDollar", FallbackCurrencyDollarIcon)
 }

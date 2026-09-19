@@ -10,13 +10,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -32,8 +36,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlurEffect
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,8 +61,6 @@ import com.example.klimata.ui.theme.OvercastSkyStop2
 import com.example.klimata.ui.theme.OvercastSkyStop3
 import com.example.klimata.ui.theme.OvercastSkyStop4
 import com.example.klimata.ui.theme.currentDiurnalPhase
-import androidx.compose.foundation.layout.Row
-import androidx.compose.ui.graphics.Brush
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -142,10 +146,10 @@ fun KlimataScreen(
                 .fillMaxSize()
                 .background(brush = activeSkyGradient)
         ) {
-            val totalViewportHeight = maxHeight
-            // Dynamic spacer height ensures Tonight's Schedule is fully visible in resting state
-            // with the top header of Current Setpoint slightly peeking above the bottom fold.
-            val scheduleAnchorSpacer = (totalViewportHeight - 535.dp).coerceAtLeast(80.dp)
+            val statusBarPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+            val navBarPadding = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+            val visibleViewportHeight = maxHeight - statusBarPadding - navBarPadding
+            val scheduleAnchorSpacer = (visibleViewportHeight - 538.dp).coerceAtLeast(12.dp)
 
             AtmosphericSkyCanvas(
                 scrollOffsetProvider = { scrollState.value.toFloat() },

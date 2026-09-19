@@ -33,13 +33,15 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CurrencyDollar
+import com.adamglin.phosphoricons.light.Tree
 import com.example.klimata.data.ImpactMetric
 import com.example.klimata.data.MockData
 import com.example.klimata.ui.theme.JakartaFamily
@@ -84,7 +86,7 @@ fun ImpactLedgerGrid(
             primaryValue = savings.primaryValue.ifEmpty { "Rp 84.500" },
             subtitle = savingsSubtitle,
             progressFraction = savingsProgress,
-            centerIcon = safeCurrencyDollarIcon(),
+            centerIcon = PhosphorIcons.Light.CurrencyDollar,
             gradientColors = listOf(
                 Color(0xFF6EE7B7),
                 Color(0xFF34D399),
@@ -102,7 +104,7 @@ fun ImpactLedgerGrid(
             primaryValue = carbon.primaryValue.ifEmpty { "34.2 kg" },
             subtitle = carbonSubtitle,
             progressFraction = carbonProgress,
-            centerIcon = safeTreeIcon(),
+            centerIcon = PhosphorIcons.Light.Tree,
             gradientColors = listOf(
                 Color(0xFF6EE7B7),
                 Color(0xFF2DD4BF),
@@ -191,7 +193,7 @@ private fun FrostedMetricCard(
                     gradientColors = gradientColors,
                     centerIcon = centerIcon,
                     iconTint = iconTint,
-                    modifier = Modifier.size(56.dp)
+                    modifier = Modifier.size(58.dp)
                 )
             }
         }
@@ -217,14 +219,17 @@ private fun CircularArcGauge(
         ) {
             val w = size.width
             val h = size.height
-            val strokeWidthPx = 4.5.dp.toPx()
+            val strokeWidthPx = 4.2.dp.toPx()
             val thumbRadiusPx = 3.2.dp.toPx()
             val cutoutRadiusPx = thumbRadiusPx + 2.dp.toPx()
 
-            val arcSize = Size(w - strokeWidthPx, h - strokeWidthPx)
-            val topLeft = Offset(strokeWidthPx / 2f, strokeWidthPx / 2f)
+            // Inset arc geometry so that the floating thumb dot and its halo cutout never clip at the canvas bounds
+            val arcInset = cutoutRadiusPx + 1.5.dp.toPx()
+            val arcDiameter = minOf(w, h) - (arcInset * 2f)
+            val topLeft = Offset((w - arcDiameter) / 2f, (h - arcDiameter) / 2f)
+            val arcSize = Size(arcDiameter, arcDiameter)
             val center = Offset(w / 2f, h / 2f)
-            val radius = (minOf(w, h) - strokeWidthPx) / 2f
+            val radius = arcDiameter / 2f
 
             val startAngle = 135f
             val totalSweepAngle = 270f
@@ -246,8 +251,8 @@ private fun CircularArcGauge(
             drawArc(
                 brush = Brush.horizontalGradient(
                     colors = gradientColors,
-                    startX = 0f,
-                    endX = w
+                    startX = topLeft.x,
+                    endX = topLeft.x + arcDiameter
                 ),
                 startAngle = startAngle,
                 sweepAngle = activeSweep,
@@ -287,86 +292,6 @@ private fun CircularArcGauge(
             modifier = Modifier.size(18.dp)
         )
     }
-}
-
-private val FallbackCurrencyDollarIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "CurrencyDollar",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 1.8f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 2f); lineTo(12f, 22f)
-            moveTo(17f, 6f); lineTo(10f, 6f)
-            curveTo(8.5f, 6f, 7.5f, 7f, 7.5f, 8.5f)
-            curveTo(7.5f, 10f, 8.5f, 11f, 10f, 11f)
-            lineTo(14f, 12f)
-            curveTo(15.5f, 12f, 16.5f, 13f, 16.5f, 14.5f)
-            curveTo(16.5f, 16f, 15.5f, 17f, 14f, 17f)
-            lineTo(7f, 17f)
-        }
-    }.build()
-}
-
-private val FallbackTreeIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Tree",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 1.8f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            // Trunk
-            moveTo(12f, 22f); lineTo(12f, 17f)
-            // Foliage outline
-            moveTo(12f, 2f)
-            lineTo(6f, 10f); lineTo(8.5f, 10f)
-            lineTo(5f, 17f); lineTo(19f, 17f)
-            lineTo(15.5f, 10f); lineTo(18f, 10f)
-            close()
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeCurrencyDollarIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCurrencyDollarIcon
-    }
-    return getPhosphorLightIcon("CurrencyDollar", FallbackCurrencyDollarIcon)
-}
-
-@Composable
-private fun safeTreeIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackTreeIcon
-    }
-    return getPhosphorLightIcon("Tree", FallbackTreeIcon)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF1976D2)

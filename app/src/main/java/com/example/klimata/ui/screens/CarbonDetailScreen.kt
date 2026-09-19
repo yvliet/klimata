@@ -33,6 +33,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.Tree
 import com.example.klimata.data.ImpactPeriod
 import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
@@ -97,7 +100,7 @@ fun CarbonDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = safeLeafIcon(),
+                            imageVector = PhosphorIcons.Light.Tree,
                             contentDescription = null,
                             tint = Color.White,
                             modifier = Modifier.size(20.dp)
@@ -348,48 +351,4 @@ private fun EquivalenceCard(
             )
         }
     }
-}
-
-private val FallbackLeafIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Leaf",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(2f, 22f); lineTo(12f, 12f)
-            moveTo(20f, 4f)
-            curveTo(12f, 4f, 4f, 12f, 4f, 20f)
-            curveTo(12f, 20f, 20f, 12f, 20f, 4f)
-            close()
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeLeafIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackLeafIcon
-    }
-    return getPhosphorLightIcon("Leaf", FallbackLeafIcon)
 }

@@ -35,6 +35,9 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CaretLeft
 import com.example.klimata.ui.theme.JakartaFamily
 
 /**
@@ -80,7 +83,7 @@ fun DetailPageScaffold(
                         .clickable(onClick = onBackClick)
                 ) {
                     Icon(
-                        imageVector = safeCaretLeftIcon(),
+                        imageVector = PhosphorIcons.Light.CaretLeft,
                         contentDescription = "Navigate back",
                         tint = Color.White,
                         modifier = Modifier.size(18.dp)
@@ -128,47 +131,4 @@ fun DetailPageScaffold(
             content = content
         )
     }
-}
-
-private val FallbackCaretLeftIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "CaretLeft",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.2f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = StrokeJoin.Round
-        ) {
-            moveTo(15f, 18f)
-            lineTo(9f, 12f)
-            lineTo(15f, 6f)
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeCaretLeftIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCaretLeftIcon
-    }
-    return getPhosphorLightIcon("CaretLeft", FallbackCaretLeftIcon)
 }

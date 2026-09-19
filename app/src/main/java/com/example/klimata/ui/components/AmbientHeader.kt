@@ -21,8 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -36,9 +34,6 @@ import com.example.klimata.ui.theme.OnSkySecondary
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -50,6 +45,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.Cube
+import com.adamglin.phosphoricons.light.DotsThreeVertical
+import com.adamglin.phosphoricons.light.Plus
 
 /**
  * Decoupled room name and pager dots indicator.
@@ -102,22 +103,27 @@ fun RoomIndicator(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(top = 2.dp)
         ) {
-            Icon(
-                imageVector = SimpleArrowIcon,
-                contentDescription = null,
-                tint = OnSkySecondary,
-                modifier = Modifier.size(9.dp)
+            val isPrimarySelected = currentRoomIndex == 0
+            val cubeColor by animateColorAsState(
+                targetValue = if (isPrimarySelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
+                animationSpec = tween(200),
+                label = "cubeColor"
             )
 
-            Spacer(modifier = Modifier.width(2.dp))
+            Icon(
+                imageVector = PhosphorIcons.Light.Cube,
+                contentDescription = "Primary Room",
+                tint = cubeColor,
+                modifier = Modifier
+                    .size(12.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onRoomSelected(0) }
+            )
 
-            for (i in 0 until roomCount) {
+            for (i in 1 until roomCount) {
                 val isSelected = i == currentRoomIndex
-                val dotSize by animateDpAsState(
-                    targetValue = if (isSelected) 6.dp else 4.dp,
-                    animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium),
-                    label = "dotSize$i"
-                )
                 val dotColor by animateColorAsState(
                     targetValue = if (isSelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
                     animationSpec = tween(200),
@@ -125,7 +131,7 @@ fun RoomIndicator(
                 )
                 Box(
                     modifier = Modifier
-                        .size(dotSize)
+                        .size(5.dp)
                         .clip(CircleShape)
                         .background(dotColor)
                         .clickable(
@@ -157,7 +163,7 @@ fun AmbientTopBarActions(
             modifier = Modifier.size(36.dp)
         ) {
             Icon(
-                imageVector = PlusIcon,
+                imageVector = PhosphorIcons.Light.Plus,
                 contentDescription = "Add Room",
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
@@ -169,7 +175,7 @@ fun AmbientTopBarActions(
             modifier = Modifier.size(36.dp)
         ) {
             Icon(
-                imageVector = MoreVerticalIcon,
+                imageVector = PhosphorIcons.Light.DotsThreeVertical,
                 contentDescription = "More Options",
                 tint = Color.White,
                 modifier = Modifier.size(20.dp)
@@ -210,71 +216,6 @@ fun AmbientHeader(
             onMenuClick = onMenuClick
         )
     }
-}
-
-// Inlined vector paths avoid pulling in material-icons-extended (~30MB) for basic glyphs
-private val SimpleArrowIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "SimpleArrow",
-        defaultWidth = 12.dp,
-        defaultHeight = 12.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(fill = androidx.compose.ui.graphics.SolidColor(Color.White)) {
-            moveTo(3f, 3f)
-            lineTo(21f, 11f)
-            lineTo(13f, 13f)
-            lineTo(11f, 21f)
-            close()
-        }
-    }.build()
-}
-
-private val PlusIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Plus",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = androidx.compose.ui.graphics.SolidColor(Color.White),
-            strokeLineWidth = 2.2f,
-            strokeLineCap = androidx.compose.ui.graphics.StrokeCap.Round
-        ) {
-            moveTo(12f, 5f)
-            lineTo(12f, 19f)
-            moveTo(5f, 12f)
-            lineTo(19f, 12f)
-        }
-    }.build()
-}
-
-private val MoreVerticalIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "MoreVertical",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(fill = androidx.compose.ui.graphics.SolidColor(Color.White)) {
-            moveTo(12f, 6f)
-            arcTo(1.5f, 1.5f, 0f, true, true, 12f, 3f)
-            arcTo(1.5f, 1.5f, 0f, false, true, 12f, 6f)
-            close()
-            moveTo(12f, 13.5f)
-            arcTo(1.5f, 1.5f, 0f, true, true, 12f, 10.5f)
-            arcTo(1.5f, 1.5f, 0f, false, true, 12f, 13.5f)
-            close()
-            moveTo(12f, 21f)
-            arcTo(1.5f, 1.5f, 0f, true, true, 12f, 18f)
-            arcTo(1.5f, 1.5f, 0f, false, true, 12f, 21f)
-            close()
-        }
-    }.build()
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF1976D2)

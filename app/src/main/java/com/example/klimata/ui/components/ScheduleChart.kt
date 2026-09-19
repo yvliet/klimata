@@ -51,13 +51,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CaretRight
+import com.adamglin.phosphoricons.light.Fan
 import com.example.klimata.data.MockData
 import com.example.klimata.data.ThermalStep
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
-import kotlin.math.roundToInt
-
 import com.example.klimata.ui.theme.LocalDiurnalColors
+import kotlin.math.roundToInt
 
 /**
  * Visualizes the 4-phase overnight thermal automation progression:
@@ -135,7 +138,7 @@ fun ScheduleChart(
                         )
                     )
                     Icon(
-                        imageVector = safeCaretRightIcon(),
+                        imageVector = PhosphorIcons.Light.CaretRight,
                         contentDescription = "Open schedule details",
                         tint = Color.White.copy(alpha = 0.50f),
                         modifier = Modifier.size(13.dp)
@@ -355,7 +358,7 @@ fun ScheduleChart(
                                     horizontalArrangement = Arrangement.Center
                                 ) {
                                     Icon(
-                                        imageVector = safeFanIcon(),
+                                        imageVector = PhosphorIcons.Light.Fan,
                                         contentDescription = "Fan Only",
                                         tint = Color.White,
                                         modifier = Modifier.size(13.dp)
@@ -437,80 +440,6 @@ private data class ScheduleItem(
     val phaseName: String,
     val isActive: Boolean = false,
 )
-
-private val FallbackFanIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Fan",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 12f)
-            curveTo(12f, 7f, 16f, 4f, 18f, 6f)
-            curveTo(19f, 8f, 16f, 12f, 12f, 12f)
-            curveTo(7f, 12f, 4f, 16f, 6f, 18f)
-            curveTo(8f, 19f, 12f, 16f, 12f, 12f)
-            curveTo(12f, 17f, 8f, 20f, 6f, 18f)
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeFanIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackFanIcon
-    }
-    return getPhosphorLightIcon("Fan", FallbackFanIcon)
-}
-
-private val FallbackCaretRightIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "CaretRight",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2.2f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = StrokeJoin.Round
-        ) {
-            moveTo(9f, 6f)
-            lineTo(15f, 12f)
-            lineTo(9f, 18f)
-        }
-    }.build()
-}
-
-@Composable
-private fun safeCaretRightIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCaretRightIcon
-    }
-    return getPhosphorLightIcon("CaretRight", FallbackCaretRightIcon)
-}
 
 @Preview(showBackground = true, backgroundColor = 0xFF1976D2)
 @Composable

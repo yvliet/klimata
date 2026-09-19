@@ -26,6 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.Cube
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -34,9 +37,6 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -97,7 +97,7 @@ fun RoomThermalVisualizerCard(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Icon(
-                        imageVector = safeCubeIcon(),
+                        imageVector = PhosphorIcons.Light.Cube,
                         contentDescription = null,
                         tint = Color.White.copy(alpha = 0.50f),
                         modifier = Modifier.size(13.dp)
@@ -483,56 +483,6 @@ private fun IsometricRoomCanvas(
             strokeWidth = 1f
         )
     }
-}
-
-private val FallbackCubeIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Cube",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = androidx.compose.ui.graphics.SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round,
-            strokeLineJoin = androidx.compose.ui.graphics.StrokeJoin.Round
-        ) {
-            moveTo(12f, 2f)
-            lineTo(21f, 7f)
-            lineTo(21f, 17f)
-            lineTo(12f, 22f)
-            lineTo(3f, 17f)
-            lineTo(3f, 7f)
-            close()
-            moveTo(12f, 22f); lineTo(12f, 12f)
-            moveTo(21f, 7f); lineTo(12f, 12f)
-            moveTo(3f, 7f); lineTo(12f, 12f)
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeCubeIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackCubeIcon
-    }
-    return getPhosphorLightIcon("Cube", FallbackCubeIcon)
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF1976D2)

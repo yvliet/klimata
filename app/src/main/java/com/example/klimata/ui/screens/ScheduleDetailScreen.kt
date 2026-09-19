@@ -20,15 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.Sparkle
 import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.data.ThermalStep
@@ -101,7 +99,7 @@ fun ScheduleDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = safeSparkleIcon(),
+                            imageVector = PhosphorIcons.Light.Sparkle,
                             contentDescription = null,
                             tint = MineralMintActive,
                             modifier = Modifier.size(13.dp)
@@ -309,46 +307,4 @@ private fun ThermalStepMilestoneCard(
             }
         }
     }
-}
-
-private val FallbackSparkleIcon: ImageVector by lazy {
-    ImageVector.Builder(
-        name = "Sparkle",
-        defaultWidth = 24.dp,
-        defaultHeight = 24.dp,
-        viewportWidth = 24f,
-        viewportHeight = 24f
-    ).apply {
-        path(
-            stroke = SolidColor(Color.White),
-            strokeLineWidth = 2f,
-            strokeLineCap = StrokeCap.Round
-        ) {
-            moveTo(12f, 2f); lineTo(14f, 10f); lineTo(22f, 12f); lineTo(14f, 14f)
-            lineTo(12f, 22f); lineTo(10f, 14f); lineTo(2f, 12f); lineTo(10f, 10f)
-            close()
-        }
-    }.build()
-}
-
-private fun getPhosphorLightIcon(iconName: String, fallback: ImageVector): ImageVector {
-    return try {
-        val clazz = Class.forName("com.adamglin.phosphoricons.light.${iconName}Kt")
-        val phosphorIconsClass = Class.forName("com.adamglin.PhosphorIcons")
-        val lightField = phosphorIconsClass.getField("Light")
-        val lightObj = lightField[null]
-        val lightClass = Class.forName("com.adamglin.PhosphorIcons\$Light")
-        val method = clazz.getMethod("get$iconName", lightClass)
-        method.invoke(null, lightObj) as ImageVector
-    } catch (_: Throwable) {
-        fallback
-    }
-}
-
-@Composable
-private fun safeSparkleIcon(): ImageVector {
-    if (LocalInspectionMode.current) {
-        return FallbackSparkleIcon
-    }
-    return getPhosphorLightIcon("Sparkle", FallbackSparkleIcon)
 }
