@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -48,7 +49,7 @@ sealed class Screen(val route: String) {
 
 /**
  * Root navigation graph managing cinematic horizontal slide transitions across detail
- * destinations with subtle background parallax and soft recession dimming.
+ * destinations with subtle background parallax, soft recession dimming, and single-top navigation locks.
  */
 @Composable
 fun KlimataNavGraph(
@@ -61,6 +62,14 @@ fun KlimataNavGraph(
     }
 
     var rooms by remember { mutableStateOf(MockData.rooms) }
+
+    fun navigateSafely(route: String) {
+        if (navController.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
 
     KlimataTheme(phase = selectedPhase) {
         val diurnal = LocalDiurnalColors.current
@@ -105,16 +114,16 @@ fun KlimataNavGraph(
                             }
                         },
                         onScheduleClick = { roomId ->
-                            navController.navigate(Screen.ScheduleDetail.createRoute(roomId))
+                            navigateSafely(Screen.ScheduleDetail.createRoute(roomId))
                         },
                         onThermalClick = { roomId ->
-                            navController.navigate(Screen.RoomThermalDetail.createRoute(roomId))
+                            navigateSafely(Screen.RoomThermalDetail.createRoute(roomId))
                         },
                         onSavingsClick = { roomId ->
-                            navController.navigate(Screen.SavingsDetail.createRoute(roomId))
+                            navigateSafely(Screen.SavingsDetail.createRoute(roomId))
                         },
                         onCarbonClick = { roomId ->
-                            navController.navigate(Screen.CarbonDetail.createRoute(roomId))
+                            navigateSafely(Screen.CarbonDetail.createRoute(roomId))
                         }
                     )
                 }

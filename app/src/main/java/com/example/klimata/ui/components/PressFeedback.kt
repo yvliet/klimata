@@ -75,23 +75,21 @@ fun Modifier.bouncyClickable(
                     val sheenJob = coroutineScope.launch {
                         sheenAnim.animateTo(sheenAlpha, pressSpring)
                     }
-                    val released = try {
+                    try {
                         tryAwaitRelease()
-                        true
-                    } catch (e: Exception) {
-                        false
+                    } finally {
+                        pressJob.cancel()
+                        sheenJob.cancel()
+                        coroutineScope.launch {
+                            scaleAnim.animateTo(1.0f, releaseSpring)
+                        }
+                        coroutineScope.launch {
+                            sheenAnim.animateTo(0.0f, releaseSpring)
+                        }
                     }
-                    pressJob.cancel()
-                    sheenJob.cancel()
-                    coroutineScope.launch {
-                        scaleAnim.animateTo(1.0f, releaseSpring)
-                    }
-                    coroutineScope.launch {
-                        sheenAnim.animateTo(0.0f, releaseSpring)
-                    }
-                    if (released) {
-                        onClick()
-                    }
+                },
+                onTap = {
+                    onClick()
                 }
             )
         }
