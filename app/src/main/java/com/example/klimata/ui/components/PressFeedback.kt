@@ -6,10 +6,11 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
@@ -33,6 +34,7 @@ fun Modifier.bouncyClickable(
 ): Modifier {
     if (!enabled) return this
 
+    val currentOnClick by rememberUpdatedState(onClick)
     val coroutineScope = rememberCoroutineScope()
     val scaleAnim = remember { Animatable(1.0f) }
     val sheenAnim = remember { Animatable(0.0f) }
@@ -58,7 +60,6 @@ fun Modifier.bouncyClickable(
             this.shape = shape
             clip = true
         }
-        .clip(shape)
         .drawWithContent {
             drawContent()
             val currentSheen = sheenAnim.value
@@ -66,7 +67,7 @@ fun Modifier.bouncyClickable(
                 drawRect(color = Color.White.copy(alpha = currentSheen))
             }
         }
-        .pointerInput(enabled, onClick) {
+        .pointerInput(enabled) {
             detectTapGestures(
                 onPress = {
                     val pressJob = coroutineScope.launch {
@@ -89,7 +90,7 @@ fun Modifier.bouncyClickable(
                     }
                 },
                 onTap = {
-                    onClick()
+                    currentOnClick()
                 }
             )
         }

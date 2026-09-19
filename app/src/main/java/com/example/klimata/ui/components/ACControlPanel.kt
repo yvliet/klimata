@@ -73,12 +73,13 @@ fun ACControlPanel(
     modifier: Modifier = Modifier,
     profile: ACProfile = MockData.acProfile,
     dispatch: DispatchState = MockData.dispatch,
+    initialPowerOn: Boolean = true,
     initialEcoEnabled: Boolean = true,
     onPowerToggle: (Boolean) -> Unit = {},
     onEcoToggle: (Boolean) -> Unit = {},
     onTempChange: (Int) -> Unit = {},
 ) {
-    var isPowerOn by remember { mutableStateOf(value = true) }
+    var isPowerOn by remember(initialPowerOn) { mutableStateOf(initialPowerOn) }
     var setpoint by remember(profile.currentSetpoint) { mutableIntStateOf(profile.currentSetpoint) }
     var activeMode by remember(profile.mode) { mutableStateOf(profile.mode) }
     var isEcoEnabled by remember(initialEcoEnabled) { mutableStateOf(initialEcoEnabled) }
@@ -430,7 +431,7 @@ fun ACDigitalRemoteCard(
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
                             .background(powerButtonColor)
                             .clickable(
@@ -444,14 +445,14 @@ fun ACDigitalRemoteCard(
                             imageVector = PhosphorIcons.Light.Power,
                             contentDescription = "Toggle AC Power",
                             tint = powerIconColor,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                     }
 
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(42.dp)
                             .clip(CircleShape)
                             .background(ecoButtonColor)
                             .clickable(
@@ -466,7 +467,7 @@ fun ACDigitalRemoteCard(
                             imageVector = PhosphorIcons.Light.Leaf,
                             contentDescription = "Toggle Eco Mode",
                             tint = ecoIconColor,
-                            modifier = Modifier.size(17.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -508,7 +509,7 @@ fun ACDigitalRemoteCard(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .height(34.dp)
+                        .height(38.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(stepperBgColor)
                         .clickable(
@@ -525,7 +526,7 @@ fun ACDigitalRemoteCard(
                         imageVector = PhosphorIcons.Light.Minus,
                         contentDescription = "Decrease Temperature",
                         tint = stepperIconColor,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
 
@@ -533,7 +534,7 @@ fun ACDigitalRemoteCard(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
-                        .height(34.dp)
+                        .height(38.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(stepperBgColor)
                         .clickable(
@@ -550,7 +551,7 @@ fun ACDigitalRemoteCard(
                         imageVector = PhosphorIcons.Light.Plus,
                         contentDescription = "Increase Temperature",
                         tint = stepperIconColor,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             }
@@ -562,8 +563,8 @@ fun ACDigitalRemoteCard(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(10.dp))
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(12.dp))
                     .background(modeBtnBgColor)
                     .clickable(
                         enabled = isPowerOn,

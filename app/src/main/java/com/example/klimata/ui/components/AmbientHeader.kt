@@ -99,9 +99,9 @@ fun RoomIndicator(
         }
 
         Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(0.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 2.dp)
+            modifier = Modifier.padding(top = 0.dp)
         ) {
             val isPrimarySelected = currentRoomIndex == 0
             val cubeColor by animateColorAsState(
@@ -110,17 +110,22 @@ fun RoomIndicator(
                 label = "cubeColor"
             )
 
-            Icon(
-                imageVector = PhosphorIcons.Light.Cube,
-                contentDescription = "Primary Room",
-                tint = cubeColor,
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(12.dp)
+                    .size(24.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) { onRoomSelected(0) }
-            )
+            ) {
+                Icon(
+                    imageVector = PhosphorIcons.Light.Cube,
+                    contentDescription = "Primary Room",
+                    tint = cubeColor,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
 
             for (i in 1 until roomCount) {
                 val isSelected = i == currentRoomIndex
@@ -130,15 +135,21 @@ fun RoomIndicator(
                     label = "dotColor$i"
                 )
                 Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(5.dp)
-                        .clip(CircleShape)
-                        .background(dotColor)
+                        .size(24.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) { onRoomSelected(i) }
-                )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(dotColor)
+                    )
+                }
             }
         }
     }
@@ -160,7 +171,7 @@ fun AmbientTopBarActions(
     ) {
         IconButton(
             onClick = onAddRoomClick,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(40.dp)
         ) {
             Icon(
                 imageVector = PhosphorIcons.Light.Plus,
@@ -172,7 +183,7 @@ fun AmbientTopBarActions(
 
         IconButton(
             onClick = onMenuClick,
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(40.dp)
         ) {
             Icon(
                 imageVector = PhosphorIcons.Light.DotsThreeVertical,

@@ -106,11 +106,30 @@ fun KlimataNavGraph(
                     }
                 ) {
                     KlimataScreen(
-                        initialPhase = selectedPhase,
+                        phase = selectedPhase,
+                        onPhaseChange = { selectedPhase = it },
                         rooms = rooms,
+                        onPowerToggle = { roomId, isPowerOn ->
+                            rooms = rooms.map {
+                                if (it.id == roomId) {
+                                    it.copy(isPowerOn = isPowerOn)
+                                } else {
+                                    it
+                                }
+                            }
+                        },
                         onEcoToggle = { roomId, isEnabled ->
                             rooms = rooms.map {
                                 if (it.id == roomId) it.copy(isEcoEnabled = isEnabled) else it
+                            }
+                        },
+                        onTempChange = { roomId, setpoint ->
+                            rooms = rooms.map {
+                                if (it.id == roomId) {
+                                    it.copy(profile = it.profile.copy(currentSetpoint = setpoint))
+                                } else {
+                                    it
+                                }
                             }
                         },
                         onScheduleClick = { roomId ->

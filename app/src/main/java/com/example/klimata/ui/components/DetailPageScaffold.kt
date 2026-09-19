@@ -25,13 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,7 +34,6 @@ import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.CaretLeft
 import com.example.klimata.ui.theme.DetailBlackBackground
 import com.example.klimata.ui.theme.DetailCardSurface
-import com.example.klimata.ui.theme.DetailTextMuted
 import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
@@ -52,10 +44,10 @@ import com.example.klimata.ui.theme.JakartaFamily
 @Composable
 fun DetailPageScaffold(
     title: String,
-    subtitle: String? = null,
     onBackClick: () -> Unit,
-    trailingContent: @Composable (() -> Unit)? = null,
     modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    trailingContent: @Composable (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollState = rememberScrollState()

@@ -73,18 +73,17 @@ import kotlin.math.abs
 @Composable
 fun KlimataScreen(
     modifier: Modifier = Modifier,
-    initialPhase: DiurnalPhase? = null,
+    phase: DiurnalPhase = currentDiurnalPhase(),
+    onPhaseChange: (DiurnalPhase) -> Unit = {},
     rooms: List<RoomState> = MockData.rooms,
+    onPowerToggle: (roomId: String, isPowerOn: Boolean) -> Unit = { _, _ -> },
     onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
+    onTempChange: (roomId: String, setpoint: Int) -> Unit = { _, _ -> },
     onScheduleClick: (roomId: String) -> Unit = {},
     onThermalClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
     onCarbonClick: (roomId: String) -> Unit = {},
 ) {
-    var selectedPhase by remember {
-        mutableStateOf(initialPhase ?: currentDiurnalPhase())
-    }
-
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size })
     val coroutineScope = rememberCoroutineScope()
     val currentRoom = rooms[pagerState.currentPage]
@@ -142,11 +141,11 @@ fun KlimataScreen(
         label = "HeroTempAlphaTransition"
     )
 
-    KlimataTheme(phase = selectedPhase) {
+    KlimataTheme(phase = phase) {
         val diurnal = LocalDiurnalColors.current
 
-        val activeSkyGradient = remember(selectedPhase) {
-            if (selectedPhase == DiurnalPhase.NIGHT) {
+        val activeSkyGradient = remember(phase) {
+            if (phase == DiurnalPhase.NIGHT) {
                 Brush.verticalGradient(
                     listOf(OvercastSkyStop1, OvercastSkyStop2, OvercastSkyStop3, OvercastSkyStop4)
                 )
@@ -167,7 +166,7 @@ fun KlimataScreen(
 
             AtmosphericSkyCanvas(
                 scrollOffsetProvider = { scrollState.value.toFloat() },
-                phase = selectedPhase,
+                phase = phase,
                 weatherCondition = effectiveCondition,
                 modifier = Modifier.fillMaxSize()
             )
@@ -246,7 +245,7 @@ fun KlimataScreen(
                             condition = effectiveCondition,
                             highTemp = MockData.weather.highTemp,
                             lowTemp = MockData.weather.lowTemp,
-                            phase = selectedPhase,
+                            phase = phase,
                             roomIndex = pagerState.currentPage,
                             tempScale = animatedTempScale,
                             tempAlpha = animatedTempAlpha,
@@ -287,8 +286,11 @@ fun KlimataScreen(
                         ACControlPanel(
                             profile = room.profile,
                             dispatch = room.dispatchState,
+                            initialPowerOn = room.isPowerOn,
                             initialEcoEnabled = room.isEcoEnabled,
+                            onPowerToggle = { isPowerOn -> onPowerToggle(room.id, isPowerOn) },
                             onEcoToggle = { isEnabled -> onEcoToggle(room.id, isEnabled) },
+                            onTempChange = { setpoint -> onTempChange(room.id, setpoint) },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -339,11 +341,12 @@ fun KlimataScreen(
                 AmbientTopBarActions(
                     onAddRoomClick = { /* TODO: Hook room provisioning flow */ },
                     onMenuClick = {
-                        selectedPhase = when (selectedPhase) {
+                        val nextPhase = when (phase) {
                             DiurnalPhase.DAY -> DiurnalPhase.EVENING
                             DiurnalPhase.EVENING -> DiurnalPhase.NIGHT
                             DiurnalPhase.NIGHT -> DiurnalPhase.DAY
                         }
+                        onPhaseChange(nextPhase)
                     },
                     modifier = Modifier.align(Alignment.TopEnd)
                 )
@@ -355,12 +358,12 @@ fun KlimataScreen(
 @Preview(showBackground = true)
 @Composable
 private fun KlimataScreenDayPreview() {
-    KlimataScreen(initialPhase = DiurnalPhase.DAY)
+    KlimataScreen(phase = DiurnalPhase.DAY)
 }
 
 @Preview(showBackground = true)
 @Composable
 private fun KlimataScreenNightPreview() {
-    KlimataScreen(initialPhase = DiurnalPhase.NIGHT)
+    KlimataScreen(phase = DiurnalPhase.NIGHT)
 }
 
