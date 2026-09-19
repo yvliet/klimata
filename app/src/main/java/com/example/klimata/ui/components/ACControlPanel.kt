@@ -367,10 +367,24 @@ fun ACDigitalRemoteCard(
         label = "RemoteStepperIconColor"
     )
 
+    val rawModeColor = when (currentMode) {
+        "Cool" -> Color(0xFF60A5FA)
+        "Dry" -> Color(0xFF38BDF8)
+        "Fan" -> Color(0xFFFBBF24)
+        "Auto" -> Color(0xFFA78BFA)
+        else -> Color(0xFF60A5FA)
+    }
+
     val modeBtnBgColor by animateColorAsState(
-        targetValue = if (isPowerOn) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.04f),
+        targetValue = if (isPowerOn) rawModeColor else Color.White.copy(alpha = 0.04f),
         animationSpec = tween(200),
         label = "RemoteModeBtnBgColor"
+    )
+
+    val modeIconColor by animateColorAsState(
+        targetValue = if (isPowerOn) Color(0xFF0F172A) else Color.White.copy(alpha = 0.25f),
+        animationSpec = tween(200),
+        label = "RemoteModeIconColor"
     )
 
     val powerIndicatorDotColor by animateColorAsState(
@@ -478,23 +492,22 @@ fun ACDigitalRemoteCard(
                         }
                 ) {
                     Crossfade(
-                        targetState = Pair(currentMode, isPowerOn),
+                        targetState = currentMode,
                         animationSpec = tween(180),
                         label = "RemoteModeIconCrossfade"
-                    ) { (mode, powerState) ->
-                        val (modeIcon, rawModeColor) = when (mode) {
-                            "Cool" -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
-                            "Dry" -> PhosphorIcons.Light.Drop to Color(0xFF38BDF8)
-                            "Fan" -> PhosphorIcons.Light.Fan to Color(0xFFFBBF24)
-                            "Auto" -> PhosphorIcons.Light.ArrowsClockwise to Color(0xFFA78BFA)
-                            else -> PhosphorIcons.Light.Snowflake to Color(0xFF60A5FA)
+                    ) { mode ->
+                        val modeIcon = when (mode) {
+                            "Cool" -> PhosphorIcons.Light.Snowflake
+                            "Dry" -> PhosphorIcons.Light.Drop
+                            "Fan" -> PhosphorIcons.Light.Fan
+                            "Auto" -> PhosphorIcons.Light.ArrowsClockwise
+                            else -> PhosphorIcons.Light.Snowflake
                         }
-                        val modeColor = if (powerState) rawModeColor else Color.White.copy(alpha = 0.25f)
 
                         Icon(
                             imageVector = modeIcon,
                             contentDescription = "Cycle AC Mode (Current: $mode)",
-                            tint = modeColor,
+                            tint = modeIconColor,
                             modifier = Modifier.size(18.dp)
                         )
                     }
