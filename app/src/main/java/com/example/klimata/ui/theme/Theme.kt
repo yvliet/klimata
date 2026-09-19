@@ -49,6 +49,7 @@ data class DiurnalColors(
     val onSkyPrimary: Color = OnSkyPrimary,
     val onSkySecondary: Color = OnSkySecondary,
     val onSkyMuted: Color = OnSkyMuted,
+    val onAccent: Color = Color.White,
 )
 
 val LocalDiurnalColors = staticCompositionLocalOf {
@@ -86,6 +87,7 @@ fun diurnalColorsFor(phase: DiurnalPhase): DiurnalColors = when (phase) {
         onSkyPrimary = OnSkyPrimary,
         onSkySecondary = OnSkySecondary,
         onSkyMuted = OnSkyMuted,
+        onAccent = Color.White,
     )
     DiurnalPhase.EVENING -> DiurnalColors(
         skyGradient = Brush.verticalGradient(
@@ -117,6 +119,7 @@ fun diurnalColorsFor(phase: DiurnalPhase): DiurnalColors = when (phase) {
         onSkyPrimary = OnSkyPrimary,
         onSkySecondary = OnSkySecondary,
         onSkyMuted = OnSkyMuted,
+        onAccent = Color.White,
     )
     DiurnalPhase.NIGHT -> DiurnalColors(
         skyGradient = Brush.verticalGradient(
@@ -148,12 +151,13 @@ fun diurnalColorsFor(phase: DiurnalPhase): DiurnalColors = when (phase) {
         onSkyPrimary = OnSkyPrimary,
         onSkySecondary = OnSkySecondary,
         onSkyMuted = OnSkyMuted,
+        onAccent = Color(0xFF0F172A),
     )
 }
 
 private fun makeLightKlimataScheme(diurnal: DiurnalColors) = lightColorScheme(
     primary = diurnal.accentColor,
-    onPrimary = Color.White,
+    onPrimary = diurnal.onAccent,
     surface = diurnal.deckSurface,
     onSurface = diurnal.textPrimary,
     surfaceVariant = diurnal.cardSurface,
@@ -162,7 +166,7 @@ private fun makeLightKlimataScheme(diurnal: DiurnalColors) = lightColorScheme(
 
 private fun makeDarkKlimataScheme(diurnal: DiurnalColors) = darkColorScheme(
     primary = diurnal.accentColor,
-    onPrimary = Color.White,
+    onPrimary = diurnal.onAccent,
     surface = diurnal.deckSurface,
     onSurface = diurnal.textPrimary,
     surfaceVariant = diurnal.cardSurface,

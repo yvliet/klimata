@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.sp
 import com.example.klimata.ui.theme.DetailCardBorder
 import com.example.klimata.ui.theme.DetailCardSurface
@@ -44,8 +45,7 @@ import com.example.klimata.ui.theme.DetailCardSurfaceElevated
 import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
-import com.example.klimata.ui.theme.MineralMint
-import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.LocalDiurnalColors
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.max
@@ -63,6 +63,7 @@ fun PresetRoomCanvas(
     widthMeters: Float,
     lengthMeters: Float,
     ceilingHeightMeters: Float = 2.8f,
+    accentColor: Color = LocalDiurnalColors.current.accentColor,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -77,9 +78,9 @@ fun PresetRoomCanvas(
         }
     }
 
-    val mintLabelPaint = remember(density) {
+    val accentLabelPaint = remember(density, accentColor) {
         Paint().apply {
-            color = android.graphics.Color.argb(255, 52, 211, 153)
+            color = accentColor.toArgb()
             textSize = with(density) { 10.sp.toPx() }
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
@@ -158,7 +159,7 @@ fun PresetRoomCanvas(
                     lineTo(p[5].x, p[5].y)
                     close()
                 }
-                drawPath(rearWallRight, color = MineralMintActive.copy(alpha = 0.04f), style = Fill)
+                drawPath(rearWallRight, color = accentColor.copy(alpha = 0.04f), style = Fill)
 
                 val rearWallLeft = Path().apply {
                     moveTo(p[3].x, p[3].y)
@@ -167,7 +168,7 @@ fun PresetRoomCanvas(
                     lineTo(p[7].x, p[7].y)
                     close()
                 }
-                drawPath(rearWallLeft, color = MineralMint.copy(alpha = 0.05f), style = Fill)
+                drawPath(rearWallLeft, color = accentColor.copy(alpha = 0.05f), style = Fill)
 
                 // 2. Floor plane fill & wireframe
                 val floorPath = Path().apply {
@@ -177,8 +178,8 @@ fun PresetRoomCanvas(
                     lineTo(p[3].x, p[3].y)
                     close()
                 }
-                drawPath(floorPath, color = MineralMintActive.copy(alpha = 0.06f), style = Fill)
-                drawPath(floorPath, color = MineralMintActive.copy(alpha = 0.85f), style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round))
+                drawPath(floorPath, color = accentColor.copy(alpha = 0.06f), style = Fill)
+                drawPath(floorPath, color = accentColor.copy(alpha = 0.85f), style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round))
 
                 // 3. Vertical pillars
                 val pillarColor = Color.White.copy(alpha = 0.70f)
@@ -196,12 +197,12 @@ fun PresetRoomCanvas(
                     lineTo(p[7].x, p[7].y)
                     close()
                 }
-                drawPath(ceilPath, color = MineralMintActive, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+                drawPath(ceilPath, color = accentColor, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
 
                 // 5. Corner nodes
                 listOf(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]).forEach { node ->
                     drawCircle(color = DetailCardSurface, radius = 4.5.dp.toPx(), center = node)
-                    drawCircle(color = MineralMintActive, radius = 3.dp.toPx(), center = node)
+                    drawCircle(color = accentColor, radius = 3.dp.toPx(), center = node)
                 }
 
                 // 6. Dimension callouts in 3D
@@ -229,7 +230,7 @@ fun PresetRoomCanvas(
                     "H: %.1f m".format(h),
                     midHeight.x,
                     midHeight.y,
-                    mintLabelPaint
+                    accentLabelPaint
                 )
         }
     }
@@ -245,6 +246,7 @@ fun CustomRoomCanvas(
     onVerticesChanged: (List<Offset>) -> Unit,
     isClosed: Boolean,
     onClosedChanged: (Boolean) -> Unit,
+    accentColor: Color = LocalDiurnalColors.current.accentColor,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -277,9 +279,9 @@ fun CustomRoomCanvas(
         }
     }
 
-    val areaLabelPaint = remember(density) {
+    val areaLabelPaint = remember(density, accentColor) {
         Paint().apply {
-            color = android.graphics.Color.argb(255, 52, 211, 153)
+            color = accentColor.toArgb()
             textSize = with(density) { 13.sp.toPx() }
             isAntiAlias = true
             textAlign = Paint.Align.CENTER
@@ -415,14 +417,14 @@ fun CustomRoomCanvas(
             if (isClosed) {
                 drawPath(
                     polyPath,
-                    color = MineralMintActive.copy(alpha = 0.08f),
+                    color = accentColor.copy(alpha = 0.08f),
                     style = Fill
                 )
             }
 
             drawPath(
                 polyPath,
-                color = MineralMintActive,
+                color = accentColor,
                 style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
             )
 
@@ -431,7 +433,7 @@ fun CustomRoomCanvas(
                 val last = vertices.last()
                 val first = vertices.first()
                 drawLine(
-                    color = MineralMintActive.copy(alpha = 0.35f),
+                    color = accentColor.copy(alpha = 0.35f),
                     start = last,
                     end = first,
                     strokeWidth = 1.5.dp.toPx(),
@@ -471,7 +473,7 @@ fun CustomRoomCanvas(
 
                 if (isFirst && !isClosed && vertices.size >= 3) {
                     drawCircle(
-                        color = MineralMintActive.copy(alpha = 0.25f),
+                        color = accentColor.copy(alpha = 0.25f),
                         radius = closureRadiusPx,
                         center = vertex
                     )
@@ -483,7 +485,7 @@ fun CustomRoomCanvas(
                     center = vertex
                 )
                 drawCircle(
-                    color = MineralMintActive,
+                    color = accentColor,
                     radius = if (isActive) 7.dp.toPx() else 4.5.dp.toPx(),
                     center = vertex
                 )

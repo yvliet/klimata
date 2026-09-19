@@ -84,7 +84,7 @@ import com.example.klimata.ui.theme.DetailTextMuted
 import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
-import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.LocalDiurnalColors
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -121,6 +121,7 @@ fun AddRoomWizardScreen(
     val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
+    val diurnal = LocalDiurnalColors.current
 
     var currentStage by remember { mutableStateOf(WizardStage.NAME_ROOM) }
 
@@ -431,9 +432,9 @@ fun AddRoomWizardScreen(
                                     focusedContainerColor = DetailCardSurface,
                                     unfocusedContainerColor = DetailCardSurface,
                                     disabledContainerColor = DetailCardSurface,
-                                    focusedIndicatorColor = MineralMintActive,
+                                    focusedIndicatorColor = diurnal.accentColor,
                                     unfocusedIndicatorColor = DetailCardBorder,
-                                    cursorColor = MineralMintActive
+                                    cursorColor = diurnal.accentColor
                                 ),
                                 shape = RoundedCornerShape(16.dp),
                                 modifier = Modifier
@@ -468,7 +469,7 @@ fun AddRoomWizardScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurface)
+                                                    .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurface)
                                                     .clickable { roomName = name }
                                                     .padding(horizontal = 14.dp, vertical = 9.dp)
                                             ) {
@@ -478,7 +479,7 @@ fun AddRoomWizardScreen(
                                                         fontFamily = JakartaFamily,
                                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                                         fontSize = 12.5.sp,
-                                                        color = if (isSelected) MineralMintActive else DetailTextPrimary
+                                                        color = if (isSelected) diurnal.accentColor else DetailTextPrimary
                                                     )
                                                 )
                                             }
@@ -491,7 +492,7 @@ fun AddRoomWizardScreen(
                                             Box(
                                                 modifier = Modifier
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurface)
+                                                    .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurface)
                                                     .clickable { roomName = name }
                                                     .padding(horizontal = 14.dp, vertical = 9.dp)
                                             ) {
@@ -501,7 +502,7 @@ fun AddRoomWizardScreen(
                                                         fontFamily = JakartaFamily,
                                                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                                                         fontSize = 12.5.sp,
-                                                        color = if (isSelected) MineralMintActive else DetailTextPrimary
+                                                        color = if (isSelected) diurnal.accentColor else DetailTextPrimary
                                                     )
                                                 )
                                             }
@@ -561,7 +562,7 @@ fun AddRoomWizardScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (sizingMode == "presets") MineralMintActive else Color.Transparent)
+                                        .background(if (sizingMode == "presets") diurnal.accentColor else Color.Transparent)
                                         .clickable { sizingMode = "presets" }
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
@@ -571,7 +572,7 @@ fun AddRoomWizardScreen(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 12.sp,
-                                            color = if (sizingMode == "presets") Color(0xFF0F172A) else DetailTextSecondary
+                                            color = if (sizingMode == "presets") diurnal.onAccent else DetailTextSecondary
                                         )
                                     )
                                 }
@@ -579,7 +580,7 @@ fun AddRoomWizardScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (sizingMode == "custom") MineralMintActive else Color.Transparent)
+                                        .background(if (sizingMode == "custom") diurnal.accentColor else Color.Transparent)
                                         .clickable { sizingMode = "custom" }
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
@@ -589,7 +590,7 @@ fun AddRoomWizardScreen(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 12.sp,
-                                            color = if (sizingMode == "custom") Color(0xFF0F172A) else DetailTextSecondary
+                                            color = if (sizingMode == "custom") diurnal.onAccent else DetailTextSecondary
                                         )
                                     )
                                 }
@@ -601,6 +602,7 @@ fun AddRoomWizardScreen(
                                     widthMeters = manualWidth,
                                     lengthMeters = manualLength,
                                     ceilingHeightMeters = ceilingHeight,
+                                    accentColor = diurnal.accentColor,
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(210.dp)
@@ -615,7 +617,7 @@ fun AddRoomWizardScreen(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp,
-                                        color = MineralMintActive,
+                                        color = diurnal.accentColor,
                                         textAlign = TextAlign.Center
                                     )
                                 )
@@ -644,7 +646,7 @@ fun AddRoomWizardScreen(
                                                 modifier = Modifier
                                                     .weight(1f)
                                                     .clip(RoundedCornerShape(12.dp))
-                                                    .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
+                                                    .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
                                                     .clickable {
                                                         selectedPreset = label
                                                         areaSquareMeters = sqm
@@ -659,7 +661,7 @@ fun AddRoomWizardScreen(
                                                         fontFamily = JakartaFamily,
                                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                         fontSize = 12.sp,
-                                                        color = if (isSelected) MineralMintActive else DetailTextPrimary,
+                                                        color = if (isSelected) diurnal.accentColor else DetailTextPrimary,
                                                         textAlign = TextAlign.Center
                                                     )
                                                 )
@@ -682,8 +684,8 @@ fun AddRoomWizardScreen(
                                             },
                                             valueRange = 2.5f..8.0f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = MineralMintActive,
-                                                activeTrackColor = MineralMintActive,
+                                                thumbColor = diurnal.accentColor,
+                                                activeTrackColor = diurnal.accentColor,
                                                 inactiveTrackColor = DetailCardBorder
                                             )
                                         )
@@ -704,8 +706,8 @@ fun AddRoomWizardScreen(
                                             },
                                             valueRange = 2.5f..10.0f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = MineralMintActive,
-                                                activeTrackColor = MineralMintActive,
+                                                thumbColor = diurnal.accentColor,
+                                                activeTrackColor = diurnal.accentColor,
                                                 inactiveTrackColor = DetailCardBorder
                                             )
                                         )
@@ -725,8 +727,8 @@ fun AddRoomWizardScreen(
                                             },
                                             valueRange = 2.2f..4.0f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = MineralMintActive,
-                                                activeTrackColor = MineralMintActive,
+                                                thumbColor = diurnal.accentColor,
+                                                activeTrackColor = diurnal.accentColor,
                                                 inactiveTrackColor = DetailCardBorder
                                             )
                                         )
@@ -743,6 +745,7 @@ fun AddRoomWizardScreen(
                                     RoomConstructionCanvas(
                                         floorVertices = floorVerticesInMeters,
                                         ceilingHeightM = ceilingHeight,
+                                        accentColor = diurnal.accentColor,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(240.dp)
@@ -753,6 +756,7 @@ fun AddRoomWizardScreen(
                                         onVerticesChanged = { customVertices = it },
                                         isClosed = isPolygonClosed,
                                         onClosedChanged = { isPolygonClosed = it },
+                                        accentColor = diurnal.accentColor,
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(280.dp)
@@ -788,7 +792,7 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 13.sp,
-                                                    color = MineralMintActive
+                                                    color = diurnal.accentColor
                                                 )
                                             )
                                         }
@@ -802,7 +806,7 @@ fun AddRoomWizardScreen(
                                                 .fillMaxWidth()
                                                 .height(44.dp)
                                                 .clip(RoundedCornerShape(12.dp))
-                                                .background(MineralMintActive.copy(alpha = 0.18f))
+                                                .background(diurnal.accentColor.copy(alpha = 0.18f))
                                                 .bouncyClickable {
                                                     isPolygonClosed = true
                                                 }
@@ -813,7 +817,7 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 13.sp,
-                                                    color = MineralMintActive
+                                                    color = diurnal.accentColor
                                                 )
                                             )
                                         }
@@ -904,7 +908,7 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.Bold,
                                                     fontSize = 12.5.sp,
-                                                    color = MineralMintActive
+                                                    color = diurnal.accentColor
                                                 )
                                             )
                                         }
@@ -915,8 +919,8 @@ fun AddRoomWizardScreen(
                                             },
                                             valueRange = 2.2f..4.0f,
                                             colors = SliderDefaults.colors(
-                                                thumbColor = MineralMintActive,
-                                                activeTrackColor = MineralMintActive,
+                                                thumbColor = diurnal.accentColor,
+                                                activeTrackColor = diurnal.accentColor,
                                                 inactiveTrackColor = DetailCardBorder
                                             )
                                         )
@@ -965,7 +969,7 @@ fun AddRoomWizardScreen(
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .clip(RoundedCornerShape(10.dp))
-                                                .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
+                                                .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
                                                 .clickable { thermalMass = type }
                                                 .padding(vertical = 8.dp)
                                         ) {
@@ -975,7 +979,7 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                                     fontSize = 11.5.sp,
-                                                    color = if (isSelected) MineralMintActive else DetailTextSecondary,
+                                                    color = if (isSelected) diurnal.accentColor else DetailTextSecondary,
                                                     textAlign = TextAlign.Center
                                                 )
                                             )
@@ -1015,6 +1019,7 @@ fun AddRoomWizardScreen(
                             RoomConstructionCanvas(
                                 floorVertices = floorVerticesInMeters,
                                 ceilingHeightM = ceilingHeight,
+                                accentColor = diurnal.accentColor,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(210.dp)
@@ -1027,7 +1032,7 @@ fun AddRoomWizardScreen(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
-                                    color = MineralMintActive,
+                                    color = diurnal.accentColor,
                                     textAlign = TextAlign.Center
                                 )
                             )
@@ -1102,12 +1107,12 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier
                                             .size(52.dp)
                                             .clip(CircleShape)
-                                            .background(MineralMintActive.copy(alpha = 0.16f))
+                                            .background(diurnal.accentColor.copy(alpha = 0.16f))
                                     ) {
                                         Icon(
                                             imageVector = PhosphorIcons.Light.Camera,
                                             contentDescription = "Take Photo",
-                                            tint = MineralMintActive,
+                                            tint = diurnal.accentColor,
                                             modifier = Modifier.size(24.dp)
                                         )
                                     }
@@ -1194,7 +1199,7 @@ fun AddRoomWizardScreen(
                                         .background(DetailCardSurface)
                                 ) {
                                     CircularProgressIndicator(
-                                        color = MineralMintActive,
+                                        color = diurnal.accentColor,
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
@@ -1240,7 +1245,7 @@ fun AddRoomWizardScreen(
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(8.dp))
-                                                .background(MineralMintActive.copy(alpha = 0.16f))
+                                                .background(diurnal.accentColor.copy(alpha = 0.16f))
                                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
                                             Text(
@@ -1249,7 +1254,7 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.SemiBold,
                                                     fontSize = 11.sp,
-                                                    color = MineralMintActive
+                                                    color = diurnal.accentColor
                                                 )
                                             )
                                         }
@@ -1319,7 +1324,7 @@ fun AddRoomWizardScreen(
                                             .weight(1.3f)
                                             .height(48.dp)
                                             .clip(RoundedCornerShape(14.dp))
-                                            .background(MineralMintActive)
+                                            .background(diurnal.accentColor)
                                             .bouncyClickable {
                                                 currentStage = WizardStage.LOCATION_SYNC
                                             }
@@ -1330,7 +1335,7 @@ fun AddRoomWizardScreen(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 13.sp,
-                                                color = Color(0xFF0F172A)
+                                                color = diurnal.onAccent
                                             )
                                         )
                                     }
@@ -1386,7 +1391,7 @@ fun AddRoomWizardScreen(
                                             Icon(
                                                 imageVector = PhosphorIcons.Light.MapPin,
                                                 contentDescription = null,
-                                                tint = MineralMintActive,
+                                                tint = diurnal.accentColor,
                                                 modifier = Modifier.size(18.dp)
                                             )
                                             Text(
@@ -1402,7 +1407,7 @@ fun AddRoomWizardScreen(
 
                                         if (isDetectingGps) {
                                             CircularProgressIndicator(
-                                                color = MineralMintActive,
+                                                color = diurnal.accentColor,
                                                 modifier = Modifier.size(18.dp),
                                                 strokeWidth = 2.dp
                                             )
@@ -1418,7 +1423,7 @@ fun AddRoomWizardScreen(
                                                 Icon(
                                                     imageVector = PhosphorIcons.Light.ArrowsClockwise,
                                                     contentDescription = "Refresh GPS",
-                                                    tint = MineralMintActive,
+                                                    tint = diurnal.accentColor,
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
@@ -1465,7 +1470,7 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .clip(RoundedCornerShape(12.dp))
-                                            .background(if (isSelected) MineralMintActive.copy(alpha = 0.16f) else DetailCardSurfaceElevated)
+                                            .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.16f) else DetailCardSurfaceElevated)
                                             .clickable { selectedLocation = city }
                                             .padding(horizontal = 14.dp, vertical = 10.dp)
                                     ) {
@@ -1480,14 +1485,14 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                                     fontSize = 13.sp,
-                                                    color = if (isSelected) MineralMintActive else DetailTextPrimary
+                                                    color = if (isSelected) diurnal.accentColor else DetailTextPrimary
                                                 )
                                             )
                                             if (isSelected) {
                                                 Icon(
                                                     imageVector = PhosphorIcons.Light.Check,
                                                     contentDescription = null,
-                                                    tint = MineralMintActive,
+                                                    tint = diurnal.accentColor,
                                                     modifier = Modifier.size(16.dp)
                                                 )
                                             }
@@ -1563,7 +1568,7 @@ fun AddRoomWizardScreen(
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 34.sp,
                                             letterSpacing = (-0.5).sp,
-                                            color = MineralMintActive
+                                            color = diurnal.accentColor
                                         )
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -1592,6 +1597,7 @@ fun AddRoomWizardScreen(
                                         value = "1.4",
                                         unit = "trees/mo",
                                         description = "CO₂ captured naturally",
+                                        accentColor = diurnal.accentColor,
                                         modifier = Modifier.weight(1f)
                                     )
                                     ImpactStatCard(
@@ -1599,6 +1605,7 @@ fun AddRoomWizardScreen(
                                         value = "138",
                                         unit = "km",
                                         description = "Combustion tailpipe offset",
+                                        accentColor = diurnal.accentColor,
                                         modifier = Modifier.weight(1f)
                                     )
                                 }
@@ -1622,6 +1629,8 @@ fun AddRoomWizardScreen(
 private fun PrimaryActionButton(
     label: String,
     enabled: Boolean = true,
+    accentColor: Color = LocalDiurnalColors.current.accentColor,
+    onAccent: Color = LocalDiurnalColors.current.onAccent,
     onClick: () -> Unit
 ) {
     Box(
@@ -1630,7 +1639,7 @@ private fun PrimaryActionButton(
             .fillMaxWidth()
             .height(52.dp)
             .clip(RoundedCornerShape(16.dp))
-            .background(if (enabled) MineralMintActive else DetailCardSurfaceElevated)
+            .background(if (enabled) accentColor else DetailCardSurfaceElevated)
             .bouncyClickable(enabled = enabled, onClick = onClick)
     ) {
         Text(
@@ -1639,7 +1648,7 @@ private fun PrimaryActionButton(
                 fontFamily = JakartaFamily,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = if (enabled) Color(0xFF0F172A) else DetailTextMuted
+                color = if (enabled) onAccent else DetailTextMuted
             )
         )
     }
@@ -1651,6 +1660,7 @@ private fun ImpactStatCard(
     value: String,
     unit: String,
     description: String,
+    accentColor: Color = LocalDiurnalColors.current.accentColor,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -1687,7 +1697,7 @@ private fun ImpactStatCard(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 11.sp,
-                        color = MineralMintActive
+                        color = accentColor
                     ),
                     modifier = Modifier.padding(bottom = 2.dp)
                 )

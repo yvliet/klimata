@@ -23,8 +23,7 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import com.example.klimata.ui.theme.DetailCardSurface
-import com.example.klimata.ui.theme.MineralMint
-import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.LocalDiurnalColors
 import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
@@ -39,6 +38,7 @@ import kotlin.math.sin
 fun RoomConstructionCanvas(
     floorVertices: List<Offset>,
     ceilingHeightM: Float = 2.8f,
+    accentColor: Color = LocalDiurnalColors.current.accentColor,
     onAnimationFinished: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -138,7 +138,7 @@ fun RoomConstructionCanvas(
                         val pStart = pFloor[i]
                         val pEnd = pFloor[(i + 1) % n]
                         drawLine(
-                            color = MineralMintActive,
+                            color = accentColor,
                             start = pStart,
                             end = lerpPoint(pStart, pEnd, segT),
                             strokeWidth = 2.dp.toPx(),
@@ -150,7 +150,7 @@ fun RoomConstructionCanvas(
                 // Glowing nodes as perimeter progresses
                 val nodeCount = (floorP * n).toInt() + 1
                 for (i in 0 until min(nodeCount, n)) {
-                    drawCircle(color = MineralMintActive, radius = 3.5.dp.toPx(), center = pFloor[i])
+                    drawCircle(color = accentColor, radius = 3.5.dp.toPx(), center = pFloor[i])
                 }
             }
 
@@ -176,13 +176,13 @@ fun RoomConstructionCanvas(
                     val segEnd = (i + 1) / n.toFloat()
 
                     if (ceilP > segStart) {
-                        val segT = ((ceilP - segStart) / (segEnd - segStart)).coerceIn(0f, 1f)
+                        val ceilT = ((ceilP - segStart) / (segEnd - segStart)).coerceIn(0f, 1f)
                         val pStart = pCeil[i]
                         val pEnd = pCeil[(i + 1) % n]
                         drawLine(
-                            color = MineralMintActive.copy(alpha = 0.90f),
+                            color = accentColor.copy(alpha = 0.90f),
                             start = pStart,
-                            end = lerpPoint(pStart, pEnd, segT),
+                            end = lerpPoint(pStart, pEnd, ceilT),
                             strokeWidth = 1.8.dp.toPx(),
                             cap = StrokeCap.Round
                         )
@@ -190,7 +190,7 @@ fun RoomConstructionCanvas(
                 }
 
                 for (i in 0 until n) {
-                    drawCircle(color = MineralMintActive, radius = 3.dp.toPx(), center = pCeil[i])
+                    drawCircle(color = accentColor, radius = 3.dp.toPx(), center = pCeil[i])
                 }
             }
 
@@ -226,7 +226,7 @@ fun RoomConstructionCanvas(
                     path = rearWallPath,
                     brush = Brush.verticalGradient(
                         listOf(
-                            MineralMintActive.copy(alpha = 0.14f * wallAlpha),
+                            accentColor.copy(alpha = 0.14f * wallAlpha),
                             Color.Transparent
                         ),
                         startY = min(r1Ceil.y, r2Ceil.y),
@@ -252,9 +252,9 @@ fun RoomConstructionCanvas(
                     strokeWidth = 5.5.dp.toPx(),
                     cap = StrokeCap.Round
                 )
-                // Active mint louvre LED
+                // Active louvre LED
                 drawLine(
-                    color = MineralMintActive.copy(alpha = wallAlpha),
+                    color = accentColor.copy(alpha = wallAlpha),
                     start = Offset(acP1.x, acP1.y + 2.dp.toPx()),
                     end = Offset(acP2.x, acP2.y + 2.dp.toPx()),
                     strokeWidth = 1.8.dp.toPx(),
