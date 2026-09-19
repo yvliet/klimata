@@ -3,6 +3,7 @@ package com.example.klimata.ui.screens.provisioning
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -288,6 +289,23 @@ fun AddRoomWizardScreen(
         onRoomCreated(newRoom)
     }
 
+    fun handleBack() {
+        when (currentStage) {
+            WizardStage.NAME_ROOM -> onBackClick()
+            WizardStage.ROOM_SIZING -> currentStage = WizardStage.NAME_ROOM
+            WizardStage.CONSTRUCTION_ANIMATION -> currentStage = WizardStage.ROOM_SIZING
+            WizardStage.CAPTURE_AC -> currentStage = WizardStage.ROOM_SIZING
+            WizardStage.CONFIRM_AC -> currentStage = WizardStage.CAPTURE_AC
+            WizardStage.LOCATION_SYNC -> currentStage = WizardStage.CONFIRM_AC
+            WizardStage.IMPACT_REVEAL -> currentStage = WizardStage.LOCATION_SYNC
+        }
+    }
+
+    // Intercept system back button / back swipe gesture so user steps back within wizard instead of exiting
+    BackHandler {
+        handleBack()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -316,17 +334,7 @@ fun AddRoomWizardScreen(
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(DetailCardSurface)
-                        .clickable {
-                            when (currentStage) {
-                                WizardStage.NAME_ROOM -> onBackClick()
-                                WizardStage.ROOM_SIZING -> currentStage = WizardStage.NAME_ROOM
-                                WizardStage.CONSTRUCTION_ANIMATION -> currentStage = WizardStage.ROOM_SIZING
-                                WizardStage.CAPTURE_AC -> currentStage = WizardStage.ROOM_SIZING
-                                WizardStage.CONFIRM_AC -> currentStage = WizardStage.CAPTURE_AC
-                                WizardStage.LOCATION_SYNC -> currentStage = WizardStage.CONFIRM_AC
-                                WizardStage.IMPACT_REVEAL -> currentStage = WizardStage.LOCATION_SYNC
-                            }
-                        }
+                        .clickable { handleBack() }
                 ) {
                     Icon(
                         imageVector = PhosphorIcons.Light.CaretLeft,
@@ -730,16 +738,26 @@ fun AddRoomWizardScreen(
                                     onClick = { currentStage = WizardStage.CONSTRUCTION_ANIMATION }
                                 )
                             } else {
-                                // Custom polygon canvas
-                                CustomRoomCanvas(
-                                    vertices = customVertices,
-                                    onVerticesChanged = { customVertices = it },
-                                    isClosed = isPolygonClosed,
-                                    onClosedChanged = { isPolygonClosed = it },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(280.dp)
-                                )
+                                // Custom polygon canvas: 3D preview when closed, interactive grid when drafting
+                                if (isPolygonClosed && customVertices.size >= 3) {
+                                    RoomConstructionCanvas(
+                                        floorVertices = floorVerticesInMeters,
+                                        ceilingHeightM = ceilingHeight,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(240.dp)
+                                    )
+                                } else {
+                                    CustomRoomCanvas(
+                                        vertices = customVertices,
+                                        onVerticesChanged = { customVertices = it },
+                                        isClosed = isPolygonClosed,
+                                        onClosedChanged = { isPolygonClosed = it },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(280.dp)
+                                    )
+                                }
 
                                 // Area readout and controls
                                 if (customVertices.isNotEmpty()) {
@@ -805,7 +823,7 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        // Undo button
+                                        // Undo / Edit button
                                         Box(
                                             contentAlignment = Alignment.Center,
                                             modifier = Modifier
@@ -822,7 +840,7 @@ fun AddRoomWizardScreen(
                                                 }
                                         ) {
                                             Text(
-                                                text = if (isPolygonClosed) "Reopen" else "Undo",
+                                                text = if (isPolygonClosed) "Edit Corners" else "Undo",
                                                 style = TextStyle(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.SemiBold,
@@ -855,6 +873,53 @@ fun AddRoomWizardScreen(
                                                 )
                                             )
                                         }
+                                    }
+
+                                    // Ceiling Height Slider on Custom Canvas
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(18.dp))
+                                            .background(DetailCardSurface)
+                                            .padding(16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "Ceiling Height",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 12.5.sp,
+                                                    color = DetailTextPrimary
+                                                )
+                                            )
+                                            Text(
+                                                text = "%.1f m".format(ceilingHeight),
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.5.sp,
+                                                    color = MineralMintActive
+                                                )
+                                            )
+                                        }
+                                        Slider(
+                                            value = ceilingHeight,
+                                            onValueChange = {
+                                                ceilingHeight = (it * 10f).roundToInt() / 10f
+                                            },
+                                            valueRange = 2.2f..4.0f,
+                                            colors = SliderDefaults.colors(
+                                                thumbColor = MineralMintActive,
+                                                activeTrackColor = MineralMintActive,
+                                                inactiveTrackColor = DetailCardBorder
+                                            )
+                                        )
                                     }
                                 }
 

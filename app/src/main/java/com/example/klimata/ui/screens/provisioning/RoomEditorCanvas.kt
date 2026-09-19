@@ -66,7 +66,6 @@ fun PresetRoomCanvas(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-    var is3dView by remember { mutableStateOf(true) }
 
     val labelPaint = remember(density) {
         Paint().apply {
@@ -98,8 +97,7 @@ fun PresetRoomCanvas(
             val canvasW = size.width
             val canvasH = size.height
 
-            if (is3dView) {
-                // 3D Isometric wireframe projection with auto-centering
+            // Always force 3D Isometric wireframe projection with auto-centering
                 val isoAngle = 0.5236f // 30 degrees
                 val cosA = cos(isoAngle)
                 val sinA = sin(isoAngle)
@@ -233,133 +231,6 @@ fun PresetRoomCanvas(
                     midHeight.y,
                     mintLabelPaint
                 )
-
-            } else {
-                // 2D Top-down Plan View
-                val w = widthMeters
-                val l = lengthMeters
-
-                val padding = 44.dp.toPx()
-                val availW = canvasW - padding * 2
-                val availH = canvasH - padding * 2
-
-                val scale = min(availW / w, availH / l)
-                val roomPxW = w * scale
-                val roomPxL = l * scale
-
-                val left = (canvasW - roomPxW) / 2f
-                val top = (canvasH - roomPxL) / 2f
-
-                val corners = listOf(
-                    Offset(left, top),
-                    Offset(left + roomPxW, top),
-                    Offset(left + roomPxW, top + roomPxL),
-                    Offset(left, top + roomPxL)
-                )
-
-                // Dot grid inside room
-                val gridStep = 0.5f * scale
-                var gx = left + gridStep
-                while (gx < left + roomPxW) {
-                    var gy = top + gridStep
-                    while (gy < top + roomPxL) {
-                        drawCircle(
-                            color = DetailCardBorder.copy(alpha = 0.30f),
-                            radius = 1.5f,
-                            center = Offset(gx, gy)
-                        )
-                        gy += gridStep
-                    }
-                    gx += gridStep
-                }
-
-                val roomPath = Path().apply {
-                    moveTo(corners[0].x, corners[0].y)
-                    corners.drop(1).forEach { lineTo(it.x, it.y) }
-                    close()
-                }
-                drawPath(roomPath, color = MineralMintActive.copy(alpha = 0.06f), style = Fill)
-                drawPath(roomPath, color = MineralMintActive, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
-
-                corners.forEach { corner ->
-                    drawCircle(color = MineralMintActive, radius = 4.dp.toPx(), center = corner)
-                }
-
-                val labelOffset = 18.dp.toPx()
-                val wallLabels = listOf(
-                    Triple(corners[0], corners[1], "%.1f m".format(w)),
-                    Triple(corners[1], corners[2], "%.1f m".format(l)),
-                    Triple(corners[2], corners[3], "%.1f m".format(w)),
-                    Triple(corners[3], corners[0], "%.1f m".format(l))
-                )
-
-                wallLabels.forEachIndexed { i, (p1, p2, text) ->
-                    val mid = Offset((p1.x + p2.x) / 2f, (p1.y + p2.y) / 2f)
-                    val offsetY = when (i) {
-                        0 -> -labelOffset
-                        2 -> labelOffset + 4.dp.toPx()
-                        else -> 0f
-                    }
-                    val offsetX = when (i) {
-                        1 -> labelOffset + 4.dp.toPx()
-                        3 -> -labelOffset - 4.dp.toPx()
-                        else -> 0f
-                    }
-                    drawContext.canvas.nativeCanvas.drawText(
-                        text,
-                        mid.x + offsetX,
-                        mid.y + offsetY,
-                        if (i == 0 || i == 2) labelPaint else mintLabelPaint
-                    )
-                }
-            }
-        }
-
-        // View mode toggle pill (3D Iso / 2D Plan) in top-right corner
-        Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(10.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(DetailCardSurfaceElevated.copy(alpha = 0.90f))
-                .padding(2.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (is3dView) MineralMintActive else Color.Transparent)
-                    .clickable { is3dView = true }
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "3D",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        color = if (is3dView) Color(0xFF0F172A) else DetailTextSecondary
-                    )
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(if (!is3dView) MineralMintActive else Color.Transparent)
-                    .clickable { is3dView = false }
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "2D",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        color = if (!is3dView) Color(0xFF0F172A) else DetailTextSecondary
-                    )
-                )
-            }
         }
     }
 }
