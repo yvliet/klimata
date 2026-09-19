@@ -80,28 +80,28 @@ fun RoomThermalDetailScreen(
         ) {
             Column {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DetailCardSurfaceElevated),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(DetailCardSurfaceElevated),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = PhosphorIcons.Light.Cube,
-                                contentDescription = null,
-                                tint = MineralMintActive,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Cube,
+                            contentDescription = null,
+                            tint = MineralMintActive,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.Bottom,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Text(
                             text = "Floor Area & Height",
                             style = TextStyle(
@@ -109,24 +109,18 @@ fun RoomThermalDetailScreen(
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 14.sp,
                                 color = DetailTextPrimary
-                            )
+                            ),
+                            modifier = Modifier.alignByBaseline()
                         )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MineralMintActive.copy(alpha = 0.16f))
-                            .padding(horizontal = 9.dp, vertical = 4.dp)
-                    ) {
                         Text(
                             text = "${room.areaSquareMeters} m² / ${room.volumeCubicMeters} m³",
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 11.5.sp,
-                                color = MineralMintActive
-                            )
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 12.sp,
+                                color = DetailTextMuted
+                            ),
+                            modifier = Modifier.alignByBaseline()
                         )
                     }
                 }
