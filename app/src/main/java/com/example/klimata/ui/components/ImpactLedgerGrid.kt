@@ -136,8 +136,7 @@ private fun FrostedMetricCard(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(24.dp))
-            .bouncyClickable(onClick = onClick)
+            .bouncyClickable(shape = RoundedCornerShape(24.dp), onClick = onClick)
             .background(diurnal.frostedCardBackground)
             .padding(16.dp)
     ) {

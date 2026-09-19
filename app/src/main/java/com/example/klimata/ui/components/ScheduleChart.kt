@@ -164,8 +164,7 @@ fun ScheduleChart(
                     stiffness = Spring.StiffnessMediumLow
                 )
             )
-            .clip(RoundedCornerShape(24.dp))
-            .bouncyClickable(onClick = onClick)
+            .bouncyClickable(shape = RoundedCornerShape(24.dp), onClick = onClick)
             .background(diurnal.frostedCardBackground)
             .padding(vertical = 18.dp)
     ) {
