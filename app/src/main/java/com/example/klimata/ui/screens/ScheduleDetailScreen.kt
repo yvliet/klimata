@@ -230,7 +230,7 @@ private fun MinimalistThermalForecastCard(
                 Column(
                     modifier = Modifier
                         .width(totalWidth)
-                        .padding(vertical = 16.dp)
+                        .padding(vertical = 20.dp)
                 ) {
                     // Top Section: Outdoor Ambient Weather Stream (Time & Nocturnal Weather Icon)
                     Row(modifier = Modifier.width(totalWidth)) {
@@ -269,10 +269,10 @@ private fun MinimalistThermalForecastCard(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     // Middle Section: Dual Splines with Vertical Dashed Connectors
-                    val chartHeight = 136.dp
+                    val chartHeight = 172.dp
                     Box(
                         modifier = Modifier
                             .width(totalWidth)
@@ -293,14 +293,14 @@ private fun MinimalistThermalForecastCard(
 
                         val targetUpperY = steps.map { step ->
                             val norm = 1f - ((step.outdoorTemp - ambientMin) / ambientSpan).coerceIn(0f, 1f)
-                            with(density) { 26.dp.toPx() } + norm * with(density) { 32.dp.toPx() }
+                            with(density) { 28.dp.toPx() } + norm * with(density) { 38.dp.toPx() }
                         }
 
                         // Bottom spline target coordinates (AC setpoints: 24° up to 26°/Fan)
                         val targetLowerY = steps.map { step ->
                             val setpoint = if (step.setpointCelsius > 0) step.setpointCelsius.toFloat() else 26.5f
                             val norm = ((setpoint - 24f) / 3f).coerceIn(0f, 1f)
-                            with(density) { 86.dp.toPx() } + norm * with(density) { 28.dp.toPx() }
+                            with(density) { 110.dp.toPx() } + norm * with(density) { 36.dp.toPx() }
                         }
 
                         val animUpperY = targetUpperY.mapIndexed { idx, target ->
@@ -498,7 +498,7 @@ private fun MinimalistThermalForecastCard(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Bottom Section: Indoor AC Automation Stream (Phase Name & Airflow Mode)
                     Row(modifier = Modifier.width(totalWidth)) {
