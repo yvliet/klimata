@@ -242,7 +242,7 @@ fun ACTelemetryCard(
                 ) { (currentTemp, powerState, mode) ->
                     if (mode == "Fan") {
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
+                            verticalAlignment = Alignment.Bottom,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
@@ -653,18 +653,19 @@ fun ACDigitalRemoteCard(
                         ) {
                             onPowerToggle(!isPowerOn)
                         }
-                        .padding(horizontal = 6.dp)
+                        .padding(horizontal = 4.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = PhosphorIcons.Light.Power,
                             contentDescription = "Toggle AC Power",
                             tint = powerIconColor,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = if (isPowerOn) "ON" else "OFF",
                             style = TextStyle(
@@ -693,11 +694,11 @@ fun ACDigitalRemoteCard(
                         ) {
                             onModeCycle()
                         }
-                        .padding(horizontal = 6.dp)
+                        .padding(horizontal = 4.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Crossfade(
                             targetState = currentMode,
@@ -719,7 +720,7 @@ fun ACDigitalRemoteCard(
                                 modifier = Modifier.size(15.dp)
                             )
                         }
-
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = currentMode,
                             style = TextStyle(
@@ -757,11 +758,11 @@ fun ACDigitalRemoteCard(
                         ) {
                             onSwingToggle(!isSwingEnabled)
                         }
-                        .padding(horizontal = 6.dp)
+                        .padding(horizontal = 4.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = PhosphorIcons.Light.Wind,
@@ -769,6 +770,7 @@ fun ACDigitalRemoteCard(
                             tint = swingIconColor,
                             modifier = Modifier.size(15.dp)
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = if (isSwingEnabled) "Swing" else "Fixed",
                             style = TextStyle(
@@ -797,11 +799,11 @@ fun ACDigitalRemoteCard(
                         ) {
                             onEcoToggle(!isEcoEnabled)
                         }
-                        .padding(horizontal = 6.dp)
+                        .padding(horizontal = 4.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
                             imageVector = PhosphorIcons.Light.Leaf,
@@ -809,8 +811,9 @@ fun ACDigitalRemoteCard(
                             tint = ecoIconColor,
                             modifier = Modifier.size(15.dp)
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = if (isEcoEnabled) "Eco On" else "Eco",
+                            text = "Eco",
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.SemiBold,
