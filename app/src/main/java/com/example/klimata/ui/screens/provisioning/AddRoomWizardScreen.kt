@@ -1,8 +1,11 @@
 package com.example.klimata.ui.screens.provisioning
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Spring
@@ -149,22 +152,6 @@ fun AddRoomWizardScreen(
     }
 
     // Photo pickers
-    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
-        if (bmp != null) {
-            acPhotoBitmap = bmp
-            isAnalyzingPhoto = true
-            currentStage = WizardStage.CONFIRM_AC
-            coroutineScope.launch {
-                val result = AcRecognitionService.analyzeAcPhoto(bmp, areaSquareMeters)
-                acBrand = result.brand
-                acModel = result.model
-                acCapacity = result.capacity
-                acInverterType = result.inverterType
-                isAnalyzingPhoto = false
-            }
-        }
-    }
-
     val galleryLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
             val bmp = try {
@@ -191,6 +178,40 @@ fun AddRoomWizardScreen(
                     isAnalyzingPhoto = false
                 }
             }
+        }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp ->
+        if (bmp != null) {
+            acPhotoBitmap = bmp
+            isAnalyzingPhoto = true
+            currentStage = WizardStage.CONFIRM_AC
+            coroutineScope.launch {
+                val result = AcRecognitionService.analyzeAcPhoto(bmp, areaSquareMeters)
+                acBrand = result.brand
+                acModel = result.model
+                acCapacity = result.capacity
+                acInverterType = result.inverterType
+                isAnalyzingPhoto = false
+            }
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            try {
+                cameraLauncher.launch(null)
+            } catch (e: Exception) {
+                try {
+                    galleryLauncher.launch("image/*")
+                } catch (ignored: Exception) {}
+            }
+        } else {
+            try {
+                galleryLauncher.launch("image/*")
+            } catch (ignored: Exception) {}
         }
     }
 
@@ -871,7 +892,22 @@ fun AddRoomWizardScreen(
                                     .clip(RoundedCornerShape(24.dp))
                                     .background(DetailCardSurface)
                                     .bouncyClickable {
-                                        cameraLauncher.launch(null)
+                                        val hasCameraPermission = ContextCompat.checkSelfPermission(
+                                            context,
+                                            Manifest.permission.CAMERA
+                                        ) == PackageManager.PERMISSION_GRANTED
+
+                                        if (hasCameraPermission) {
+                                            try {
+                                                cameraLauncher.launch(null)
+                                            } catch (e: Exception) {
+                                                try {
+                                                    galleryLauncher.launch("image/*")
+                                                } catch (ignored: Exception) {}
+                                            }
+                                        } else {
+                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                        }
                                     }
                             ) {
                                 Column(
