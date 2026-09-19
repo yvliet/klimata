@@ -373,22 +373,24 @@ fun KlimataScreen(
                     .padding(start = 24.dp, end = 20.dp, top = 12.dp, bottom = 12.dp)
             ) {
                 // Room indicator starts above hero temp and glides up to dock at top bar Y on scroll
-                RoomIndicator(
-                    currentRoom = currentRoom?.name ?: "Klimata",
-                    roomCount = rooms.size,
-                    currentRoomIndex = if (rooms.isEmpty()) 0 else pagerState.currentPage,
-                    onRoomSelected = { targetIndex ->
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(targetIndex)
-                        }
-                    },
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .graphicsLayer {
-                            val scroll = if (rooms.isEmpty()) 0f else scrollState.value.toFloat()
-                            translationY = (restOffsetYPx - scroll).coerceAtLeast(0f)
-                        }
-                )
+                if (rooms.isNotEmpty() && currentRoom != null) {
+                    RoomIndicator(
+                        currentRoom = currentRoom.name,
+                        roomCount = rooms.size,
+                        currentRoomIndex = pagerState.currentPage,
+                        onRoomSelected = { targetIndex ->
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(targetIndex)
+                            }
+                        },
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .graphicsLayer {
+                                val scroll = scrollState.value.toFloat()
+                                translationY = (restOffsetYPx - scroll).coerceAtLeast(0f)
+                            }
+                    )
+                }
 
                 AmbientTopBarActions(
                     onAddRoomClick = onAddRoomClick,

@@ -86,14 +86,14 @@ fun EmptyRoomsDoodlePrompt(
                 val endY = 2.dp.toPx()
 
                 // Origin right above the prompt text
-                val startX = size.width - 76.dp.toPx()
+                val startX = size.width - 64.dp.toPx()
                 val startY = size.height - 2.dp.toPx()
 
-                // Control points creating an organic hand-sketched curve
-                val ctrl1X = size.width - 68.dp.toPx()
-                val ctrl1Y = size.height * 0.65f
-                val ctrl2X = size.width - 72.dp.toPx()
-                val ctrl2Y = size.height * 0.25f
+                // Control points creating an organic curve that arrives pointing straight UP
+                val ctrl1X = size.width - 66.dp.toPx()
+                val ctrl1Y = 24.dp.toPx()
+                val ctrl2X = size.width - 84.dp.toPx()
+                val ctrl2Y = 14.dp.toPx()
 
                 // 1. Primary hand-drawn shaft
                 val mainPath = Path().apply {
@@ -113,14 +113,14 @@ fun EmptyRoomsDoodlePrompt(
 
                 // 2. Wispy secondary sketch stroke for authentic pencil/doodle character
                 val sketchPath = Path().apply {
-                    moveTo(startX + 1.2f, startY - 0.5f)
+                    moveTo(startX + 1.0f, startY - 0.5f)
                     cubicTo(
-                        ctrl1X + 1.5f,
-                        ctrl1Y + 1.0f,
-                        ctrl2X - 1.0f,
-                        ctrl2Y - 1.0f,
-                        endX + 0.5f,
-                        endY + 1.0f
+                        ctrl1X + 1.2f,
+                        ctrl1Y + 0.8f,
+                        ctrl2X + 0.6f,
+                        ctrl2Y + 0.4f,
+                        endX + 0.4f,
+                        endY + 0.8f
                     )
                 }
 
@@ -134,10 +134,10 @@ fun EmptyRoomsDoodlePrompt(
                     )
                 )
 
-                // 3. Hand-sketched arrowhead
-                val arrowLength = 9.dp.toPx()
+                // 3. Hand-sketched arrowhead pointing straight UP into the (+) button
+                val arrowLength = 8.5.dp.toPx()
                 val tangentAngle = kotlin.math.atan2(endY - ctrl2Y, endX - ctrl2X)
-                val barbSpread = Math.toRadians(30.0)
+                val barbSpread = Math.toRadians(28.0)
 
                 val barb1Angle = tangentAngle + Math.PI - barbSpread
                 val barb2Angle = tangentAngle + Math.PI + barbSpread
@@ -145,10 +145,10 @@ fun EmptyRoomsDoodlePrompt(
                 val barb1X = endX + (arrowLength * cos(barb1Angle)).toFloat()
                 val barb1Y = endY + (arrowLength * sin(barb1Angle)).toFloat()
 
-                val barb2X = endX + (arrowLength * 0.85f * cos(barb2Angle)).toFloat()
-                val barb2Y = endY + (arrowLength * 0.85f * sin(barb2Angle)).toFloat()
+                val barb2X = endX + (arrowLength * 0.9f * cos(barb2Angle)).toFloat()
+                val barb2Y = endY + (arrowLength * 0.9f * sin(barb2Angle)).toFloat()
 
-                // Left barb
+                // Right barb (pointing down-right)
                 drawLine(
                     color = primaryColor,
                     start = Offset(endX, endY),
@@ -157,7 +157,7 @@ fun EmptyRoomsDoodlePrompt(
                     cap = StrokeCap.Round
                 )
 
-                // Right barb (slightly asymmetrical like a true hand sketch)
+                // Left barb (pointing down-left)
                 drawLine(
                     color = primaryColor,
                     start = Offset(endX, endY),
@@ -169,8 +169,8 @@ fun EmptyRoomsDoodlePrompt(
                 // Sketched reinforcement on left barb
                 drawLine(
                     color = sketchColor,
-                    start = Offset(endX + 0.5f, endY + 0.5f),
-                    end = Offset(barb1X + 0.8f, barb1Y - 0.4f),
+                    start = Offset(endX + 0.4f, endY + 0.5f),
+                    end = Offset(barb2X + 0.6f, barb2Y - 0.3f),
                     strokeWidth = sketchWidthPx,
                     cap = StrokeCap.Round
                 )
