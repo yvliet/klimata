@@ -1,10 +1,13 @@
 package com.example.klimata.ui.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +52,7 @@ import com.example.klimata.data.MockData
 import com.example.klimata.ui.theme.EcoGreen
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
+import com.example.klimata.ui.theme.LocalDiurnalColors
 
 /**
  * Tactical AC hardware control card.
@@ -62,197 +66,202 @@ fun ACControlPanel(
     onPowerToggle: (Boolean) -> Unit = {},
     onTempChange: (Int) -> Unit = {},
 ) {
+    val diurnal = LocalDiurnalColors.current
     var isPowerOn by remember { mutableStateOf(value = true) }
     var setpoint by remember(profile.currentSetpoint) { mutableIntStateOf(profile.currentSetpoint) }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.12f))
-            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(20.dp))
-            .padding(16.dp),
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = 0.85f,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(diurnal.frostedCardBackground)
+            .padding(18.dp),
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Row(
+        Crossfade(
+            targetState = profile to dispatch,
+            animationSpec = tween(220),
+            label = "ACControlCrossfade"
+        ) { (curProfile, curDispatch) ->
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Column {
-                    Text(
-                        text = "Current Setpoint",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.65f)
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Row(verticalAlignment = Alignment.Bottom) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
                         Text(
-                            text = "${setpoint}°C",
+                            text = "Current Setpoint",
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 34.sp,
-                                color = Color.White,
-                                letterSpacing = (-0.5).sp
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.65f)
                             )
                         )
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.height(2.dp))
 
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            modifier = Modifier.padding(bottom = 6.dp)
-                        ) {
-                            Icon(
-                                imageVector = safeLeafIcon(),
-                                contentDescription = null,
-                                tint = com.example.klimata.ui.theme.MineralMintActive,
-                                modifier = Modifier.size(13.dp)
-                            )
+                        Row(verticalAlignment = Alignment.Bottom) {
                             Text(
-                                text = profile.mode.ifEmpty { "Eco Flow" },
+                                text = "${setpoint}°C",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 12.sp,
-                                    color = Color.White.copy(alpha = 0.90f)
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 34.sp,
+                                    color = Color.White,
+                                    letterSpacing = (-0.5).sp
                                 )
                             )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                modifier = Modifier.padding(bottom = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = safeLeafIcon(),
+                                    contentDescription = null,
+                                    tint = com.example.klimata.ui.theme.MineralMintActive,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Text(
+                                    text = "Eco Flow",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.sp,
+                                        color = Color.White.copy(alpha = 0.90f)
+                                    )
+                                )
+                            }
                         }
                     }
-                }
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Setpoint bounds [18°C, 30°C] match residential split-unit IR firmware limits
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(1.dp, Color.White.copy(alpha = 0.20f), CircleShape)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                if (setpoint > 18) {
-                                    setpoint--
-                                    onTempChange(setpoint)
-                                }
-                            }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = safeMinusIcon(),
-                            contentDescription = "Decrease Temperature",
-                            tint = Color.White,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(1.dp, Color.White.copy(alpha = 0.20f), CircleShape)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                if (setpoint < 30) {
-                                    setpoint++
-                                    onTempChange(setpoint)
+                        // Setpoint bounds [18°C, 30°C] match residential split-unit IR firmware limits
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.08f))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    if (setpoint > 18) {
+                                        setpoint--
+                                        onTempChange(setpoint)
+                                    }
                                 }
-                            }
-                    ) {
-                        Icon(
-                            imageVector = safePlusIcon(),
-                            contentDescription = "Increase Temperature",
-                            tint = Color.White,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(2.dp))
-
-                    val switchTrackColor by animateColorAsState(
-                        targetValue = if (isPowerOn) com.example.klimata.ui.theme.MineralMintActive else Color.White.copy(alpha = 0.18f),
-                        animationSpec = tween(220),
-                        label = "switchTrackColor"
-                    )
-                    val switchThumbOffset by animateDpAsState(
-                        targetValue = if (isPowerOn) 22.dp else 2.dp,
-                        animationSpec = tween(220),
-                        label = "switchThumbOffset"
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .size(width = 50.dp, height = 30.dp)
-                            .clip(RoundedCornerShape(15.dp))
-                            .background(switchTrackColor)
-                            .border(
-                                1.dp,
-                                if (isPowerOn) com.example.klimata.ui.theme.MineralMintActive.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.25f),
-                                RoundedCornerShape(15.dp)
+                        ) {
+                            Icon(
+                                imageVector = safeMinusIcon(),
+                                contentDescription = "Decrease Temperature",
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
                             )
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                isPowerOn = !isPowerOn
-                                onPowerToggle(isPowerOn)
-                            }
-                            .padding(2.dp),
-                        contentAlignment = Alignment.CenterStart
-                    ) {
+                        }
+
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.08f))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    if (setpoint < 30) {
+                                        setpoint++
+                                        onTempChange(setpoint)
+                                    }
+                                }
+                        ) {
+                            Icon(
+                                imageVector = safePlusIcon(),
+                                contentDescription = "Increase Temperature",
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(2.dp))
+
+                        val switchTrackColor by animateColorAsState(
+                            targetValue = if (isPowerOn) com.example.klimata.ui.theme.MineralMintActive else Color.White.copy(alpha = 0.14f),
+                            animationSpec = tween(220),
+                            label = "switchTrackColor"
+                        )
+                        val switchThumbOffset by animateDpAsState(
+                            targetValue = if (isPowerOn) 22.dp else 2.dp,
+                            animationSpec = tween(220),
+                            label = "switchThumbOffset"
+                        )
+
                         Box(
                             modifier = Modifier
+                                .size(width = 50.dp, height = 30.dp)
+                                .clip(RoundedCornerShape(15.dp))
+                                .background(switchTrackColor)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    isPowerOn = !isPowerOn
+                                    onPowerToggle(isPowerOn)
+                                }
+                                .padding(2.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Box(
+                                modifier = Modifier
                                 .offset(x = switchThumbOffset)
                                 .size(24.dp)
                                 .shadow(2.dp, CircleShape)
                                 .clip(CircleShape)
                                 .background(Color.White)
-                        )
+                            )
+                        }
                     }
                 }
-            }
 
-            val dispatchMethod = dispatch.dispatchMethod.ifEmpty { "IR Blaster" }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                Icon(
-                    imageVector = safeBroadcastIcon(),
-                    contentDescription = null,
-                    tint = Color.White.copy(alpha = 0.50f),
-                    modifier = Modifier.size(11.dp)
-                )
-                Text(
-                    text = "$dispatchMethod • ${profile.brand} ${profile.model} • ${profile.capacity} • ${profile.inverterType}",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 11.5.sp,
-                        color = Color.White.copy(alpha = 0.55f)
+                val dispatchMethod = curDispatch.dispatchMethod.ifEmpty { "IR Blaster" }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        imageVector = safeBroadcastIcon(),
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.50f),
+                        modifier = Modifier.size(11.dp)
                     )
-                )
+                    Text(
+                        text = "$dispatchMethod • ${curProfile.brand} ${curProfile.model} • ${curProfile.capacity} • ${curProfile.inverterType}",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.5.sp,
+                            color = Color.White.copy(alpha = 0.55f)
+                        )
+                    )
+                }
             }
         }
     }

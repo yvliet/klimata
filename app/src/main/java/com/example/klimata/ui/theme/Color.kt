@@ -42,16 +42,14 @@ val NightMoonCoronaOuter = Color(0x18818CF8)
 val StarColorCool = Color(0xFFE0E7FF)
 val StarColorWarm = Color(0xFFFEF3C7)
 
-// Translucent Frosted Panels
-val FrostedCardBackground = Color(0x1FFFFFFF)
-val FrostedCardBorder = Color(0x33FFFFFF)
+// Translucent Frosted Dark Panels
+val DayFrostedCardBackground = Color(0x40182438)
+val EveningFrostedCardBackground = Color(0x66281A2E)
+val NightFrostedCardBackground = Color(0x701E1B36)
+val FrostedCardBackground = NightFrostedCardBackground
 
-val DayFrostedCardBackground = Color(0x26FFFFFF)
-val DayFrostedCardBorder = Color(0x3DFFFFFF)
-val EveningFrostedCardBackground = Color(0x24FFFFFF)
-val EveningFrostedCardBorder = Color(0x38FFFFFF)
-val NightFrostedCardBackground = Color(0x1AFFFFFF)
-val NightFrostedCardBorder = Color(0x2EFFFFFF)
+val FrostedSubCardBackground = Color(0x0EFFFFFF)
+val FrostedButtonBackground = Color(0x14FFFFFF)
 
 // Sky Legibility Tokens
 val OnSkyPrimary = Color(0xFFFFFFFF)

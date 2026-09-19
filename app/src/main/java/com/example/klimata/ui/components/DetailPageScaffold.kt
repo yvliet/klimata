@@ -1,7 +1,6 @@
 package com.example.klimata.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -77,8 +76,7 @@ fun DetailPageScaffold(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.14f))
-                        .border(1.dp, Color.White.copy(alpha = 0.22f), CircleShape)
+                        .background(Color.White.copy(alpha = 0.10f))
                         .clickable(onClick = onBackClick)
                 ) {
                     Icon(
@@ -126,7 +124,7 @@ fun DetailPageScaffold(
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             content = content
         )
     }

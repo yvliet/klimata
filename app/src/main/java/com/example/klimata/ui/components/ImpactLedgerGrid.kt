@@ -1,7 +1,11 @@
 package com.example.klimata.ui.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +39,7 @@ import com.example.klimata.data.ImpactMetric
 import com.example.klimata.data.MockData
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
+import com.example.klimata.ui.theme.LocalDiurnalColors
 
 /**
  * Dual metric summary cards displaying estimated billing reductions and avoided emissions.
@@ -49,7 +54,7 @@ fun ImpactLedgerGrid(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         FrostedMetricCard(
             title = savings.title.ifEmpty { "Monthly Savings" },
@@ -83,77 +88,89 @@ private fun FrostedMetricCard(
     onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val diurnal = LocalDiurnalColors.current
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.12f))
-            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(20.dp))
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = 0.85f,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(diurnal.frostedCardBackground)
             .clickable(onClick = onClick)
-            .padding(16.dp)
+            .padding(18.dp)
     ) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(accentColor.copy(alpha = 0.18f)),
-                    contentAlignment = Alignment.Center
+        Crossfade(
+            targetState = Triple(title, primaryValue, badgeText),
+            animationSpec = tween(220),
+            label = "FrostedMetricCardCrossfade"
+        ) { (curTitle, curVal, curBadge) ->
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = accentColor,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(accentColor.copy(alpha = 0.18f))
-                        .padding(horizontal = 7.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = badgeText,
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 10.5.sp,
-                            color = accentColor
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(accentColor.copy(alpha = 0.18f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(16.dp)
                         )
-                    )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(accentColor.copy(alpha = 0.18f))
+                            .padding(horizontal = 7.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = curBadge,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.5.sp,
+                                color = accentColor
+                            )
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Text(
+                    text = curVal,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 19.sp,
+                        letterSpacing = (-0.3).sp,
+                        color = Color.White
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(3.dp))
+
+                Text(
+                    text = curTitle,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.70f)
+                    )
+                )
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Text(
-                text = primaryValue,
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 19.sp,
-                    letterSpacing = (-0.3).sp,
-                    color = Color.White
-                )
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Text(
-                text = title,
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.70f)
-                )
-            )
         }
     }
 }

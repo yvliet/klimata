@@ -1,7 +1,6 @@
 package com.example.klimata.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -57,7 +56,7 @@ fun ScheduleDetailScreen(
         // Stepped Progression Timeline
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
                 text = "Automation Milestones",
@@ -84,8 +83,7 @@ fun ScheduleDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.10f))
-                .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(20.dp))
+                .background(Color.White.copy(alpha = 0.07f))
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -136,8 +134,7 @@ fun ScheduleDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.08f))
-                .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(18.dp))
+                .background(Color.White.copy(alpha = 0.06f))
                 .padding(16.dp)
         ) {
             Row(
@@ -201,14 +198,8 @@ private fun ThermalStepMilestoneCard(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
             .background(
-                if (step.isActive) Color.White.copy(alpha = 0.16f)
-                else Color.White.copy(alpha = 0.09f)
-            )
-            .border(
-                1.dp,
-                if (step.isActive) MineralMintActive.copy(alpha = 0.50f)
-                else Color.White.copy(alpha = 0.16f),
-                RoundedCornerShape(18.dp)
+                if (step.isActive) Color.White.copy(alpha = 0.14f)
+                else Color.White.copy(alpha = 0.07f)
             )
             .padding(14.dp)
     ) {

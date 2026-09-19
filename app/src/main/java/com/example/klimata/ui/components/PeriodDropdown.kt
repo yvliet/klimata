@@ -1,7 +1,6 @@
 package com.example.klimata.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -51,11 +50,10 @@ fun PeriodDropdown(
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.White.copy(alpha = 0.16f))
-                .border(1.dp, Color.White.copy(alpha = 0.26f), RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(14.dp))
+                .background(Color.White.copy(alpha = 0.12f))
                 .clickable { expanded = true }
-                .padding(horizontal = 10.dp, vertical = 6.dp)
+                .padding(horizontal = 12.dp, vertical = 7.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -81,7 +79,7 @@ fun PeriodDropdown(
 
         MaterialTheme(
             colorScheme = MaterialTheme.colorScheme.copy(
-                surface = Color(0xFF131D2E),
+                surface = Color(0xFF161C2C),
                 onSurface = Color.White
             )
         ) {
@@ -89,9 +87,8 @@ fun PeriodDropdown(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
                 modifier = Modifier
-                    .background(Color(0xFF131D2E).copy(alpha = 0.94f))
-                    .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(14.dp))
-                    .clip(RoundedCornerShape(14.dp))
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFF161C2C).copy(alpha = 0.96f))
             ) {
                 ImpactPeriod.entries.forEach { period ->
                     val isSelected = period == selectedPeriod

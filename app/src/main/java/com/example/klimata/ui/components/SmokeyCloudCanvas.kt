@@ -1,13 +1,18 @@
 package com.example.klimata.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -113,11 +118,27 @@ fun AtmosphericSkyCanvas(
         DiurnalPhase.NIGHT -> R.drawable.clouds_top_right_night
     }
 
+    val currentRawScroll = scrollOffsetProvider()
+    val animatedScroll by animateFloatAsState(
+        targetValue = currentRawScroll,
+        animationSpec = spring(
+            dampingRatio = 0.82f,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "CloudSpringParallax"
+    )
+
+    val cloudBlurProgress = (animatedScroll / 260f).coerceIn(0f, 1f)
+    val cloudBlurRadius = (cloudBlurProgress * 16f).dp
+
     Box(modifier = modifier.fillMaxSize()) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .blur(radius = (cloudBlurProgress * 8f).dp)
+        ) {
             val width = size.width
             val height = size.height
-            val currentScrollOffset = scrollOffsetProvider()
 
             val bloomCenter = Offset(width * 0.68f, height * 0.18f)
             val bloomColor = when (phase) {
@@ -136,14 +157,14 @@ fun AtmosphericSkyCanvas(
             )
 
             if (phase == DiurnalPhase.NIGHT) {
-                drawCalmStarfield(width, height, CalmNightStars, alphaMultiplier = 0.85f)
+                drawCalmStarfield(width, height, CalmNightStars, alphaMultiplier = 0.85f * (1f - cloudBlurProgress * 0.4f))
             }
 
             StaticCirrusWisps.forEach { wisp ->
                 val wispWidth = width * wisp.heightPercent * wisp.widthRatio
                 val wispHeight = height * wisp.heightPercent
                 val cx = width * wisp.xPercent
-                val cy = height * wisp.yPercent - currentScrollOffset * 0.08f
+                val cy = height * wisp.yPercent - animatedScroll * 0.08f
 
                 val brush = Brush.radialGradient(
                     colors = listOf(
@@ -174,7 +195,7 @@ fun AtmosphericSkyCanvas(
             }
         }
 
-        // Reading scrollOffsetProvider inside graphicsLayer confines invalidations to draw phase
+        // Reading animatedScroll inside graphicsLayer and blur confines invalidations
         Image(
             painter = painterResource(id = topCloudRes),
             contentDescription = null,
@@ -182,9 +203,10 @@ fun AtmosphericSkyCanvas(
             modifier = Modifier
                 .fillMaxWidth(0.92f)
                 .align(Alignment.TopEnd)
+                .blur(radius = cloudBlurRadius)
                 .graphicsLayer {
-                    translationY = -scrollOffsetProvider() * 0.14f
-                    alpha = 0.88f
+                    translationY = -animatedScroll * 0.14f
+                    alpha = (0.88f - cloudBlurProgress * 0.25f).coerceAtLeast(0.40f)
                 }
         )
     }

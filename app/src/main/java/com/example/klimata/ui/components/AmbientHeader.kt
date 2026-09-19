@@ -31,6 +31,136 @@ import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.OnSkyPrimary
 import com.example.klimata.ui.theme.OnSkySecondary
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.getValue
+
+/**
+ * Decoupled room name and pager dots indicator.
+ * Can be positioned above the hero temperature and smoothly docked into the top bar on scroll.
+ */
+@Composable
+fun RoomIndicator(
+    currentRoom: String,
+    modifier: Modifier = Modifier,
+    roomCount: Int = 3,
+    currentRoomIndex: Int = 0,
+    onRoomSelected: (Int) -> Unit = {},
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        AnimatedContent(
+            targetState = currentRoomIndex to currentRoom,
+            transitionSpec = {
+                if (targetState.first >= initialState.first) {
+                    (slideInHorizontally(animationSpec = tween(220)) { fullWidth -> fullWidth } + fadeIn(animationSpec = tween(220)))
+                        .togetherWith(slideOutHorizontally(animationSpec = tween(220)) { fullWidth -> -fullWidth } + fadeOut(animationSpec = tween(220)))
+                } else {
+                    (slideInHorizontally(animationSpec = tween(220)) { fullWidth -> -fullWidth } + fadeIn(animationSpec = tween(220)))
+                        .togetherWith(slideOutHorizontally(animationSpec = tween(220)) { fullWidth -> fullWidth } + fadeOut(animationSpec = tween(220)))
+                }
+            },
+            label = "RoomIndicatorTransition"
+        ) { (_, roomName) ->
+            Text(
+                text = roomName,
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                lineHeight = 24.sp,
+                color = OnSkyPrimary
+            )
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(top = 2.dp)
+        ) {
+            Icon(
+                imageVector = SimpleArrowIcon,
+                contentDescription = null,
+                tint = OnSkySecondary,
+                modifier = Modifier.size(9.dp)
+            )
+
+            Spacer(modifier = Modifier.width(2.dp))
+
+            for (i in 0 until roomCount) {
+                val isSelected = i == currentRoomIndex
+                val dotSize by animateDpAsState(
+                    targetValue = if (isSelected) 6.dp else 4.dp,
+                    animationSpec = spring(dampingRatio = 0.8f, stiffness = Spring.StiffnessMedium),
+                    label = "dotSize$i"
+                )
+                val dotColor by animateColorAsState(
+                    targetValue = if (isSelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
+                    animationSpec = tween(200),
+                    label = "dotColor$i"
+                )
+                Box(
+                    modifier = Modifier
+                        .size(dotSize)
+                        .clip(CircleShape)
+                        .background(dotColor)
+                        .clickable { onRoomSelected(i) }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Top bar action buttons (Add Room and More Options).
+ */
+@Composable
+fun AmbientTopBarActions(
+    modifier: Modifier = Modifier,
+    onAddRoomClick: () -> Unit = {},
+    onMenuClick: () -> Unit = {},
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            onClick = onAddRoomClick,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Icon(
+                imageVector = PlusIcon,
+                contentDescription = "Add Room",
+                tint = OnSkyPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        IconButton(
+            onClick = onMenuClick,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Icon(
+                imageVector = MoreVerticalIcon,
+                contentDescription = "More Options",
+                tint = OnSkyPrimary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+    }
+}
+
 /**
  * Top app bar displaying the current active room name, pager position indicator dots,
  * and navigation actions.
@@ -52,75 +182,17 @@ fun AmbientHeader(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.Top,
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            Text(
-                text = currentRoom,
-                fontFamily = JakartaFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp,
-                lineHeight = 24.sp,
-                color = OnSkyPrimary
-            )
+        RoomIndicator(
+            currentRoom = currentRoom,
+            roomCount = roomCount,
+            currentRoomIndex = currentRoomIndex,
+            onRoomSelected = onRoomSelected
+        )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(top = 2.dp)
-            ) {
-                Icon(
-                    imageVector = SimpleArrowIcon,
-                    contentDescription = null,
-                    tint = OnSkySecondary,
-                    modifier = Modifier.size(9.dp)
-                )
-
-                Spacer(modifier = Modifier.width(2.dp))
-
-                for (i in 0 until roomCount) {
-                    val isSelected = i == currentRoomIndex
-                    Box(
-                        modifier = Modifier
-                            .size(if (isSelected) 5.dp else 4.dp)
-                            .clip(CircleShape)
-                            .background(
-                                if (isSelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f)
-                            )
-                            .clickable { onRoomSelected(i) }
-                    )
-                }
-            }
-        }
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onAddRoomClick,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = PlusIcon,
-                    contentDescription = "Add Room",
-                    tint = OnSkyPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            IconButton(
-                onClick = onMenuClick,
-                modifier = Modifier.size(36.dp)
-            ) {
-                Icon(
-                    imageVector = MoreVerticalIcon,
-                    contentDescription = "More Options",
-                    tint = OnSkyPrimary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
+        AmbientTopBarActions(
+            onAddRoomClick = onAddRoomClick,
+            onMenuClick = onMenuClick
+        )
     }
 }
 

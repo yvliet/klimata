@@ -1,8 +1,13 @@
 package com.example.klimata.ui.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,6 +53,8 @@ import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import kotlin.math.roundToInt
 
+import com.example.klimata.ui.theme.LocalDiurnalColors
+
 /**
  * Visualizes the 4-phase overnight thermal automation progression:
  * - 22:00 (Pre-Cool): High fan setpoint to clear residual daytime masonry heat.
@@ -60,6 +68,7 @@ fun ScheduleChart(
     steps: List<ThermalStep> = MockData.thermalSteps,
     onClick: () -> Unit = {},
 ) {
+    val diurnal = LocalDiurnalColors.current
     val phases = remember(steps) {
         if (steps.size >= 4) {
             listOf(
@@ -81,11 +90,16 @@ fun ScheduleChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color.White.copy(alpha = 0.12f))
-            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(20.dp))
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = 0.85f,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            )
+            .clip(RoundedCornerShape(24.dp))
+            .background(diurnal.frostedCardBackground)
             .clickable(onClick = onClick)
-            .padding(16.dp)
+            .padding(18.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -146,16 +160,48 @@ fun ScheduleChart(
                 val bottomMargin = with(density) { 14.dp.toPx() }
                 val usableHeight = heightPx - topMargin - bottomMargin
 
-                val y0 = topMargin + (usableHeight * 0.95f)
-                val y1 = topMargin + (usableHeight * 0.62f)
-                val y2 = topMargin + (usableHeight * 0.30f)
-                val y3 = topMargin + (usableHeight * 0.05f)
+                val targetY0 = topMargin + (usableHeight * (if (steps.isNotEmpty() && steps[0].setpointCelsius > 0) {
+                    1.0f - ((steps[0].setpointCelsius - 22f) / 10f).coerceIn(0.05f, 0.95f) * 0.5f
+                } else 0.95f))
+
+                val targetY1 = topMargin + (usableHeight * (if (steps.size > 1 && steps[1].setpointCelsius > 0) {
+                    0.80f - ((steps[1].setpointCelsius - 23f) / 10f).coerceIn(0.05f, 0.95f) * 0.5f
+                } else 0.62f))
+
+                val targetY2 = topMargin + (usableHeight * (if (steps.size > 2 && steps[2].setpointCelsius > 0) {
+                    0.50f - ((steps[2].setpointCelsius - 24f) / 10f).coerceIn(0.05f, 0.95f) * 0.5f
+                } else 0.30f))
+
+                val targetY3 = topMargin + (usableHeight * (if (steps.size > 3 && steps[3].setpointCelsius > 0) {
+                    0.20f - ((steps[3].setpointCelsius - 25f) / 10f).coerceIn(0.05f, 0.95f) * 0.3f
+                } else 0.05f))
+
+                val animY0 by animateFloatAsState(
+                    targetValue = targetY0,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                    label = "animY0"
+                )
+                val animY1 by animateFloatAsState(
+                    targetValue = targetY1,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                    label = "animY1"
+                )
+                val animY2 by animateFloatAsState(
+                    targetValue = targetY2,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                    label = "animY2"
+                )
+                val animY3 by animateFloatAsState(
+                    targetValue = targetY3,
+                    animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
+                    label = "animY3"
+                )
 
                 val points = listOf(
-                    Offset(x0, y0),
-                    Offset(x1, y1),
-                    Offset(x2, y2),
-                    Offset(x3, y3)
+                    Offset(x0, animY0),
+                    Offset(x1, animY1),
+                    Offset(x2, animY2),
+                    Offset(x3, animY3)
                 )
 
                 Canvas(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
@@ -164,7 +210,7 @@ fun ScheduleChart(
 
                     drawLine(
                         color = Color.White.copy(alpha = 0.28f),
-                        start = Offset(x0, y0),
+                        start = Offset(x0, animY0),
                         end = Offset(x0, h),
                         strokeWidth = 1.2.dp.toPx(),
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
@@ -172,31 +218,31 @@ fun ScheduleChart(
 
                     // S-curves between steps represent thermal equilibration lag rather than instant room shifts
                     val curvePath = Path().apply {
-                        moveTo(0f, y0)
-                        lineTo(x0, y0)
+                        moveTo(0f, animY0)
+                        lineTo(x0, animY0)
 
                         val dx01 = x1 - x0
                         cubicTo(
-                            x0 + dx01 * 0.5f, y0,
-                            x0 + dx01 * 0.5f, y1,
-                            x1, y1
+                            x0 + dx01 * 0.5f, animY0,
+                            x0 + dx01 * 0.5f, animY1,
+                            x1, animY1
                         )
 
                         val dx12 = x2 - x1
                         cubicTo(
-                            x1 + dx12 * 0.5f, y1,
-                            x1 + dx12 * 0.5f, y2,
-                            x2, y2
+                            x1 + dx12 * 0.5f, animY1,
+                            x1 + dx12 * 0.5f, animY2,
+                            x2, animY2
                         )
 
                         val dx23 = x3 - x2
                         cubicTo(
-                            x2 + dx23 * 0.5f, y2,
-                            x2 + dx23 * 0.5f, y3,
-                            x3, y3
+                            x2 + dx23 * 0.5f, animY2,
+                            x2 + dx23 * 0.5f, animY3,
+                            x3, animY3
                         )
 
-                        lineTo(w, y3)
+                        lineTo(w, animY3)
                     }
 
                     val fillPath = Path().apply {
@@ -268,7 +314,7 @@ fun ScheduleChart(
                 // Modifier.layout positions actual Composable nodes above canvas coordinates,
                 // avoiding TextMeasurer allocation overhead and text caching churn inside Canvas.
                 points.forEachIndexed { index, point ->
-                    val item = phases[index]
+                    val item = phases.getOrNull(index) ?: return@forEachIndexed
                     Box(
                         modifier = Modifier.layout { measurable, constraints ->
                             val placeable = measurable.measure(constraints)
@@ -279,38 +325,44 @@ fun ScheduleChart(
                             }
                         }
                     ) {
-                        if (item.isFanOnly || item.tempLabel == null) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = safeFanIcon(),
-                                    contentDescription = "Fan Only",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                                Spacer(modifier = Modifier.width(3.dp))
+                        Crossfade(
+                            targetState = item.isFanOnly to item.tempLabel,
+                            animationSpec = tween(200),
+                            label = "StepLabelCrossfade$index"
+                        ) { (isFan, label) ->
+                            if (isFan || label == null) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = safeFanIcon(),
+                                        contentDescription = "Fan Only",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "Fan",
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.sp,
+                                            color = Color.White
+                                        )
+                                    )
+                                }
+                            } else {
                                 Text(
-                                    text = "Fan",
+                                    text = label,
                                     style = TextStyle(
                                         fontFamily = JakartaFamily,
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp,
+                                        fontSize = 14.sp,
                                         color = Color.White
                                     )
                                 )
                             }
-                        } else {
-                            Text(
-                                text = item.tempLabel,
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    color = Color.White
-                                )
-                            )
                         }
                     }
                 }
@@ -318,34 +370,40 @@ fun ScheduleChart(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                phases.forEachIndexed { index, phase ->
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = phase.time,
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = if (phase.isActive) FontWeight.SemiBold else FontWeight.Normal,
-                                fontSize = 12.sp,
-                                color = if (phase.isActive) Color.White else Color.White.copy(alpha = 0.85f)
+            Crossfade(
+                targetState = phases,
+                animationSpec = tween(220),
+                label = "PhaseRowCrossfade"
+            ) { currentPhases ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    currentPhases.forEachIndexed { index, phase ->
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = phase.time,
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontWeight = if (phase.isActive) FontWeight.SemiBold else FontWeight.Normal,
+                                    fontSize = 12.sp,
+                                    color = if (phase.isActive) Color.White else Color.White.copy(alpha = 0.85f)
+                                )
                             )
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = phase.phaseName,
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 11.sp,
-                                color = if (index == 3) Color(0xFF6EE7B7) else Color.White.copy(alpha = 0.60f)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = phase.phaseName,
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 11.sp,
+                                    color = if (index == 3) Color(0xFF6EE7B7) else Color.White.copy(alpha = 0.60f)
+                                )
                             )
-                        )
+                        }
                     }
                 }
             }

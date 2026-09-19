@@ -1,7 +1,6 @@
 package com.example.klimata.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +41,7 @@ import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.DetailPageScaffold
 import com.example.klimata.ui.components.PeriodDropdown
 import com.example.klimata.ui.theme.JakartaFamily
+import com.example.klimata.ui.theme.LocalDiurnalColors
 import com.example.klimata.ui.theme.MineralMintActive
 
 @Composable
@@ -49,6 +49,7 @@ fun SavingsDetailScreen(
     room: RoomState = MockData.masterBedRoom,
     onBackClick: () -> Unit = {},
 ) {
+    val diurnal = LocalDiurnalColors.current
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.savingsHistory.forPeriod(selectedPeriod)
     val breakdown = room.savingsBreakdown
@@ -68,9 +69,8 @@ fun SavingsDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(22.dp))
-                .background(Color.White.copy(alpha = 0.14f))
-                .border(1.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(22.dp))
+                .clip(RoundedCornerShape(24.dp))
+                .background(diurnal.frostedCardBackground)
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -144,8 +144,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.10f))
-                .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(20.dp))
+                .background(Color.White.copy(alpha = 0.07f))
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -264,8 +263,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.10f))
-                .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(20.dp))
+                .background(Color.White.copy(alpha = 0.07f))
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -324,8 +322,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.08f))
-                .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(18.dp))
+                .background(Color.White.copy(alpha = 0.06f))
                 .padding(16.dp)
         ) {
             Row(

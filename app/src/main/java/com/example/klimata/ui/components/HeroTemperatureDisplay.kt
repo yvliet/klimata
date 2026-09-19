@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +25,9 @@ import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.OnSkySecondary
 import com.example.klimata.ui.theme.currentDiurnalPhase
+
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 
 /**
  * Large ambient temperature readout.
@@ -36,6 +42,9 @@ fun HeroTemperatureDisplay(
     highTemp: Int? = null,
     lowTemp: Int? = null,
     phase: DiurnalPhase = currentDiurnalPhase(),
+    roomIndex: Int = 0,
+    tempScale: Float = 1f,
+    tempAlpha: Float = 1f,
 ) {
     val reflectionGradient = when (phase) {
         DiurnalPhase.DAY -> Brush.verticalGradient(
@@ -55,59 +64,73 @@ fun HeroTemperatureDisplay(
         )
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
-    ) {
-        // Degree symbol is decoupled from digits: a unified 108sp string sizes the degree glyph
-        // to standard font ascender height, creating excessive visual mass and vertical offset.
-        Row(
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.Start
+    Crossfade(
+        targetState = Pair(temperature, condition),
+        animationSpec = tween(220),
+        label = "HeroTempCrossfade",
+        modifier = modifier.fillMaxWidth()
+    ) { (animTemp, animCondition) ->
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.Start
         ) {
+            // Scale and fade applied exclusively to the temperature digits and degree symbol,
+            // zooming in to invisibility at midpoint while preserving condition text stability.
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.Start,
+                modifier = Modifier.graphicsLayer {
+                    scaleX = tempScale
+                    scaleY = tempScale
+                    alpha = tempAlpha
+                    transformOrigin = TransformOrigin.Center
+                }
+            ) {
+                Text(
+                    text = animTemp.toString(),
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Light,
+                        fontSize = 122.sp,
+                        lineHeight = 126.sp,
+                        letterSpacing = (-3.5).sp,
+                        brush = reflectionGradient
+                    )
+                )
+
+                Text(
+                    text = "°",
+                    modifier = Modifier.padding(top = 10.dp),
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Light,
+                        fontSize = 64.sp,
+                        lineHeight = 68.sp,
+                        brush = reflectionGradient
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            val detailText = if ((highTemp != null) && (lowTemp != null)) {
+                "$animCondition  $highTemp°/$lowTemp°"
+            } else {
+                animCondition
+            }
+
             Text(
-                text = temperature.toString(),
+                text = detailText,
                 style = TextStyle(
                     fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Light,
-                    fontSize = 108.sp,
-                    lineHeight = 112.sp,
-                    letterSpacing = (-3).sp,
-                    brush = reflectionGradient
-                )
-            )
-
-            Text(
-                text = "°",
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Light,
-                    fontSize = 58.sp,
-                    lineHeight = 62.sp,
-                    brush = reflectionGradient
-                )
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 17.sp,
+                    lineHeight = 22.sp,
+                    letterSpacing = 0.sp
+                ),
+                color = OnSkySecondary
             )
         }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        val detailText = if ((highTemp != null) && (lowTemp != null)) {
-            "$condition  $highTemp°/$lowTemp°"
-        } else {
-            condition
-        }
-
-        Text(
-            text = detailText,
-            style = TextStyle(
-                fontFamily = JakartaFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 17.sp,
-                lineHeight = 22.sp,
-                letterSpacing = 0.sp
-            ),
-            color = OnSkySecondary
-        )
     }
 }
 
