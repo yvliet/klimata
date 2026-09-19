@@ -144,7 +144,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.07f))
+                .background(diurnal.frostedCardBackground)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -263,7 +263,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.07f))
+                .background(diurnal.frostedCardBackground)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -322,7 +322,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.06f))
+                .background(diurnal.frostedCardBackground)
                 .padding(16.dp)
         ) {
             Row(

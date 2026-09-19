@@ -200,7 +200,7 @@ fun CarbonDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.07f))
+                .background(diurnal.frostedCardBackground)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -232,7 +232,7 @@ fun CarbonDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.06f))
+                .background(diurnal.frostedCardBackground)
                 .padding(16.dp)
         ) {
             Row(
@@ -291,10 +291,11 @@ private fun EquivalenceCard(
     description: String,
     modifier: Modifier = Modifier,
 ) {
+    val diurnal = LocalDiurnalColors.current
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.07f))
+            .background(diurnal.frostedCardBackground)
             .padding(14.dp)
     ) {
         Column {

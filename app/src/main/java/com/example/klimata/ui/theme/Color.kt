@@ -4,11 +4,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // Diurnal Sky Gradient Stops
-val DaySkyStop1 = Color(0xFF1976D2)
-val DaySkyStop2 = Color(0xFF42A5F5)
-val DaySkyStop3 = Color(0xFF90CAF9)
-val DaySkyStop4 = Color(0xFFBBDEFB)
-val DaySkyStop5 = Color(0xFFBBDEFB)
+val DaySkyStop1 = Color(0xFF1E6DEB)
+val DaySkyStop2 = Color(0xFF388BF2)
+val DaySkyStop3 = Color(0xFF5CA4F8)
+val DaySkyStop4 = Color(0xFF8AC1FB)
+val DaySkyStop5 = Color(0xFF8AC1FB)
 
 val EveningSkyStop1 = Color(0xFF1A237E)
 val EveningSkyStop2 = Color(0xFFAD1457)
@@ -21,6 +21,12 @@ val NightSkyStop2 = Color(0xFF1B2838)
 val NightSkyStop3 = Color(0xFF1E3A5F)
 val NightSkyStop4 = Color(0xFF2C5282)
 val NightSkyStop5 = Color(0xFF2C5282)
+
+// Overcast / Stormy Sky Gradient Stops
+val OvercastSkyStop1 = Color(0xFF0F1322)
+val OvercastSkyStop2 = Color(0xFF141829)
+val OvercastSkyStop3 = Color(0xFF1A1F33)
+val OvercastSkyStop4 = Color(0xFF222842)
 
 // Celestial Light Blooms
 val DaySunBloom = Color(0x3DFFEA79)
@@ -42,14 +48,19 @@ val NightMoonCoronaOuter = Color(0x18818CF8)
 val StarColorCool = Color(0xFFE0E7FF)
 val StarColorWarm = Color(0xFFFEF3C7)
 
-// Translucent Frosted Dark Panels
-val DayFrostedCardBackground = Color(0x40182438)
-val EveningFrostedCardBackground = Color(0x66281A2E)
-val NightFrostedCardBackground = Color(0x701E1B36)
+// Translucent Frosted Panels
+// Contextual contrast rule:
+// On light daytime skies, cards use a translucent dark slate-navy ("dark on light")
+// providing tangible elevation and crisp contrast for white typography and charts.
+// On dark nocturnal skies, cards use pure translucent white ("light on dark")
+// naturally yielding a soft, luminous frosted indigo surface.
+val DayFrostedCardBackground = Color(0x4D0F172A)
+val EveningFrostedCardBackground = Color(0x381C1917)
+val NightFrostedCardBackground = Color(0x24FFFFFF)
 val FrostedCardBackground = NightFrostedCardBackground
 
-val FrostedSubCardBackground = Color(0x0EFFFFFF)
-val FrostedButtonBackground = Color(0x14FFFFFF)
+val FrostedSubCardBackground = FrostedCardBackground
+val FrostedButtonBackground = Color(0x18FFFFFF)
 
 // Sky Legibility Tokens
 val OnSkyPrimary = Color(0xFFFFFFFF)
@@ -76,11 +87,11 @@ val DayCardBorder = Color(0xFFEEF2F6)
 
 val EveningDeckSurface = Color(0xFFFAFAF9)
 val EveningCardSurface = Color(0xFFF5F5F4)
-val EveningCardBorder = Color(0xFFE7E5E4)
+val EveningCardBorder = Color(0x28FFFFFF)
 
 val NightDeckSurface = Color(0xFF0B1120)
-val NightCardSurface = Color(0xFF151F32)
-val NightCardBorder = Color(0xFF22314A)
+val NightCardSurface = Color(0xFF28304C)
+val NightCardBorder = Color(0x33FFFFFF)
 
 // Text Colors
 val DayTextPrimary = Color(0xFF090D16)

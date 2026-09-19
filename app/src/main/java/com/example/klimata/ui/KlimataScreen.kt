@@ -30,7 +30,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,21 +38,28 @@ import com.example.klimata.data.MockData
 import com.example.klimata.ui.components.ACControlPanel
 import com.example.klimata.ui.components.AmbientTopBarActions
 import com.example.klimata.ui.components.AtmosphericSkyCanvas
+import com.example.klimata.ui.components.CloudForegroundVeil
 import com.example.klimata.ui.components.HeroTemperatureDisplay
 import com.example.klimata.ui.components.ImpactLedgerGrid
 import com.example.klimata.ui.components.RoomIndicator
 import com.example.klimata.ui.components.ScheduleChart
 import com.example.klimata.ui.theme.DiurnalPhase
+import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.LocalDiurnalColors
+import com.example.klimata.ui.theme.OvercastSkyStop1
+import com.example.klimata.ui.theme.OvercastSkyStop2
+import com.example.klimata.ui.theme.OvercastSkyStop3
+import com.example.klimata.ui.theme.OvercastSkyStop4
 import com.example.klimata.ui.theme.currentDiurnalPhase
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.graphics.Brush
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlin.math.abs
 
 /**
- * Root screen orchestrating multi-room thermal automation state, full-screen horizontal paging,
- * real-time hero temperature zoom dynamics, sticky docked room indicator header, and diurnal sky backdrop parallax.
+ * Main application screen.
  */
 @Composable
 fun KlimataScreen(
@@ -71,6 +77,7 @@ fun KlimataScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size })
     val coroutineScope = rememberCoroutineScope()
     val currentRoom = rooms[pagerState.currentPage]
+    val effectiveCondition = currentRoom.weatherCondition
 
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
@@ -117,10 +124,20 @@ fun KlimataScreen(
     KlimataTheme(phase = selectedPhase) {
         val diurnal = LocalDiurnalColors.current
 
+        val activeSkyGradient = remember(selectedPhase) {
+            if (selectedPhase == DiurnalPhase.NIGHT) {
+                Brush.verticalGradient(
+                    listOf(OvercastSkyStop1, OvercastSkyStop2, OvercastSkyStop3, OvercastSkyStop4)
+                )
+            } else {
+                diurnal.skyGradient
+            }
+        }
+
         BoxWithConstraints(
             modifier = modifier
                 .fillMaxSize()
-                .background(brush = diurnal.skyGradient)
+                .background(brush = activeSkyGradient)
         ) {
             val totalViewportHeight = maxHeight
             // Dynamic spacer height ensures Tonight's Schedule is fully visible in resting state
@@ -130,6 +147,7 @@ fun KlimataScreen(
             AtmosphericSkyCanvas(
                 scrollOffsetProvider = { scrollState.value.toFloat() },
                 phase = selectedPhase,
+                weatherCondition = effectiveCondition,
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -183,30 +201,39 @@ fun KlimataScreen(
                     // Placeholder space matching the pinned top bar + rest offset of room indicator
                     Spacer(modifier = Modifier.height(102.dp))
 
-                    val scrollOffset = scrollState.value.toFloat()
-                    val heroProgress = (scrollOffset / 200f).coerceIn(0f, 1f)
-                    val heroBlurDp = (heroProgress * 16f).dp
-                    val heroAlpha = (1f - heroProgress * 0.85f).coerceIn(0f, 1f)
-
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp)
-                            .blur(radius = heroBlurDp)
                             .graphicsLayer {
-                                alpha = heroAlpha
+                                val scrollOffset = scrollState.value.toFloat()
+                                val heroProgress = (scrollOffset / 200f).coerceIn(0f, 1f)
+                                alpha = (1f - heroProgress * 0.85f).coerceIn(0f, 1f)
                                 translationY = -scrollOffset * 0.20f
                             }
                     ) {
                         HeroTemperatureDisplay(
                             temperature = currentRoom.currentTemp,
-                            condition = currentRoom.weatherCondition,
+                            condition = effectiveCondition,
                             highTemp = MockData.weather.highTemp,
                             lowTemp = MockData.weather.lowTemp,
                             phase = selectedPhase,
                             roomIndex = pagerState.currentPage,
                             tempScale = animatedTempScale,
-                            tempAlpha = animatedTempAlpha
+                            tempAlpha = animatedTempAlpha,
+                            modifier = Modifier.padding(horizontal = 24.dp)
+                        )
+
+                        CloudForegroundVeil(
+                            scrollOffsetProvider = { scrollState.value.toFloat() },
+                            phase = selectedPhase,
+                            weatherCondition = effectiveCondition,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .align(Alignment.TopStart)
+                                .graphicsLayer {
+                                    translationY = 8.dp.toPx()
+                                }
                         )
                     }
 
@@ -218,11 +245,13 @@ fun KlimataScreen(
                     )
                 }
 
-                // Interactive horizontal card pager with tight 8dp inter-card packing
+                // Default CenterVertically misaligns top cards across rooms with differing content heights
+                // Equal pageSpacing and contentPadding ensures adjacent cards sit flush at screen edges without resting peek
                 HorizontalPager(
                     state = pagerState,
-                    pageSpacing = 12.dp,
+                    pageSpacing = 16.dp,
                     contentPadding = PaddingValues(horizontal = 16.dp),
+                    verticalAlignment = Alignment.Top,
                     modifier = Modifier.fillMaxWidth()
                 ) { pageIndex ->
                     val room = rooms[pageIndex]
@@ -281,10 +310,15 @@ fun KlimataScreen(
                         }
                 )
 
-                // Top action icons remain pinned at top-right
                 AmbientTopBarActions(
                     onAddRoomClick = { /* TODO: Hook room provisioning flow */ },
-                    onMenuClick = { /* TODO: Hook contextual settings menu */ },
+                    onMenuClick = {
+                        selectedPhase = when (selectedPhase) {
+                            DiurnalPhase.DAY -> DiurnalPhase.EVENING
+                            DiurnalPhase.EVENING -> DiurnalPhase.NIGHT
+                            DiurnalPhase.NIGHT -> DiurnalPhase.DAY
+                        }
+                    },
                     modifier = Modifier.align(Alignment.TopEnd)
                 )
             }

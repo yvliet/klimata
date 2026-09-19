@@ -6,8 +6,10 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -204,6 +206,24 @@ fun ScheduleChart(
                     Offset(x3, animY3)
                 )
 
+                val curvePath = remember { Path() }
+                val fillPath = remember { Path() }
+                val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f) }
+                val fillGradientColors = remember {
+                    listOf(
+                        Color.White.copy(alpha = 0.12f),
+                        Color.White.copy(alpha = 0.03f),
+                        Color.Transparent
+                    )
+                }
+                val lineGradientColors = remember {
+                    listOf(
+                        Color.White.copy(alpha = 0.95f),
+                        Color.White.copy(alpha = 0.85f),
+                        Color.White.copy(alpha = 0.70f)
+                    )
+                }
+
                 Canvas(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
                     val w = size.width
                     val h = size.height
@@ -213,65 +233,50 @@ fun ScheduleChart(
                         start = Offset(x0, animY0),
                         end = Offset(x0, h),
                         strokeWidth = 1.2.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
+                        pathEffect = dashEffect
                     )
 
                     // S-curves between steps represent thermal equilibration lag rather than instant room shifts
-                    val curvePath = Path().apply {
-                        moveTo(0f, animY0)
-                        lineTo(x0, animY0)
+                    curvePath.rewind()
+                    curvePath.moveTo(0f, animY0)
+                    curvePath.lineTo(x0, animY0)
 
-                        val dx01 = x1 - x0
-                        cubicTo(
-                            x0 + dx01 * 0.5f, animY0,
-                            x0 + dx01 * 0.5f, animY1,
-                            x1, animY1
-                        )
+                    val dx01 = x1 - x0
+                    curvePath.cubicTo(
+                        x0 + dx01 * 0.5f, animY0,
+                        x0 + dx01 * 0.5f, animY1,
+                        x1, animY1
+                    )
 
-                        val dx12 = x2 - x1
-                        cubicTo(
-                            x1 + dx12 * 0.5f, animY1,
-                            x1 + dx12 * 0.5f, animY2,
-                            x2, animY2
-                        )
+                    val dx12 = x2 - x1
+                    curvePath.cubicTo(
+                        x1 + dx12 * 0.5f, animY1,
+                        x1 + dx12 * 0.5f, animY2,
+                        x2, animY2
+                    )
 
-                        val dx23 = x3 - x2
-                        cubicTo(
-                            x2 + dx23 * 0.5f, animY2,
-                            x2 + dx23 * 0.5f, animY3,
-                            x3, animY3
-                        )
+                    val dx23 = x3 - x2
+                    curvePath.cubicTo(
+                        x2 + dx23 * 0.5f, animY2,
+                        x2 + dx23 * 0.5f, animY3,
+                        x3, animY3
+                    )
+                    curvePath.lineTo(w, animY3)
 
-                        lineTo(w, animY3)
-                    }
-
-                    val fillPath = Path().apply {
-                        addPath(curvePath)
-                        lineTo(w, h)
-                        lineTo(0f, h)
-                        close()
-                    }
+                    fillPath.rewind()
+                    fillPath.addPath(curvePath)
+                    fillPath.lineTo(w, h)
+                    fillPath.lineTo(0f, h)
+                    fillPath.close()
 
                     drawPath(
                         path = fillPath,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.12f),
-                                Color.White.copy(alpha = 0.03f),
-                                Color.Transparent
-                            )
-                        )
+                        brush = Brush.verticalGradient(colors = fillGradientColors)
                     )
 
                     drawPath(
                         path = curvePath,
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.95f),
-                                Color.White.copy(alpha = 0.85f),
-                                Color.White.copy(alpha = 0.70f)
-                            )
-                        ),
+                        brush = Brush.horizontalGradient(colors = lineGradientColors),
                         style = Stroke(
                             width = 2.4.dp.toPx(),
                             cap = StrokeCap.Round

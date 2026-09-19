@@ -1,5 +1,8 @@
 package com.example.klimata.data
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class AmbientWeather(
     val location: String,
     val condition: String,
@@ -11,6 +14,7 @@ data class AmbientWeather(
     val gridStatus: String,
 )
 
+@Immutable
 data class ACProfile(
     val roomName: String,
     val brand: String,
@@ -21,6 +25,7 @@ data class ACProfile(
     val mode: String,
 )
 
+@Immutable
 data class ThermalStep(
     val time: String,
     val setpointCelsius: Int,
@@ -34,12 +39,14 @@ data class ThermalStep(
     val isCompleted: Boolean = false,
 )
 
+@Immutable
 data class ImpactMetric(
     val title: String,
     val primaryValue: String,
     val subtitle: String,
 )
 
+@Immutable
 data class TimeBucketedImpact(
     val weekly: ImpactMetric,
     val monthly: ImpactMetric,
@@ -54,6 +61,7 @@ data class TimeBucketedImpact(
     }
 }
 
+@Immutable
 data class SavingsBreakdown(
     val compressorCyclingPercent: Int,
     val fanCoastingPercent: Int,
@@ -61,6 +69,7 @@ data class SavingsBreakdown(
     val localTariffPerKwh: String,
 )
 
+@Immutable
 data class CarbonEquivalence(
     val treesEquivalent: Float,
     val drivingKmAvoided: Float,
@@ -68,12 +77,14 @@ data class CarbonEquivalence(
     val gridEmissionFactor: Float,
 )
 
+@Immutable
 data class DispatchState(
     val isAutonomous: Boolean,
     val statusLabel: String,
     val dispatchMethod: String,
 )
 
+@Immutable
 data class RoomState(
     val id: String,
     val name: String,
@@ -181,6 +192,8 @@ object MockData {
 
     val roomList: List<String> = listOf("Master Bed", "Living Room", "Study")
 
+    val supportedWeatherConditions: List<String> = listOf("Overcast", "Partly Cloudy", "Clear Night")
+
     val masterBedRoom = RoomState(
         id = "room_master_bed",
         name = "Master Bed",
@@ -189,7 +202,7 @@ object MockData {
         currentTemp = 24,
         targetTemp = 24,
         isPowerOn = true,
-        weatherCondition = "Clear Night",
+        weatherCondition = "Overcast",
         thermalSteps = thermalSteps,
         dispatchState = dispatch,
         monthlySavings = savingsMetric,

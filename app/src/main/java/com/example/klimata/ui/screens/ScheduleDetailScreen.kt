@@ -35,6 +35,7 @@ import com.example.klimata.data.ThermalStep
 import com.example.klimata.ui.components.DetailPageScaffold
 import com.example.klimata.ui.components.ScheduleChart
 import com.example.klimata.ui.theme.JakartaFamily
+import com.example.klimata.ui.theme.LocalDiurnalColors
 import com.example.klimata.ui.theme.MineralMintActive
 import com.example.klimata.ui.theme.MineralMintGlow
 
@@ -43,6 +44,7 @@ fun ScheduleDetailScreen(
     room: RoomState = MockData.masterBedRoom,
     onBackClick: () -> Unit = {},
 ) {
+    val diurnal = LocalDiurnalColors.current
     DetailPageScaffold(
         title = "Tonight's Schedule",
         subtitle = "${room.name} • Adaptive Thermal Drift",
@@ -83,7 +85,7 @@ fun ScheduleDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(Color.White.copy(alpha = 0.07f))
+                .background(diurnal.frostedCardBackground)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -134,7 +136,7 @@ fun ScheduleDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(Color.White.copy(alpha = 0.06f))
+                .background(diurnal.frostedCardBackground)
                 .padding(16.dp)
         ) {
             Row(
@@ -191,6 +193,7 @@ private fun ThermalStepMilestoneCard(
     stepNumber: Int,
     modifier: Modifier = Modifier,
 ) {
+    val diurnal = LocalDiurnalColors.current
     val isCoasting = step.setpointCelsius == 0
     val setpointDisplay = if (isCoasting) "Fan Only" else "${step.setpointCelsius}°C"
 
@@ -199,7 +202,7 @@ private fun ThermalStepMilestoneCard(
             .clip(RoundedCornerShape(18.dp))
             .background(
                 if (step.isActive) Color.White.copy(alpha = 0.14f)
-                else Color.White.copy(alpha = 0.07f)
+                else diurnal.frostedCardBackground
             )
             .padding(14.dp)
     ) {

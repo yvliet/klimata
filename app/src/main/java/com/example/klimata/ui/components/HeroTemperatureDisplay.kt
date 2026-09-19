@@ -71,7 +71,9 @@ fun HeroTemperatureDisplay(
         modifier = modifier.fillMaxWidth()
     ) { (animTemp, animCondition) ->
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 6.dp),
             horizontalAlignment = Alignment.Start
         ) {
             // Scale and fade applied exclusively to the temperature digits and degree symbol,

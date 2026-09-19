@@ -33,6 +33,7 @@ import com.example.klimata.ui.theme.OnSkySecondary
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
@@ -43,6 +44,8 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 
 /**
  * Decoupled room name and pager dots indicator.
@@ -56,6 +59,9 @@ fun RoomIndicator(
     currentRoomIndex: Int = 0,
     onRoomSelected: (Int) -> Unit = {},
 ) {
+    val density = LocalDensity.current
+    val slideOffsetPx = with(density) { 16.dp.roundToPx() }
+
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -63,12 +69,14 @@ fun RoomIndicator(
         AnimatedContent(
             targetState = currentRoomIndex to currentRoom,
             transitionSpec = {
+                val animSpec = tween<Float>(durationMillis = 220, easing = FastOutSlowInEasing)
+                val slideSpec = tween<IntOffset>(durationMillis = 220, easing = FastOutSlowInEasing)
                 if (targetState.first >= initialState.first) {
-                    (slideInHorizontally(animationSpec = tween(220)) { fullWidth -> fullWidth } + fadeIn(animationSpec = tween(220)))
-                        .togetherWith(slideOutHorizontally(animationSpec = tween(220)) { fullWidth -> -fullWidth } + fadeOut(animationSpec = tween(220)))
+                    (slideInHorizontally(animationSpec = slideSpec) { slideOffsetPx } + fadeIn(animationSpec = animSpec))
+                        .togetherWith(slideOutHorizontally(animationSpec = slideSpec) { -slideOffsetPx } + fadeOut(animationSpec = animSpec))
                 } else {
-                    (slideInHorizontally(animationSpec = tween(220)) { fullWidth -> -fullWidth } + fadeIn(animationSpec = tween(220)))
-                        .togetherWith(slideOutHorizontally(animationSpec = tween(220)) { fullWidth -> fullWidth } + fadeOut(animationSpec = tween(220)))
+                    (slideInHorizontally(animationSpec = slideSpec) { -slideOffsetPx } + fadeIn(animationSpec = animSpec))
+                        .togetherWith(slideOutHorizontally(animationSpec = slideSpec) { slideOffsetPx } + fadeOut(animationSpec = animSpec))
                 }
             },
             label = "RoomIndicatorTransition"
@@ -142,7 +150,7 @@ fun AmbientTopBarActions(
             Icon(
                 imageVector = PlusIcon,
                 contentDescription = "Add Room",
-                tint = OnSkyPrimary,
+                tint = Color.White,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -154,7 +162,7 @@ fun AmbientTopBarActions(
             Icon(
                 imageVector = MoreVerticalIcon,
                 contentDescription = "More Options",
-                tint = OnSkyPrimary,
+                tint = Color.White,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -162,8 +170,7 @@ fun AmbientTopBarActions(
 }
 
 /**
- * Top app bar displaying the current active room name, pager position indicator dots,
- * and navigation actions.
+ * Pinned persistent header containing the room name, page indicator, and top actions.
  */
 @Composable
 fun AmbientHeader(
