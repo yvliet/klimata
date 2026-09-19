@@ -46,6 +46,7 @@ import com.example.klimata.data.MockData
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.LocalDiurnalColors
+import com.example.klimata.ui.theme.MineralMintActive
 import com.example.klimata.ui.theme.SavingsYellow
 import com.example.klimata.ui.theme.SavingsYellowDark
 import com.example.klimata.ui.theme.SavingsYellowLight
@@ -60,8 +61,8 @@ private val SavingsGradients = listOf(
 
 private val CarbonGradients = listOf(
     Color(0xFF6EE7B7),
-    Color(0xFF2DD4BF),
-    Color(0xFF0EA5E9)
+    Color(0xFF34D399),
+    Color(0xFF10B981)
 )
 
 /**
@@ -119,7 +120,7 @@ fun ImpactLedgerGrid(
             progressFraction = carbonProgress,
             centerIcon = PhosphorIcons.Light.Tree,
             gradientColors = CarbonGradients,
-            iconTint = Color(0xFF2DD4BF),
+            iconTint = MineralMintActive,
             onClick = onCarbonClick,
             modifier = Modifier
                 .weight(1f)

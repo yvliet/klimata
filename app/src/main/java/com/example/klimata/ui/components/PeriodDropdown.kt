@@ -41,7 +41,7 @@ import com.example.klimata.ui.theme.DetailCardSurfaceElevated
 import com.example.klimata.ui.theme.DetailTextPrimary
 import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
-import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.LocalDiurnalColors
 
 /**
  * Minimalist dark dropdown selector for toggling time-horizon impact views.
@@ -52,6 +52,7 @@ fun PeriodDropdown(
     onPeriodSelected: (ImpactPeriod) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val diurnal = LocalDiurnalColors.current
     var expanded by remember { mutableStateOf(false) }
 
     val chevronRotation by animateFloatAsState(
@@ -123,7 +124,7 @@ fun PeriodDropdown(
                                     fontFamily = JakartaFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontSize = 13.sp,
-                                    color = if (isSelected) MineralMintActive else DetailTextPrimary
+                                    color = if (isSelected) diurnal.accentColor else DetailTextPrimary
                                 ),
                                 modifier = Modifier.fillMaxWidth()
                             )

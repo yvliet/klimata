@@ -57,6 +57,7 @@ import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.LocalDiurnalColors
 import com.example.klimata.ui.theme.MineralMintActive
+import com.example.klimata.ui.theme.PowerGreenActive
 
 /**
  * 2-column Bento AC control row:
@@ -326,7 +327,7 @@ fun ACDigitalRemoteCard(
     val diurnal = LocalDiurnalColors.current
 
     val powerButtonColor by animateColorAsState(
-        targetValue = if (isPowerOn) MineralMintActive else Color.White.copy(alpha = 0.08f),
+        targetValue = if (isPowerOn) PowerGreenActive else Color.White.copy(alpha = 0.08f),
         animationSpec = tween(200),
         label = "RemotePowerColor"
     )
@@ -373,7 +374,7 @@ fun ACDigitalRemoteCard(
     )
 
     val powerIndicatorDotColor by animateColorAsState(
-        targetValue = if (isPowerOn) MineralMintActive else Color.White.copy(alpha = 0.20f),
+        targetValue = if (isPowerOn) PowerGreenActive else Color.White.copy(alpha = 0.20f),
         animationSpec = tween(200),
         label = "RemotePowerDot"
     )

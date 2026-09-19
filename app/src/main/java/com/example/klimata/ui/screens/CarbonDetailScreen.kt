@@ -145,7 +145,7 @@ fun CarbonDetailScreen(
         // Dynamic Horizon Trend & Statistics Graph
         NightlyTrendCard(
             trendData = trendData,
-            accentColor = Color(0xFF38BDF8),
+            accentColor = MineralMintActive,
             modifier = Modifier.fillMaxWidth()
         )
 
