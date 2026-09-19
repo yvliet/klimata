@@ -1563,35 +1563,15 @@ private fun WallThermalMaterialPicker(
             .padding(14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Wall Thermal Material",
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.5.sp,
-                    color = DetailTextPrimary
-                )
+        Text(
+            text = "Wall Material",
+            style = TextStyle(
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.5.sp,
+                color = DetailTextPrimary
             )
-            Text(
-                text = when (thermalMass) {
-                    "Light" -> "Drywall · Low inertia"
-                    "Medium" -> "Brick · Balanced inertia"
-                    "Heavy" -> "Concrete · High retention"
-                    else -> ""
-                },
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 11.sp,
-                    color = DetailTextMuted
-                )
-            )
-        }
+        )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -1688,44 +1668,20 @@ private fun MaterialPatternCanvas(
 
         when (materialType) {
             "Light" -> {
-                // Drywall: Two parallel gypsum boundary lines + continuous zigzag insulation battens
-                val topPlate = h * 0.18f
-                val botPlate = h * 0.82f
-                val strokeW = 1.6f
-
-                // Outer drywall sheets
-                drawLine(
-                    color = color,
-                    start = Offset(0f, topPlate),
-                    end = Offset(w, topPlate),
-                    strokeWidth = strokeW
-                )
-                drawLine(
-                    color = color,
-                    start = Offset(0f, botPlate),
-                    end = Offset(w, botPlate),
-                    strokeWidth = strokeW
-                )
-
-                // Insulation coil zigzag between sheets
-                val path = Path()
-                val segments = 6
-                val segWidth = w / segments
-                val battTop = topPlate + 2.dp.toPx()
-                val battBot = botPlate - 2.dp.toPx()
-
-                path.moveTo(0f, (battTop + battBot) / 2f)
-                for (i in 0..segments) {
-                    val x = i * segWidth
-                    val y = if (i % 2 == 0) battTop else battBot
-                    path.lineTo(x, y)
+                // Drywall: Clean evenly spaced vertical lines
+                val strokeW = 1.4f
+                val lineCount = 5
+                val step = w / (lineCount + 1)
+                for (i in 1..lineCount) {
+                    val x = i * step
+                    drawLine(
+                        color = color,
+                        start = Offset(x, h * 0.16f),
+                        end = Offset(x, h * 0.84f),
+                        strokeWidth = strokeW,
+                        cap = StrokeCap.Round
+                    )
                 }
-
-                drawPath(
-                    path = path,
-                    color = color.copy(alpha = 0.85f),
-                    style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-                )
             }
 
             "Medium" -> {
@@ -1769,59 +1725,20 @@ private fun MaterialPatternCanvas(
             }
 
             "Heavy" -> {
-                // Concrete: 45-degree diagonal structural cross-hatch + aggregate stones and speckles
-                val strokeW = 1.2f
-                val spacing = 11.dp.toPx()
-
-                // Diagonal 45-deg hatch lines
+                // Concrete: 45-degree diagonal structural cross-hatch lines
+                val strokeW = 1.3f
+                val spacing = 8.dp.toPx()
                 var startX = -h
                 while (startX < w + h) {
                     val p1 = Offset(startX, 0f)
                     val p2 = Offset(startX + h, h)
                     drawLine(
-                        color = color.copy(alpha = 0.40f),
+                        color = color,
                         start = p1,
                         end = p2,
                         strokeWidth = strokeW
                     )
                     startX += spacing
-                }
-
-                // Triangular aggregate stones
-                val aggregates = listOf(
-                    Triple(w * 0.22f, h * 0.40f, 2.4.dp.toPx()),
-                    Triple(w * 0.54f, h * 0.68f, 2.8.dp.toPx()),
-                    Triple(w * 0.78f, h * 0.32f, 2.5.dp.toPx()),
-                    Triple(w * 0.38f, h * 0.72f, 2.0.dp.toPx())
-                )
-
-                for ((cx, cy, r) in aggregates) {
-                    val tri = Path().apply {
-                        moveTo(cx, cy - r)
-                        lineTo(cx + r * 0.86f, cy + r * 0.5f)
-                        lineTo(cx - r * 0.86f, cy + r * 0.5f)
-                        close()
-                    }
-                    drawPath(
-                        path = tri,
-                        color = color.copy(alpha = 0.80f),
-                        style = Stroke(width = 1.2f)
-                    )
-                }
-
-                // Tiny aggregate sand stippling
-                val dots = listOf(
-                    Offset(w * 0.35f, h * 0.28f),
-                    Offset(w * 0.65f, h * 0.48f),
-                    Offset(w * 0.85f, h * 0.70f),
-                    Offset(w * 0.15f, h * 0.68f)
-                )
-                for (dot in dots) {
-                    drawCircle(
-                        color = color.copy(alpha = 0.65f),
-                        radius = 1.2.dp.toPx(),
-                        center = dot
-                    )
                 }
             }
         }
