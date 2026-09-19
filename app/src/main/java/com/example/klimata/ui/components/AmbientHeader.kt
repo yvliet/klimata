@@ -69,7 +69,7 @@ fun RoomIndicator(
 
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         AnimatedContent(
             targetState = currentRoomIndex to currentRoom,
@@ -113,7 +113,7 @@ fun RoomIndicator(
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(24.dp)
+                    .size(width = 16.dp, height = 18.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -137,7 +137,7 @@ fun RoomIndicator(
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(24.dp)
+                        .size(width = 16.dp, height = 18.dp)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
