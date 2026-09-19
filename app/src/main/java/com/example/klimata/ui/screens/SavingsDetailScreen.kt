@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -35,9 +34,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.Coffee
 import com.adamglin.phosphoricons.light.CurrencyDollar
-import com.adamglin.phosphoricons.light.Fan
 import com.adamglin.phosphoricons.light.Heart
-import com.adamglin.phosphoricons.light.Moon
 import com.adamglin.phosphoricons.light.Sparkle
 import com.example.klimata.data.HumanEquivalents
 import com.example.klimata.data.ImpactPeriod
@@ -46,6 +43,7 @@ import com.example.klimata.data.RoomState
 import com.example.klimata.data.SavingsEquivalentFact
 import com.example.klimata.data.SavingsFactIcon
 import com.example.klimata.ui.components.DetailPageScaffold
+import com.example.klimata.ui.components.NightlyTrendCard
 import com.example.klimata.ui.components.PeriodDropdown
 import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCardSurfaceElevated
@@ -63,7 +61,9 @@ fun SavingsDetailScreen(
 ) {
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.savingsHistory.forPeriod(selectedPeriod)
-    val breakdown = room.savingsBreakdown
+    val trendData = remember(selectedPeriod) {
+        HumanEquivalents.getSavingsTrendData(selectedPeriod)
+    }
     val facts = remember(selectedPeriod) {
         HumanEquivalents.getSavingsFacts(selectedPeriod)
     }
@@ -142,6 +142,13 @@ fun SavingsDetailScreen(
             }
         }
 
+        // Dynamic Horizon Trend & Statistics Graph
+        NightlyTrendCard(
+            trendData = trendData,
+            accentColor = MineralMintActive,
+            modifier = Modifier.fillMaxWidth()
+        )
+
         // Did You Know: Tangible Equivalents
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -185,185 +192,6 @@ fun SavingsDetailScreen(
                     fact = facts[2],
                     modifier = Modifier.fillMaxWidth()
                 )
-            }
-        }
-
-        // The Nighttime Story: Realistic Breakdown
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(DetailCardSurface)
-                .padding(18.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                Column {
-                    Text(
-                        text = "The Nighttime Story",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp,
-                            color = DetailTextPrimary
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Where the savings came from",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            color = DetailTextMuted
-                        )
-                    )
-                }
-
-                // Segmented Ratio Bar
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(10.dp)
-                        .clip(RoundedCornerShape(5.dp))
-                        .background(DetailCardSurfaceElevated)
-                ) {
-                    Row(modifier = Modifier.fillMaxWidth()) {
-                        Box(
-                            modifier = Modifier
-                                .weight(breakdown.compressorCyclingPercent.toFloat())
-                                .fillMaxHeight()
-                                .background(
-                                    Brush.horizontalGradient(
-                                        listOf(MineralMintActive, Color(0xFF6EE7B7))
-                                    )
-                                )
-                        )
-                        Spacer(modifier = Modifier.width(2.dp))
-                        Box(
-                            modifier = Modifier
-                                .weight(breakdown.fanCoastingPercent.toFloat())
-                                .fillMaxHeight()
-                                .background(Color(0xFF48484A))
-                        )
-                    }
-                }
-
-                // Narrative Story Blocks
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Row(
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(MineralMintActive.copy(alpha = 0.16f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = PhosphorIcons.Light.Moon,
-                                contentDescription = null,
-                                tint = MineralMintActive,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "The 2 AM Drift",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 12.5.sp,
-                                        color = DetailTextPrimary
-                                    )
-                                )
-                                Text(
-                                    text = "${breakdown.compressorCyclingPercent}% savings",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 11.5.sp,
-                                        color = MineralMintActive
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "When outside temperatures dropped to 26°C, your AC stepped up from 24°C to 25°C. Your body naturally cools down during deep sleep anyway, so you stayed comfortable while your compressor took a break.",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 11.5.sp,
-                                    lineHeight = 16.sp,
-                                    color = DetailTextSecondary
-                                )
-                            )
-                        }
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.Top,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFF636366).copy(alpha = 0.25f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = PhosphorIcons.Light.Fan,
-                                contentDescription = null,
-                                tint = Color(0xFFA1A1AA),
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
-
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Dawn Coasting",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 12.5.sp,
-                                        color = DetailTextPrimary
-                                    )
-                                )
-                                Text(
-                                    text = "${breakdown.fanCoastingPercent}% savings",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 11.5.sp,
-                                        color = DetailTextSecondary
-                                    )
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "By 5:30 AM, your room was already cool. Klimata turned off the compressor and just used the fan to circulate the remaining cool air until morning.",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 11.5.sp,
-                                    lineHeight = 16.sp,
-                                    color = DetailTextSecondary
-                                )
-                            )
-                        }
-                    }
-                }
             }
         }
 

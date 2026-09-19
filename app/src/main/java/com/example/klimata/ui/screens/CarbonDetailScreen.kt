@@ -44,6 +44,7 @@ import com.example.klimata.data.ImpactPeriod
 import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.DetailPageScaffold
+import com.example.klimata.ui.components.NightlyTrendCard
 import com.example.klimata.ui.components.PeriodDropdown
 import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCardSurfaceElevated
@@ -61,6 +62,9 @@ fun CarbonDetailScreen(
 ) {
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.carbonHistory.forPeriod(selectedPeriod)
+    val trendData = remember(selectedPeriod) {
+        HumanEquivalents.getCarbonTrendData(selectedPeriod)
+    }
     val facts = remember(selectedPeriod) {
         HumanEquivalents.getCarbonFacts(selectedPeriod)
     }
@@ -138,6 +142,13 @@ fun CarbonDetailScreen(
                 )
             }
         }
+
+        // Dynamic Horizon Trend & Statistics Graph
+        NightlyTrendCard(
+            trendData = trendData,
+            accentColor = Color(0xFF38BDF8),
+            modifier = Modifier.fillMaxWidth()
+        )
 
         // Did You Know: Tangible Equivalents
         Column(
