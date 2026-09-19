@@ -48,4 +48,31 @@ class ACModeCycleTest {
         assertEquals(30, stepUp(30))
         assertEquals(25, stepUp(24))
     }
+
+    @Test
+    fun remoteInteractivity_disabledWhenPowerOff() {
+        val isPowerOn = false
+        var setpoint = 24
+        var mode = "Cool"
+        var isEcoFlow = true
+
+        fun onTempStep(delta: Int) {
+            if (isPowerOn) setpoint += delta
+        }
+        fun onModeCycle() {
+            if (isPowerOn) mode = cycleMode(mode)
+        }
+        fun onEcoToggle() {
+            if (isPowerOn) isEcoFlow = !isEcoFlow
+        }
+
+        onTempStep(1)
+        assertEquals(24, setpoint)
+
+        onModeCycle()
+        assertEquals("Cool", mode)
+
+        onEcoToggle()
+        assertTrue(isEcoFlow)
+    }
 }

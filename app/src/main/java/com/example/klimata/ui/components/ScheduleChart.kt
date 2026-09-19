@@ -31,14 +31,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.layout.layout
@@ -223,20 +226,25 @@ fun ScheduleChart(
                 val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f) }
                 val fillGradientColors = remember {
                     listOf(
-                        Color(0xFFF59E0B).copy(alpha = 0.16f),
-                        Color(0xFFF59E0B).copy(alpha = 0.04f),
+                        Color(0xFF38BDF8).copy(alpha = 0.18f),
+                        Color(0xFF38BDF8).copy(alpha = 0.04f),
                         Color.Transparent
                     )
                 }
                 val lineGradientColors = remember {
                     listOf(
-                        Color(0xFFFDBA74),
-                        Color(0xFFF59E0B),
-                        Color(0xFFEA580C)
+                        Color(0xFF60A5FA),
+                        Color(0xFF38BDF8),
+                        Color(0xFF34D399)
                     )
                 }
 
-                Canvas(modifier = Modifier.fillMaxWidth().height(chartHeight)) {
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(chartHeight)
+                        .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                ) {
                     val w = size.width
                     val h = size.height
 
@@ -301,19 +309,21 @@ fun ScheduleChart(
                     points.forEachIndexed { index, point ->
                         val isActive = phases.getOrNull(index)?.isActive == true
                         if (isActive) {
+                            val dotRadiusPx = 4.dp.toPx()
+                            val cutoutRadiusPx = dotRadiusPx + 2.dp.toPx()
+
+                            // Transparent halo cutout clearing curve line and fill to reveal card background
                             drawCircle(
-                                color = Color(0xFFF59E0B).copy(alpha = 0.35f),
-                                radius = 8.5.dp.toPx(),
-                                center = point
+                                color = Color.Transparent,
+                                radius = cutoutRadiusPx,
+                                center = point,
+                                blendMode = BlendMode.Clear
                             )
+
+                            // Solid white marker dot centered inside cutout
                             drawCircle(
                                 color = Color.White,
-                                radius = 4.5.dp.toPx(),
-                                center = point
-                            )
-                            drawCircle(
-                                color = Color(0xFFEA580C),
-                                radius = 2.dp.toPx(),
+                                radius = dotRadiusPx,
                                 center = point
                             )
                         }

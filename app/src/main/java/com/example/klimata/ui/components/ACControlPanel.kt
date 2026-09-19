@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -328,14 +330,39 @@ fun ACDigitalRemoteCard(
     )
 
     val ecoButtonColor by animateColorAsState(
-        targetValue = if (isPowerOn && isEcoFlowEnabled) MineralMintActive else Color.White.copy(alpha = 0.08f),
+        targetValue = when {
+            !isPowerOn -> Color.White.copy(alpha = 0.04f)
+            isEcoFlowEnabled -> MineralMintActive
+            else -> Color.White.copy(alpha = 0.08f)
+        },
         animationSpec = tween(200),
         label = "RemoteEcoColor"
     )
     val ecoIconColor by animateColorAsState(
-        targetValue = if (isPowerOn && isEcoFlowEnabled) Color(0xFF0F172A) else Color.White.copy(alpha = 0.70f),
+        targetValue = when {
+            !isPowerOn -> Color.White.copy(alpha = 0.25f)
+            isEcoFlowEnabled -> Color(0xFF0F172A)
+            else -> Color.White.copy(alpha = 0.70f)
+        },
         animationSpec = tween(200),
         label = "RemoteEcoIconColor"
+    )
+
+    val stepperBgColor by animateColorAsState(
+        targetValue = if (isPowerOn) Color.White.copy(alpha = 0.08f) else Color.White.copy(alpha = 0.04f),
+        animationSpec = tween(200),
+        label = "RemoteStepperBgColor"
+    )
+    val stepperIconColor by animateColorAsState(
+        targetValue = if (isPowerOn) Color.White else Color.White.copy(alpha = 0.25f),
+        animationSpec = tween(200),
+        label = "RemoteStepperIconColor"
+    )
+
+    val modeBtnBgColor by animateColorAsState(
+        targetValue = if (isPowerOn) Color.White.copy(alpha = 0.06f) else Color.White.copy(alpha = 0.03f),
+        animationSpec = tween(200),
+        label = "RemoteModeBtnBgColor"
     )
 
     Box(
@@ -411,6 +438,7 @@ fun ACDigitalRemoteCard(
                             .clip(CircleShape)
                             .background(ecoButtonColor)
                             .clickable(
+                                enabled = isPowerOn,
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null
                             ) {
@@ -426,20 +454,28 @@ fun ACDigitalRemoteCard(
                     }
                 }
 
-                Crossfade(
-                    targetState = isPowerOn,
-                    animationSpec = tween(180),
-                    label = "PowerStateCrossfade"
-                ) { powerState ->
-                    Text(
-                        text = if (powerState) "ON" else "OFF",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp,
-                            color = if (powerState) MineralMintActive else Color.White.copy(alpha = 0.40f)
+                Box(
+                    modifier = Modifier.width(32.dp),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Crossfade(
+                        targetState = isPowerOn,
+                        animationSpec = tween(180),
+                        label = "PowerStateCrossfade",
+                        modifier = Modifier.fillMaxWidth()
+                    ) { powerState ->
+                        Text(
+                            text = if (powerState) "ON" else "OFF",
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.fillMaxWidth(),
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                color = if (powerState) MineralMintActive else Color.White.copy(alpha = 0.40f)
+                            )
                         )
-                    )
+                    }
                 }
             }
 
@@ -457,8 +493,9 @@ fun ACDigitalRemoteCard(
                         .weight(1f)
                         .height(34.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.08f))
+                        .background(stepperBgColor)
                         .clickable(
+                            enabled = isPowerOn,
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
@@ -470,7 +507,7 @@ fun ACDigitalRemoteCard(
                     Icon(
                         imageVector = safeMinusIcon(),
                         contentDescription = "Decrease Temperature",
-                        tint = Color.White,
+                        tint = stepperIconColor,
                         modifier = Modifier.size(14.dp)
                     )
                 }
@@ -481,8 +518,9 @@ fun ACDigitalRemoteCard(
                         .weight(1f)
                         .height(34.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.08f))
+                        .background(stepperBgColor)
                         .clickable(
+                            enabled = isPowerOn,
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
@@ -494,7 +532,7 @@ fun ACDigitalRemoteCard(
                     Icon(
                         imageVector = safePlusIcon(),
                         contentDescription = "Increase Temperature",
-                        tint = Color.White,
+                        tint = stepperIconColor,
                         modifier = Modifier.size(14.dp)
                     )
                 }
@@ -509,8 +547,9 @@ fun ACDigitalRemoteCard(
                     .fillMaxWidth()
                     .height(32.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(Color.White.copy(alpha = 0.06f))
+                    .background(modeBtnBgColor)
                     .clickable(
+                        enabled = isPowerOn,
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
@@ -518,17 +557,21 @@ fun ACDigitalRemoteCard(
                     }
             ) {
                 Crossfade(
-                    targetState = currentMode,
+                    targetState = Pair(currentMode, isPowerOn),
                     animationSpec = tween(180),
                     label = "RemoteModeCrossfade"
-                ) { mode ->
-                    val (modeIcon, modeColor) = when (mode) {
+                ) { (mode, powerState) ->
+                    val (modeIcon, rawModeColor) = when (mode) {
                         "Cool" -> safeSnowflakeIcon() to Color(0xFF60A5FA)
                         "Dry" -> safeWaterDropIcon() to Color(0xFF38BDF8)
                         "Fan" -> safeFanBladeIcon() to Color(0xFFFBBF24)
                         "Auto" -> safeAutoRefreshIcon() to Color(0xFFA78BFA)
                         else -> safeSnowflakeIcon() to Color(0xFF60A5FA)
                     }
+                    val modeColor = if (powerState) rawModeColor else Color.White.copy(alpha = 0.25f)
+                    val modeLabelColor = if (powerState) Color.White.copy(alpha = 0.60f) else Color.White.copy(alpha = 0.20f)
+                    val dotColor = if (powerState) Color.White.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.15f)
+                    val modeNameColor = if (powerState) Color.White.copy(alpha = 0.90f) else Color.White.copy(alpha = 0.25f)
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -540,7 +583,7 @@ fun ACDigitalRemoteCard(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
-                                color = Color.White.copy(alpha = 0.60f),
+                                color = modeLabelColor,
                                 letterSpacing = 0.4.sp
                             )
                         )
@@ -548,7 +591,7 @@ fun ACDigitalRemoteCard(
                             modifier = Modifier
                                 .size(3.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.35f))
+                                .background(dotColor)
                         )
                         Icon(
                             imageVector = modeIcon,
@@ -562,7 +605,7 @@ fun ACDigitalRemoteCard(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
-                                color = Color.White.copy(alpha = 0.90f),
+                                color = modeNameColor,
                                 letterSpacing = 0.3.sp
                             )
                         )
