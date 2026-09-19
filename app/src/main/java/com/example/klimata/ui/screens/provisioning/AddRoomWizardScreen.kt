@@ -13,8 +13,10 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,7 +58,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -1552,50 +1558,269 @@ private fun WallThermalMaterialPicker(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(DetailCardSurface)
             .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(
-            text = "Wall Thermal Material",
-            style = TextStyle(
-                fontFamily = JakartaFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 12.5.sp,
-                color = DetailTextPrimary
-            )
-        )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Wall Thermal Material",
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.5.sp,
+                    color = DetailTextPrimary
+                )
+            )
+            Text(
+                text = when (thermalMass) {
+                    "Light" -> "Drywall · Low inertia"
+                    "Medium" -> "Brick · Balanced inertia"
+                    "Heavy" -> "Concrete · High retention"
+                    else -> ""
+                },
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    color = DetailTextMuted
+                )
+            )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             listOf(
-                "Light\n(Drywall)" to "Light",
-                "Medium\n(Brick)" to "Medium",
-                "Heavy\n(Concrete)" to "Heavy"
-            ).forEach { (label, type) ->
+                Triple("Light", "Drywall", "Light"),
+                Triple("Medium", "Brick", "Medium"),
+                Triple("Heavy", "Concrete", "Heavy")
+            ).forEach { (category, material, type) ->
                 val isSelected = thermalMass == type
+                val cardShape = RoundedCornerShape(14.dp)
+
                 Box(
-                    contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .weight(1f)
                         .bouncyClickable(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = cardShape,
                             onClick = { onThermalMassChange(type) }
                         )
-                        .background(if (isSelected) accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
-                        .padding(vertical = 8.dp)
-                ) {
-                    Text(
-                        text = label,
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            color = if (isSelected) accentColor else DetailTextSecondary,
-                            textAlign = TextAlign.Center
+                        .background(if (isSelected) accentColor.copy(alpha = 0.12f) else DetailCardSurfaceElevated)
+                        .border(
+                            width = if (isSelected) 1.5.dp else 1.dp,
+                            color = if (isSelected) accentColor else DetailCardBorder.copy(alpha = 0.5f),
+                            shape = cardShape
                         )
+                        .padding(horizontal = 8.dp, vertical = 10.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Architectural pattern swatch window
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) accentColor.copy(alpha = 0.14f) else DetailCardSurface)
+                        ) {
+                            val patternColor = if (isSelected) accentColor else DetailTextSecondary.copy(alpha = 0.60f)
+                            MaterialPatternCanvas(
+                                materialType = type,
+                                color = patternColor,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 4.dp, vertical = 3.dp)
+                            )
+                        }
+
+                        // Compact name: category on top, material underneath
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = category,
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                    fontSize = 12.sp,
+                                    color = if (isSelected) accentColor else DetailTextPrimary,
+                                    textAlign = TextAlign.Center
+                                )
+                            )
+                            Text(
+                                text = material,
+                                style = TextStyle(
+                                    fontFamily = JakartaFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 10.5.sp,
+                                    color = if (isSelected) accentColor.copy(alpha = 0.85f) else DetailTextMuted,
+                                    textAlign = TextAlign.Center
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun MaterialPatternCanvas(
+    materialType: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+
+        when (materialType) {
+            "Light" -> {
+                // Drywall: Two parallel gypsum boundary lines + continuous zigzag insulation battens
+                val topPlate = h * 0.18f
+                val botPlate = h * 0.82f
+                val strokeW = 1.6f
+
+                // Outer drywall sheets
+                drawLine(
+                    color = color,
+                    start = Offset(0f, topPlate),
+                    end = Offset(w, topPlate),
+                    strokeWidth = strokeW
+                )
+                drawLine(
+                    color = color,
+                    start = Offset(0f, botPlate),
+                    end = Offset(w, botPlate),
+                    strokeWidth = strokeW
+                )
+
+                // Insulation coil zigzag between sheets
+                val path = Path()
+                val segments = 6
+                val segWidth = w / segments
+                val battTop = topPlate + 2.dp.toPx()
+                val battBot = botPlate - 2.dp.toPx()
+
+                path.moveTo(0f, (battTop + battBot) / 2f)
+                for (i in 0..segments) {
+                    val x = i * segWidth
+                    val y = if (i % 2 == 0) battTop else battBot
+                    path.lineTo(x, y)
+                }
+
+                drawPath(
+                    path = path,
+                    color = color.copy(alpha = 0.85f),
+                    style = Stroke(width = 1.4f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                )
+            }
+
+            "Medium" -> {
+                // Brick: Running bond masonry with mortar courses and staggered vertical head joints
+                val strokeW = 1.3f
+                val rows = 3
+                val rowH = h / rows
+
+                // Horizontal mortar courses
+                for (r in 1 until rows) {
+                    val y = r * rowH
+                    drawLine(
+                        color = color,
+                        start = Offset(0f, y),
+                        end = Offset(w, y),
+                        strokeWidth = strokeW
+                    )
+                }
+
+                // Staggered vertical head joints
+                val cols = 3
+                val colW = w / cols
+                for (r in 0 until rows) {
+                    val y1 = r * rowH
+                    val y2 = (r + 1) * rowH
+                    val offset = if (r % 2 == 0) 0f else colW * 0.5f
+
+                    var x = offset
+                    while (x < w) {
+                        if (x > 2f && x < w - 2f) {
+                            drawLine(
+                                color = color,
+                                start = Offset(x, y1),
+                                end = Offset(x, y2),
+                                strokeWidth = strokeW
+                            )
+                        }
+                        x += colW
+                    }
+                }
+            }
+
+            "Heavy" -> {
+                // Concrete: 45-degree diagonal structural cross-hatch + aggregate stones and speckles
+                val strokeW = 1.2f
+                val spacing = 11.dp.toPx()
+
+                // Diagonal 45-deg hatch lines
+                var startX = -h
+                while (startX < w + h) {
+                    val p1 = Offset(startX, 0f)
+                    val p2 = Offset(startX + h, h)
+                    drawLine(
+                        color = color.copy(alpha = 0.40f),
+                        start = p1,
+                        end = p2,
+                        strokeWidth = strokeW
+                    )
+                    startX += spacing
+                }
+
+                // Triangular aggregate stones
+                val aggregates = listOf(
+                    Triple(w * 0.22f, h * 0.40f, 2.4.dp.toPx()),
+                    Triple(w * 0.54f, h * 0.68f, 2.8.dp.toPx()),
+                    Triple(w * 0.78f, h * 0.32f, 2.5.dp.toPx()),
+                    Triple(w * 0.38f, h * 0.72f, 2.0.dp.toPx())
+                )
+
+                for ((cx, cy, r) in aggregates) {
+                    val tri = Path().apply {
+                        moveTo(cx, cy - r)
+                        lineTo(cx + r * 0.86f, cy + r * 0.5f)
+                        lineTo(cx - r * 0.86f, cy + r * 0.5f)
+                        close()
+                    }
+                    drawPath(
+                        path = tri,
+                        color = color.copy(alpha = 0.80f),
+                        style = Stroke(width = 1.2f)
+                    )
+                }
+
+                // Tiny aggregate sand stippling
+                val dots = listOf(
+                    Offset(w * 0.35f, h * 0.28f),
+                    Offset(w * 0.65f, h * 0.48f),
+                    Offset(w * 0.85f, h * 0.70f),
+                    Offset(w * 0.15f, h * 0.68f)
+                )
+                for (dot in dots) {
+                    drawCircle(
+                        color = color.copy(alpha = 0.65f),
+                        radius = 1.2.dp.toPx(),
+                        center = dot
                     )
                 }
             }
