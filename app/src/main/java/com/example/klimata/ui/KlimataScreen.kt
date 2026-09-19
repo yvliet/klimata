@@ -80,6 +80,7 @@ fun KlimataScreen(
     onPowerToggle: (roomId: String, isPowerOn: Boolean) -> Unit = { _, _ -> },
     onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
     onTempChange: (roomId: String, setpoint: Int) -> Unit = { _, _ -> },
+    onModeChange: (roomId: String, mode: String) -> Unit = { _, _ -> },
     onScheduleClick: (roomId: String) -> Unit = {},
     onThermalClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
@@ -301,6 +302,7 @@ fun KlimataScreen(
                             onPowerToggle = { isPowerOn -> onPowerToggle(room.id, isPowerOn) },
                             onEcoToggle = { isEnabled -> onEcoToggle(room.id, isEnabled) },
                             onTempChange = { setpoint -> onTempChange(room.id, setpoint) },
+                            onModeChange = { mode -> onModeChange(room.id, mode) },
                             modifier = Modifier.fillMaxWidth()
                         )
 

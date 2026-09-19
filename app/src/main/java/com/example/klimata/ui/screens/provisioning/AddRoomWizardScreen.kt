@@ -171,12 +171,13 @@ fun AddRoomWizardScreen(
     }
 
     // AC hardware state
-    var acBrand by remember { mutableStateOf("Daikin") }
-    var acModel by remember { mutableStateOf("FTKF25") }
+    var acBrand by remember { mutableStateOf("Sharp") }
+    var acModel by remember { mutableStateOf("AH-XP10") }
     var acCapacity by remember { mutableStateOf("1.0 PK") }
-    var acInverterType by remember { mutableStateOf("Eco Inverter") }
+    var acInverterType by remember { mutableStateOf("J-Tech Inverter") }
     var acPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var isAnalyzingPhoto by remember { mutableStateOf(false) }
+    var isAiVerified by remember { mutableStateOf(false) }
 
     // Location state
     var selectedLocation by remember { mutableStateOf("South Jakarta") }
@@ -256,6 +257,7 @@ fun AddRoomWizardScreen(
                     acModel = result.model
                     acCapacity = result.capacity
                     acInverterType = result.inverterType
+                    isAiVerified = result.isAiDetected
                     isAnalyzingPhoto = false
                 }
             }
@@ -273,6 +275,7 @@ fun AddRoomWizardScreen(
                 acModel = result.model
                 acCapacity = result.capacity
                 acInverterType = result.inverterType
+                isAiVerified = result.isAiDetected
                 isAnalyzingPhoto = false
             }
         }
@@ -1207,7 +1210,7 @@ fun AddRoomWizardScreen(
                                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                                         ) {
                                             Text(
-                                                text = assessment.status,
+                                                text = if (isAiVerified) "Gemini Vision Verified" else assessment.status,
                                                 style = TextStyle(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = FontWeight.SemiBold,
@@ -1273,15 +1276,27 @@ fun AddRoomWizardScreen(
                                                 shape = RoundedCornerShape(14.dp),
                                                 onClick = {
                                                     acBrand = when (acBrand) {
+                                                        "Sharp" -> "Daikin"
                                                         "Daikin" -> "Panasonic"
                                                         "Panasonic" -> "Mitsubishi"
                                                         "Mitsubishi" -> "LG"
-                                                        else -> "Daikin"
+                                                        "LG" -> "Gree"
+                                                        else -> "Sharp"
+                                                    }
+                                                    acModel = when (acBrand) {
+                                                        "Sharp" -> "AH-XP10"
+                                                        "Daikin" -> "FTKF25"
+                                                        "Panasonic" -> "CS-XU18XKH"
+                                                        "Mitsubishi" -> "MSY-GR13VF"
+                                                        "LG" -> "DualCool"
+                                                        else -> "Eco Series"
                                                     }
                                                     acCapacity = when (acCapacity) {
+                                                        "0.5 PK" -> "0.75 PK"
+                                                        "0.75 PK" -> "1.0 PK"
                                                         "1.0 PK" -> "1.5 PK"
-                                                        "1.5 PK" -> "0.75 PK"
-                                                        else -> "1.0 PK"
+                                                        "1.5 PK" -> "2.0 PK"
+                                                        else -> "0.5 PK"
                                                     }
                                                 }
                                             )

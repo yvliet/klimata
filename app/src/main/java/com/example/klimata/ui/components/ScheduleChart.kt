@@ -77,7 +77,14 @@ fun ScheduleChart(
 ) {
     val diurnal = LocalDiurnalColors.current
     val count = steps.size.coerceAtLeast(1)
-    val activeIndex = steps.indexOfFirst { it.isActive }.takeIf { it >= 0 } ?: 0
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val activeIndex = remember(steps, currentHour) {
+        val exactMatch = steps.indexOfFirst {
+            it.time.substringBefore(":").toIntOrNull() == currentHour
+        }
+        if (exactMatch >= 0) exactMatch
+        else steps.indexOfFirst { it.isActive }.takeIf { it >= 0 } ?: 0
+    }
     val colWidth = 64.dp
     val totalWidth = colWidth * count
     val scrollState = rememberScrollState()
@@ -258,7 +265,7 @@ fun ScheduleChart(
                     .horizontalScroll(scrollState)
             ) {
                 Column(modifier = Modifier.width(totalWidth)) {
-                    val chartHeight = 84.dp
+                    val chartHeight = 94.dp
                     Box(
                         modifier = Modifier
                             .width(totalWidth)
@@ -273,19 +280,26 @@ fun ScheduleChart(
                             List(count) { i -> colWidthPx * i + colWidthPx / 2f }
                         }
 
-                        val topMargin = with(density) { 24.dp.toPx() }
+                        val topMargin = with(density) { 26.dp.toPx() }
                         val bottomMargin = with(density) { 14.dp.toPx() }
                         val usableHeight = heightPx - topMargin - bottomMargin
 
-                        val points = remember(steps, colCenters, usableHeight, topMargin) {
+                        val activeTemps = remember(steps) {
+                            steps.filter { it.setpointCelsius > 0 }.map { it.setpointCelsius }
+                        }
+                        val minTemp = remember(activeTemps) { (activeTemps.minOrNull() ?: 24).toFloat() }
+                        val maxTemp = remember(activeTemps) { (activeTemps.maxOrNull() ?: 26).toFloat() }
+                        val tempSpan = remember(minTemp, maxTemp) { (maxTemp - minTemp).coerceAtLeast(2f) }
+
+                        val points = remember(steps, colCenters, usableHeight, topMargin, minTemp, tempSpan) {
                             colCenters.mapIndexed { idx, cx ->
                                 val step = steps[idx]
-                                val y = if (step.setpointCelsius > 0) {
-                                    val norm = ((step.setpointCelsius - 23f) / 4f).coerceIn(0.05f, 0.95f)
-                                    topMargin + usableHeight * (1.0f - norm * 0.75f)
+                                val norm = if (step.setpointCelsius > 0) {
+                                    ((step.setpointCelsius - minTemp) / tempSpan).coerceIn(0f, 1f)
                                 } else {
-                                    topMargin + usableHeight * 0.12f
+                                    1f
                                 }
+                                val y = topMargin + usableHeight * (0.82f - norm * 0.55f)
                                 Offset(cx, y)
                             }
                         }

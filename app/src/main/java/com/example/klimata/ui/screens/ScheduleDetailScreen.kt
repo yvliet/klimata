@@ -135,7 +135,14 @@ private fun MinimalistThermalForecastCard(
     modifier: Modifier = Modifier,
 ) {
     val count = steps.size.coerceAtLeast(1)
-    val activeIndex = steps.indexOfFirst { it.isActive }.takeIf { it >= 0 } ?: 0
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val activeIndex = remember(steps, currentHour) {
+        val exactMatch = steps.indexOfFirst {
+            it.time.substringBefore(":").toIntOrNull() == currentHour
+        }
+        if (exactMatch >= 0) exactMatch
+        else steps.indexOfFirst { it.isActive }.takeIf { it >= 0 } ?: 0
+    }
     val colWidth = 74.dp
     val totalWidth = colWidth * count
     val scrollState = rememberScrollState()
@@ -295,12 +302,19 @@ private fun MinimalistThermalForecastCard(
                             }
                         }
 
-                        val lowerPoints = remember(steps, colCenters, density) {
+                        val activeTemps = remember(steps) {
+                            steps.filter { it.setpointCelsius > 0 }.map { it.setpointCelsius }
+                        }
+                        val setpointMin = remember(activeTemps) { (activeTemps.minOrNull() ?: 24).toFloat() }
+                        val setpointMax = remember(activeTemps) { (activeTemps.maxOrNull() ?: 26).toFloat() }
+                        val setpointSpan = remember(setpointMin, setpointMax) { (setpointMax - setpointMin).coerceAtLeast(2f) }
+
+                        val lowerPoints = remember(steps, colCenters, setpointMin, setpointSpan, density) {
                             colCenters.mapIndexed { idx, cx ->
                                 val step = steps[idx]
-                                val setpoint = if (step.setpointCelsius > 0) step.setpointCelsius.toFloat() else 26.5f
-                                val norm = ((setpoint - 24f) / 3f).coerceIn(0f, 1f)
-                                val y = with(density) { 110.dp.toPx() } + norm * with(density) { 36.dp.toPx() }
+                                val setpoint = if (step.setpointCelsius > 0) step.setpointCelsius.toFloat() else setpointMax
+                                val norm = ((setpoint - setpointMin) / setpointSpan).coerceIn(0f, 1f)
+                                val y = with(density) { 136.dp.toPx() } - norm * with(density) { 26.dp.toPx() }
                                 Offset(cx, y)
                             }
                         }

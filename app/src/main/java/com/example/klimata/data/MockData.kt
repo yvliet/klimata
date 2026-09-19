@@ -157,7 +157,7 @@ object MockData {
             fanDetail = "Rapid Cool",
             outdoorTemp = 29,
             deltaLabel = "-5°C",
-            isActive = true,
+            isActive = false,
         ),
         ThermalStep(
             time = "23:00",

@@ -32,6 +32,8 @@ import com.example.klimata.ui.KlimataScreen
 import com.example.klimata.ui.screens.CarbonDetailScreen
 import com.example.klimata.ui.screens.RoomThermalDetailScreen
 import com.example.klimata.ui.screens.SavingsDetailScreen
+import android.widget.Toast
+import com.example.klimata.data.ir.IrBlasterService
 import com.example.klimata.ui.screens.ScheduleDetailScreen
 import com.example.klimata.ui.screens.provisioning.AddRoomWizardScreen
 import com.example.klimata.ui.theme.DiurnalPhase
@@ -71,6 +73,7 @@ fun KlimataNavGraph(
     }
 
     val context = LocalContext.current
+    val irBlaster = remember { IrBlasterService(context) }
     var rooms by remember { mutableStateOf(KlimataPreferences.loadRooms(context)) }
     var weatherReport by remember { mutableStateOf<AmbientWeatherReport?>(KlimataPreferences.loadWeather(context)) }
     var hasCompletedOnboarding by remember { mutableStateOf(false) }
@@ -165,12 +168,40 @@ fun KlimataNavGraph(
                                 }
                             }
                             KlimataPreferences.saveRooms(context, rooms)
+                            rooms.find { it.id == roomId }?.let { target ->
+                                irBlaster.dispatchAcCommand(
+                                    brand = target.profile.brand,
+                                    power = isPowerOn,
+                                    temp = target.targetTemp,
+                                    mode = target.profile.mode,
+                                    isEco = target.isEcoEnabled
+                                )
+                                Toast.makeText(
+                                    context,
+                                    "IR Sent: ${target.profile.brand} Power ${if (isPowerOn) "ON" else "OFF"}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         },
                         onEcoToggle = { roomId, isEnabled ->
                             rooms = rooms.map {
                                 if (it.id == roomId) it.copy(isEcoEnabled = isEnabled) else it
                             }
                             KlimataPreferences.saveRooms(context, rooms)
+                            rooms.find { it.id == roomId }?.let { target ->
+                                irBlaster.dispatchAcCommand(
+                                    brand = target.profile.brand,
+                                    power = target.isPowerOn,
+                                    temp = target.targetTemp,
+                                    mode = target.profile.mode,
+                                    isEco = isEnabled
+                                )
+                                Toast.makeText(
+                                    context,
+                                    "IR Sent: ${target.profile.brand} Eco ${if (isEnabled) "ON" else "OFF"}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         },
                         onTempChange = { roomId, setpoint ->
                             rooms = rooms.map { room ->
@@ -190,6 +221,44 @@ fun KlimataNavGraph(
                                 }
                             }
                             KlimataPreferences.saveRooms(context, rooms)
+                            rooms.find { it.id == roomId }?.let { target ->
+                                irBlaster.dispatchAcCommand(
+                                    brand = target.profile.brand,
+                                    power = target.isPowerOn,
+                                    temp = setpoint,
+                                    mode = target.profile.mode,
+                                    isEco = target.isEcoEnabled
+                                )
+                                Toast.makeText(
+                                    context,
+                                    "IR Sent: ${target.profile.brand} $setpoint°C",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        onModeChange = { roomId, mode ->
+                            rooms = rooms.map { room ->
+                                if (room.id == roomId) {
+                                    room.copy(profile = room.profile.copy(mode = mode))
+                                } else {
+                                    room
+                                }
+                            }
+                            KlimataPreferences.saveRooms(context, rooms)
+                            rooms.find { it.id == roomId }?.let { target ->
+                                irBlaster.dispatchAcCommand(
+                                    brand = target.profile.brand,
+                                    power = target.isPowerOn,
+                                    temp = target.targetTemp,
+                                    mode = mode,
+                                    isEco = target.isEcoEnabled
+                                )
+                                Toast.makeText(
+                                    context,
+                                    "IR Sent: ${target.profile.brand} Mode $mode",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         },
                         onScheduleClick = { roomId ->
                             navigateSafely(Screen.ScheduleDetail.createRoute(roomId))

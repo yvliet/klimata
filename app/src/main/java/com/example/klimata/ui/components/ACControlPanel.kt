@@ -74,6 +74,7 @@ fun ACControlPanel(
     onPowerToggle: (Boolean) -> Unit = {},
     onEcoToggle: (Boolean) -> Unit = {},
     onTempChange: (Int) -> Unit = {},
+    onModeChange: (String) -> Unit = {},
 ) {
     var isPowerOn by remember(initialPowerOn) { mutableStateOf(initialPowerOn) }
     var setpoint by remember(profile.currentSetpoint) { mutableIntStateOf(profile.currentSetpoint) }
@@ -122,6 +123,7 @@ fun ACControlPanel(
                     "Fan" -> "Auto"
                     else -> "Cool"
                 }
+                onModeChange(activeMode)
             },
             modifier = Modifier
                 .weight(1f)

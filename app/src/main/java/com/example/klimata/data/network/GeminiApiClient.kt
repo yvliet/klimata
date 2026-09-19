@@ -13,6 +13,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import android.util.Base64
+import android.util.Log
 
 object GeminiApiClient {
 
@@ -44,6 +45,7 @@ object GeminiApiClient {
         payloadJson: String
     ): Result<AcRecognitionResult> {
         return try {
+            Log.d("KlimataAI", "Querying Gemini model $modelName for AC recognition...")
             val endpoint = "https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey"
             val url = URL(endpoint)
             val conn = url.openConnection() as HttpURLConnection
@@ -71,6 +73,7 @@ object GeminiApiClient {
             conn.disconnect()
 
             if (responseCode !in 200..299) {
+                Log.e("KlimataAI", "Gemini HTTP $responseCode from $modelName: $sb")
                 return Result.failure(IllegalStateException("HTTP $responseCode from $modelName: $sb"))
             }
 
@@ -87,13 +90,17 @@ object GeminiApiClient {
             val parts = content.getJSONArray("parts")
             val textOutput = parts.getJSONObject(0).getString("text")
 
+            Log.d("KlimataAI", "Gemini raw response: $textOutput")
+
             val parsedJson = JSONObject(textOutput)
-            val brand = parsedJson.optString("brand", "Daikin")
-            val model = parsedJson.optString("model", "Inverter Series")
+            val brand = parsedJson.optString("brand", "Sharp")
+            val model = parsedJson.optString("model", "Standard Inverter")
             val capacity = parsedJson.optString("capacity", "1.0 PK")
-            val inverterType = parsedJson.optString("inverterType", "Eco Inverter")
+            val inverterType = parsedJson.optString("inverterType", "J-Tech Inverter")
             val confidence = parsedJson.optDouble("confidenceScore", 0.92).toFloat()
             val notes = parsedJson.optString("notes", "Identified via neural vision analysis")
+
+            Log.d("KlimataAI", "Parsed AC: brand=$brand, model=$model, capacity=$capacity, inverter=$inverterType")
 
             Result.success(
                 AcRecognitionResult(
@@ -106,6 +113,7 @@ object GeminiApiClient {
                 )
             )
         } catch (e: Exception) {
+            Log.e("KlimataAI", "Error calling Gemini model $modelName", e)
             Result.failure(e)
         }
     }

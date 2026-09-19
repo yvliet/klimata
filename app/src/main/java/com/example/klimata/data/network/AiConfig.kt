@@ -12,8 +12,8 @@ object AiConfig {
 
     private const val MANUAL_KEY: String = ""
 
-    const val PRIMARY_MODEL: String = "gemini-3.8-flash"
-    const val FALLBACK_MODEL: String = "gemini-3.5-flash"
+    const val PRIMARY_MODEL: String = "gemini-3.6-flash"
+    const val FALLBACK_MODEL: String = "gemini-3.8-flash"
 
     val isConfigured: Boolean
         get() = GEMINI_API_KEY.isNotBlank()
