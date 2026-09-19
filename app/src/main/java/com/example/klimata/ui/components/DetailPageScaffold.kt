@@ -48,6 +48,7 @@ fun DetailPageScaffold(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     trailingContent: @Composable (() -> Unit)? = null,
+    titleTrailingContent: @Composable (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scrollState = rememberScrollState()
@@ -69,20 +70,19 @@ fun DetailPageScaffold(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                contentAlignment = Alignment.Center,
+                contentAlignment = Alignment.CenterStart,
                 modifier = Modifier
                     .size(40.dp)
                     .bouncyClickable(
                         shape = CircleShape,
                         onClick = onBackClick
                     )
-                    .background(DetailCardSurface)
             ) {
                 Icon(
                     imageVector = PhosphorIcons.Light.CaretLeft,
                     contentDescription = "Navigate back",
                     tint = DetailTextPrimary,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
@@ -97,16 +97,24 @@ fun DetailPageScaffold(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 8.dp)
         ) {
-            Text(
-                text = title,
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 24.sp,
-                    letterSpacing = (-0.5).sp,
-                    color = DetailTextPrimary
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = title,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        letterSpacing = (-0.5).sp,
+                        color = DetailTextPrimary
+                    )
                 )
-            )
+                if (titleTrailingContent != null) {
+                    titleTrailingContent()
+                }
+            }
             if (subtitle != null) {
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(

@@ -64,6 +64,7 @@ import com.example.klimata.data.RoomState
 import com.example.klimata.data.ThermalStep
 import com.example.klimata.ui.components.DetailPageScaffold
 import com.example.klimata.ui.components.EcoInfoDialog
+import com.example.klimata.ui.components.bouncyClickable
 import com.example.klimata.ui.theme.DetailActiveColumnHighlight
 import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCurveAmbient
@@ -94,32 +95,23 @@ fun ScheduleDetailScreen(
         animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
         label = "detailLeafIconTint"
     )
-    val leafBgColor by animateColorAsState(
-        targetValue = if (room.isEcoEnabled) MineralMintActive.copy(alpha = 0.15f) else DetailCardSurface,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
-        label = "detailLeafBg"
-    )
 
     DetailPageScaffold(
         title = "Tonight's Schedule",
         subtitle = room.name,
         onBackClick = onBackClick,
-        trailingContent = {
-            Box(
-                contentAlignment = Alignment.Center,
+        titleTrailingContent = {
+            Icon(
+                imageVector = PhosphorIcons.Light.Leaf,
+                contentDescription = "Eco info",
+                tint = leafColor,
                 modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(leafBgColor)
-                    .clickable { showEcoInfoDialog = true }
-            ) {
-                Icon(
-                    imageVector = PhosphorIcons.Light.Leaf,
-                    contentDescription = "Eco info",
-                    tint = leafColor,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+                    .size(20.dp)
+                    .bouncyClickable(
+                        shape = CircleShape,
+                        onClick = { showEcoInfoDialog = true }
+                    )
+            )
         }
     ) {
         MinimalistThermalForecastCard(
