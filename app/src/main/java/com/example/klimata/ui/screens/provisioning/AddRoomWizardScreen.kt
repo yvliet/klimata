@@ -18,9 +18,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -307,13 +309,15 @@ fun AddRoomWizardScreen(
         handleBack()
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             .background(DetailBlackBackground)
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
+        val screenHeight = maxHeight
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -442,75 +446,6 @@ fun AddRoomWizardScreen(
                                     .padding(horizontal = 8.dp)
                             )
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Suggestions",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 11.5.sp,
-                                    color = DetailTextMuted
-                                )
-                            )
-
-                            val suggestions = listOf("Master Bedroom", "Living Room", "Study Room", "Studio", "Guest Room")
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        suggestions.take(3).forEach { name ->
-                                            val isSelected = roomName == name
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurface)
-                                                    .clickable { roomName = name }
-                                                    .padding(horizontal = 14.dp, vertical = 9.dp)
-                                            ) {
-                                                Text(
-                                                    text = name,
-                                                    style = TextStyle(
-                                                        fontFamily = JakartaFamily,
-                                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                                        fontSize = 12.5.sp,
-                                                        color = if (isSelected) diurnal.accentColor else DetailTextPrimary
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        suggestions.drop(3).forEach { name ->
-                                            val isSelected = roomName == name
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurface)
-                                                    .clickable { roomName = name }
-                                                    .padding(horizontal = 14.dp, vertical = 9.dp)
-                                            ) {
-                                                Text(
-                                                    text = name,
-                                                    style = TextStyle(
-                                                        fontFamily = JakartaFamily,
-                                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                                        fontSize = 12.5.sp,
-                                                        color = if (isSelected) diurnal.accentColor else DetailTextPrimary
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
                             Spacer(modifier = Modifier.height(28.dp))
 
                             PrimaryActionButton(
@@ -525,7 +460,7 @@ fun AddRoomWizardScreen(
                         // Stage 2: Room Sizing
                         WizardStage.ROOM_SIZING -> {
                             Text(
-                                text = "Size your room",
+                                text = "Lets size your room",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Bold,
@@ -735,8 +670,14 @@ fun AddRoomWizardScreen(
                                     }
                                 }
 
+                                WallThermalMaterialPicker(
+                                    thermalMass = thermalMass,
+                                    onThermalMassChange = { thermalMass = it },
+                                    accentColor = diurnal.accentColor
+                                )
+
                                 PrimaryActionButton(
-                                    label = "Confirm Dimensions ($areaSquareMeters m²)",
+                                    label = "Confirm Room ($areaSquareMeters m²)",
                                     onClick = { currentStage = WizardStage.CONSTRUCTION_ANIMATION }
                                 )
                             } else {
@@ -927,6 +868,12 @@ fun AddRoomWizardScreen(
                                     }
                                 }
 
+                                WallThermalMaterialPicker(
+                                    thermalMass = thermalMass,
+                                    onThermalMassChange = { thermalMass = it },
+                                    accentColor = diurnal.accentColor
+                                )
+
                                 val canFinishCustom = isPolygonClosed && customVertices.size >= 3
                                 PrimaryActionButton(
                                     label = if (canFinishCustom) {
@@ -943,49 +890,6 @@ fun AddRoomWizardScreen(
                                         currentStage = WizardStage.CONSTRUCTION_ANIMATION
                                     }
                                 )
-                            }
-
-                            // Wall Thermal Material Selection
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(DetailCardSurface)
-                                    .padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Wall Thermal Material",
-                                    style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp, color = DetailTextPrimary)
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    listOf("Light\n(Drywall)" to "Light", "Medium\n(Brick)" to "Medium", "Heavy\n(Concrete)" to "Heavy").forEach { (label, type) ->
-                                        val isSelected = thermalMass == type
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
-                                                .clickable { thermalMass = type }
-                                                .padding(vertical = 8.dp)
-                                        ) {
-                                            Text(
-                                                text = label,
-                                                style = TextStyle(
-                                                    fontFamily = JakartaFamily,
-                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                                    fontSize = 11.5.sp,
-                                                    color = if (isSelected) diurnal.accentColor else DetailTextSecondary,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            )
-                                        }
-                                    }
-                                }
                             }
                         }
 
@@ -1047,115 +951,127 @@ fun AddRoomWizardScreen(
 
                         // Stage 4: Photograph AC or Choose from Gallery
                         WizardStage.CAPTURE_AC -> {
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "Capture your AC unit",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 24.sp,
-                                    letterSpacing = (-0.5).sp,
-                                    color = DetailTextPrimary,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-
-                            Text(
-                                text = "Take a picture of the indoor AC unit or its model sticker.",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 13.sp,
-                                    color = DetailTextSecondary,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
-
-                            Box(
-                                contentAlignment = Alignment.Center,
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(150.dp)
-                                    .clip(RoundedCornerShape(22.dp))
-                                    .background(DetailCardSurface)
-                                    .bouncyClickable {
-                                        val hasCameraPermission = ContextCompat.checkSelfPermission(
-                                            context,
-                                            Manifest.permission.CAMERA
-                                        ) == PackageManager.PERMISSION_GRANTED
-
-                                        if (hasCameraPermission) {
-                                            try {
-                                                cameraLauncher.launch(null)
-                                            } catch (e: Exception) {
-                                                try {
-                                                    galleryLauncher.launch("image/*")
-                                                } catch (ignored: Exception) {}
-                                            }
-                                        } else {
-                                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                                        }
-                                    }
+                                    .defaultMinSize(minHeight = screenHeight - 110.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Column(
+                                    modifier = Modifier.fillMaxWidth(),
                                     horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(16.dp)
                                 ) {
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "Capture your AC unit",
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 24.sp,
+                                            letterSpacing = (-0.5).sp,
+                                            color = DetailTextPrimary,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    )
+
+                                    Text(
+                                        text = "Take a picture of the indoor AC unit or its model sticker.",
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 13.sp,
+                                            color = DetailTextSecondary,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    )
+
                                     Box(
                                         contentAlignment = Alignment.Center,
                                         modifier = Modifier
-                                            .size(52.dp)
-                                            .clip(CircleShape)
-                                            .background(diurnal.accentColor.copy(alpha = 0.16f))
+                                            .fillMaxWidth()
+                                            .height(150.dp)
+                                            .clip(RoundedCornerShape(22.dp))
+                                            .background(DetailCardSurface)
+                                            .bouncyClickable {
+                                                val hasCameraPermission = ContextCompat.checkSelfPermission(
+                                                    context,
+                                                    Manifest.permission.CAMERA
+                                                ) == PackageManager.PERMISSION_GRANTED
+
+                                                if (hasCameraPermission) {
+                                                    try {
+                                                        cameraLauncher.launch(null)
+                                                    } catch (e: Exception) {
+                                                        try {
+                                                            galleryLauncher.launch("image/*")
+                                                        } catch (ignored: Exception) {}
+                                                    }
+                                                } else {
+                                                    cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                                                }
+                                            }
                                     ) {
-                                        Icon(
-                                            imageVector = PhosphorIcons.Light.Camera,
-                                            contentDescription = "Take Photo",
-                                            tint = diurnal.accentColor,
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                                        Column(
+                                            horizontalAlignment = Alignment.CenterHorizontally,
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            Box(
+                                                contentAlignment = Alignment.Center,
+                                                modifier = Modifier
+                                                    .size(52.dp)
+                                                    .clip(CircleShape)
+                                                    .background(diurnal.accentColor.copy(alpha = 0.16f))
+                                            ) {
+                                                Icon(
+                                                    imageVector = PhosphorIcons.Light.Camera,
+                                                    contentDescription = "Take Photo",
+                                                    tint = diurnal.accentColor,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                            Text(
+                                                text = "Take a Picture of AC",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 14.sp,
+                                                    color = DetailTextPrimary
+                                                )
+                                            )
+                                        }
                                     }
+
                                     Text(
-                                        text = "Take a Picture of AC",
+                                        text = "or choose a photo from your gallery",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 14.sp,
-                                            color = DetailTextPrimary
-                                        )
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 12.5.sp,
+                                            color = DetailTextSecondary,
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        modifier = Modifier
+                                            .clickable { galleryLauncher.launch("image/*") }
+                                            .padding(vertical = 4.dp)
                                     )
                                 }
+
+                                Text(
+                                    text = "Skip and choose AC model manually",
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 12.sp,
+                                        color = DetailTextMuted
+                                    ),
+                                    modifier = Modifier
+                                        .clickable { currentStage = WizardStage.CONFIRM_AC }
+                                        .padding(bottom = 16.dp, top = 8.dp)
+                                )
                             }
-
-                            Text(
-                                text = "or choose a photo from your gallery",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 12.5.sp,
-                                    color = DetailTextSecondary,
-                                    textAlign = TextAlign.Center
-                                ),
-                                modifier = Modifier
-                                    .clickable { galleryLauncher.launch("image/*") }
-                                    .padding(vertical = 4.dp)
-                            )
-
-                            Spacer(modifier = Modifier.height(16.dp))
-
-                            Text(
-                                text = "Skip and choose AC model manually",
-                                style = TextStyle(
-                                    fontFamily = JakartaFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 12.sp,
-                                    color = DetailTextMuted
-                                ),
-                                modifier = Modifier
-                                    .clickable { currentStage = WizardStage.CONFIRM_AC }
-                                    .padding(4.dp)
-                            )
                         }
 
                         // Stage 5: AC Confirmation
@@ -1444,63 +1360,6 @@ fun AddRoomWizardScreen(
                                 }
                             }
 
-                            // Quick city selector chips
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(DetailCardSurface)
-                                    .padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "City Presets",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp,
-                                        color = DetailTextSecondary
-                                    )
-                                )
-
-                                val cities = listOf("South Jakarta", "Bandung", "Surabaya", "Singapore")
-                                cities.forEach { city ->
-                                    val isSelected = selectedLocation.equals(city, ignoreCase = true)
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(12.dp))
-                                            .background(if (isSelected) diurnal.accentColor.copy(alpha = 0.16f) else DetailCardSurfaceElevated)
-                                            .clickable { selectedLocation = city }
-                                            .padding(horizontal = 14.dp, vertical = 10.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = city,
-                                                style = TextStyle(
-                                                    fontFamily = JakartaFamily,
-                                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                                    fontSize = 13.sp,
-                                                    color = if (isSelected) diurnal.accentColor else DetailTextPrimary
-                                                )
-                                            )
-                                            if (isSelected) {
-                                                Icon(
-                                                    imageVector = PhosphorIcons.Light.Check,
-                                                    contentDescription = null,
-                                                    tint = diurnal.accentColor,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
                             Spacer(modifier = Modifier.height(16.dp))
 
                             PrimaryActionButton(
@@ -1651,6 +1510,65 @@ private fun PrimaryActionButton(
                 color = if (enabled) onAccent else DetailTextMuted
             )
         )
+    }
+}
+
+@Composable
+private fun WallThermalMaterialPicker(
+    thermalMass: String,
+    onThermalMassChange: (String) -> Unit,
+    accentColor: Color = LocalDiurnalColors.current.accentColor,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(DetailCardSurface)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Wall Thermal Material",
+            style = TextStyle(
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.5.sp,
+                color = DetailTextPrimary
+            )
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            listOf(
+                "Light\n(Drywall)" to "Light",
+                "Medium\n(Brick)" to "Medium",
+                "Heavy\n(Concrete)" to "Heavy"
+            ).forEach { (label, type) ->
+                val isSelected = thermalMass == type
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (isSelected) accentColor.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
+                        .clickable { onThermalMassChange(type) }
+                        .padding(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = label,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 11.5.sp,
+                            color = if (isSelected) accentColor else DetailTextSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 
