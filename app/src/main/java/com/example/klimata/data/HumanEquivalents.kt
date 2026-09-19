@@ -6,7 +6,7 @@ enum class SavingsFactIcon {
     COFFEE,
     SUBSCRIPTION,
     AC_HEALTH,
-    GETAWAY,
+    DINING,
 }
 
 @Immutable
@@ -199,6 +199,13 @@ object HumanEquivalents {
                 unit = "hrs",
                 description = "Giving your AC compressor a half-day break so it lasts longer.",
                 iconType = SavingsFactIcon.AC_HEALTH
+            ),
+            SavingsEquivalentFact(
+                title = "It's like..",
+                value = "1",
+                unit = "Meal",
+                description = "A street food dinner or quick lunch delivery covered.",
+                iconType = SavingsFactIcon.DINING
             )
         )
         ImpactPeriod.MONTHLY -> listOf(
@@ -222,6 +229,13 @@ object HumanEquivalents {
                 unit = "hrs",
                 description = "Over two full days of your AC compressor resting.",
                 iconType = SavingsFactIcon.AC_HEALTH
+            ),
+            SavingsEquivalentFact(
+                title = "It's like..",
+                value = "2",
+                unit = "Meals",
+                description = "A couple of cozy takeout dinners or boba cafe runs.",
+                iconType = SavingsFactIcon.DINING
             )
         )
         ImpactPeriod.YEARLY -> listOf(
@@ -245,6 +259,13 @@ object HumanEquivalents {
                 unit = "hrs",
                 description = "Nearly a whole month of your AC motor resting.",
                 iconType = SavingsFactIcon.AC_HEALTH
+            ),
+            SavingsEquivalentFact(
+                title = "It's like..",
+                value = "24",
+                unit = "Meals",
+                description = "Two dozen favorite restaurant dinners or food deliveries.",
+                iconType = SavingsFactIcon.DINING
             )
         )
         ImpactPeriod.LIFETIME -> listOf(
@@ -268,6 +289,13 @@ object HumanEquivalents {
                 unit = "hrs",
                 description = "Weeks of compressor rest, saving money on AC maintenance.",
                 iconType = SavingsFactIcon.AC_HEALTH
+            ),
+            SavingsEquivalentFact(
+                title = "It's like..",
+                value = "16",
+                unit = "Meals",
+                description = "Over a dozen takeout dinners paid for with power savings.",
+                iconType = SavingsFactIcon.DINING
             )
         )
     }

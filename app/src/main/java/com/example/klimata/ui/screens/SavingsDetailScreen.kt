@@ -34,6 +34,7 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.Coffee
 import com.adamglin.phosphoricons.light.CurrencyDollar
+import com.adamglin.phosphoricons.light.ForkKnife
 import com.adamglin.phosphoricons.light.Heart
 import com.adamglin.phosphoricons.light.Sparkle
 import com.example.klimata.data.HumanEquivalents
@@ -188,11 +189,26 @@ fun SavingsDetailScreen(
                 }
             }
 
-            if (facts.size >= 3) {
-                SavingsFactItemCard(
-                    fact = facts[2],
-                    modifier = Modifier.fillMaxWidth()
-                )
+            if (facts.size >= 4) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    SavingsFactItemCard(
+                        fact = facts[2],
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    )
+                    SavingsFactItemCard(
+                        fact = facts[3],
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                    )
+                }
             }
         }
 
@@ -271,7 +287,7 @@ private fun SavingsFactItemCard(
         SavingsFactIcon.COFFEE -> PhosphorIcons.Light.Coffee to WarmAmber
         SavingsFactIcon.SUBSCRIPTION -> PhosphorIcons.Light.Sparkle to Color(0xFF38BDF8)
         SavingsFactIcon.AC_HEALTH -> PhosphorIcons.Light.Heart to MineralMintActive
-        SavingsFactIcon.GETAWAY -> PhosphorIcons.Light.Sparkle to WarmAmber
+        SavingsFactIcon.DINING -> PhosphorIcons.Light.ForkKnife to Color(0xFFFB923C)
     }
 
     Box(
