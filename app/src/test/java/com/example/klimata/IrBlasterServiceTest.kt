@@ -157,4 +157,35 @@ class IrBlasterServiceTest {
         assertEquals(40000, pulses.last())
         assertTrue(pulses.all { it > 0 })
     }
+
+    @Test
+    fun fanSpeedsAndSwing_encodeProperlyAcrossProtocols() {
+        val service = createTestService()
+
+        // 1. Sharp Inverter: Test Swing toggle
+        val sharpSwingOn = service.encodeSharpInverter104(
+            power = true, temp = 24, mode = "Cool", fanSpeed = "High", isEco = false, swing = true
+        )
+        val sharpSwingOff = service.encodeSharpInverter104(
+            power = true, temp = 24, mode = "Cool", fanSpeed = "High", isEco = false, swing = false
+        )
+        assertEquals(212, sharpSwingOn.size)
+        assertEquals(212, sharpSwingOff.size)
+
+        // 2. Gree OEM: Test Swing and Turbo
+        val greeTurboSwing = service.encodeGreePacket(
+            power = true, temp = 24, mode = "Cool", fanSpeed = "Turbo", isEco = false, swing = true
+        )
+        val greeQuietFixed = service.encodeGreePacket(
+            power = true, temp = 24, mode = "Cool", fanSpeed = "Quiet", isEco = false, swing = false
+        )
+        assertEquals(140, greeTurboSwing.size)
+        assertEquals(140, greeQuietFixed.size)
+
+        // 3. Daikin: Test Fan mode and Swing
+        val daikinFanMode = service.encodeDaikinPacket(
+            power = true, temp = 24, mode = "Fan", fanSpeed = "Med", isEco = false, swing = true
+        )
+        assertEquals(308, daikinFanMode.size)
+    }
 }

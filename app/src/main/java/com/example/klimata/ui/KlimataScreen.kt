@@ -81,6 +81,9 @@ fun KlimataScreen(
     onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
     onTempChange: (roomId: String, setpoint: Int) -> Unit = { _, _ -> },
     onModeChange: (roomId: String, mode: String) -> Unit = { _, _ -> },
+    onFanSpeedChange: (roomId: String, fanSpeed: String) -> Unit = { _, _ -> },
+    onSwingToggle: (roomId: String, isSwingEnabled: Boolean) -> Unit = { _, _ -> },
+    onCalibrateRemote: (roomId: String) -> Unit = {},
     onScheduleClick: (roomId: String) -> Unit = {},
     onThermalClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
@@ -303,6 +306,9 @@ fun KlimataScreen(
                             onEcoToggle = { isEnabled -> onEcoToggle(room.id, isEnabled) },
                             onTempChange = { setpoint -> onTempChange(room.id, setpoint) },
                             onModeChange = { mode -> onModeChange(room.id, mode) },
+                            onFanSpeedChange = { fanSpeed -> onFanSpeedChange(room.id, fanSpeed) },
+                            onSwingToggle = { isSwing -> onSwingToggle(room.id, isSwing) },
+                            onCalibrateRemote = { onCalibrateRemote(room.id) },
                             modifier = Modifier.fillMaxWidth()
                         )
 

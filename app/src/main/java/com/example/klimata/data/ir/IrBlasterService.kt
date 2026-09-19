@@ -234,6 +234,7 @@ class IrBlasterService(private val context: Context) {
         mode: String = "Cool",
         fanSpeed: String = "Auto",
         isEco: Boolean = false,
+        swing: Boolean = false,
         codeSetId: String? = null
     ): Boolean {
         val manager = irManager
@@ -249,12 +250,13 @@ class IrBlasterService(private val context: Context) {
             mode = mode,
             fanSpeed = fanSpeed,
             isEco = isEco,
+            swing = swing,
             codeSetId = codeSetId
         )
 
         return try {
             manager.transmit(CARRIER_FREQ_38KHZ, pattern)
-            Log.i(TAG, "Successfully fired 38kHz IR packet for $brand (codeSet=${codeSetId ?: "auto"}): Power=$power, Setpoint=$temp°C, Mode=$mode, Eco=$isEco (pulses: ${pattern.size})")
+            Log.i(TAG, "Successfully fired 38kHz IR packet for $brand (codeSet=${codeSetId ?: "auto"}): Power=$power, Setpoint=$temp°C, Mode=$mode, Fan=$fanSpeed, Swing=$swing, Eco=$isEco (pulses: ${pattern.size})")
             true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to transmit IR pulse", e)
@@ -272,23 +274,24 @@ class IrBlasterService(private val context: Context) {
         mode: String = "Cool",
         fanSpeed: String = "Auto",
         isEco: Boolean = false,
+        swing: Boolean = false,
         codeSetId: String? = null
     ): IntArray {
         val effectiveCodeSet = codeSetId ?: getDefaultCodeSetForModel(brand, null)
         return when (effectiveCodeSet) {
-            "sharp_inverter_104" -> encodeSharpInverter104(power, temp, mode, fanSpeed, isEco)
-            "sharp_gree_oem" -> encodeGreePacket(power, temp, mode, fanSpeed, isEco)
+            "sharp_inverter_104" -> encodeSharpInverter104(power, temp, mode, fanSpeed, isEco, swing)
+            "sharp_gree_oem" -> encodeGreePacket(power, temp, mode, fanSpeed, isEco, swing)
             "sharp_crmc_a705" -> encodeSharpCrmcPacket(power, temp, mode, fanSpeed, isEco)
             "sharp_aux_oem" -> encodeMideaPacket(power, temp, mode, fanSpeed, isEco)
 
-            "daikin_arc433" -> encodeDaikinPacket(power, temp, mode, fanSpeed, isEco)
+            "daikin_arc433" -> encodeDaikinPacket(power, temp, mode, fanSpeed, isEco, swing)
             "daikin_arc480" -> encodeDaikinArc480Packet(power, temp, mode, fanSpeed, isEco)
 
-            "panasonic_dke" -> encodePanasonicPacket(power, temp, mode, fanSpeed, isEco)
-            "panasonic_ckp" -> encodePanasonicPacket(power, temp, mode, fanSpeed, isEco)
+            "panasonic_dke" -> encodePanasonicPacket(power, temp, mode, fanSpeed, isEco, swing)
+            "panasonic_ckp" -> encodePanasonicPacket(power, temp, mode, fanSpeed, isEco, swing)
 
-            "gree_yb0f2" -> encodeGreePacket(power, temp, mode, fanSpeed, isEco)
-            "gree_yaa" -> encodeGreePacket(power, temp, mode, fanSpeed, isEco)
+            "gree_yb0f2" -> encodeGreePacket(power, temp, mode, fanSpeed, isEco, swing)
+            "gree_yaa" -> encodeGreePacket(power, temp, mode, fanSpeed, isEco, swing)
 
             "mitsubishi_fd" -> encodeMitsubishiPacket(power, temp, mode, fanSpeed, isEco)
             "mitsubishi_heavy" -> encodeMitsubishiPacket(power, temp, mode, fanSpeed, isEco)
@@ -300,15 +303,15 @@ class IrBlasterService(private val context: Context) {
             else -> {
                 val clean = brand.lowercase(Locale.ROOT)
                 when {
-                    clean.contains("sharp") -> encodeSharpInverter104(power, temp, mode, fanSpeed, isEco)
-                    clean.contains("daikin") -> encodeDaikinPacket(power, temp, mode, fanSpeed, isEco)
-                    clean.contains("panasonic") -> encodePanasonicPacket(power, temp, mode, fanSpeed, isEco)
-                    clean.contains("gree") || clean.contains("tcl") || clean.contains("aqua") -> encodeGreePacket(power, temp, mode, fanSpeed, isEco)
+                    clean.contains("sharp") -> encodeSharpInverter104(power, temp, mode, fanSpeed, isEco, swing)
+                    clean.contains("daikin") -> encodeDaikinPacket(power, temp, mode, fanSpeed, isEco, swing)
+                    clean.contains("panasonic") -> encodePanasonicPacket(power, temp, mode, fanSpeed, isEco, swing)
+                    clean.contains("gree") || clean.contains("tcl") || clean.contains("aqua") -> encodeGreePacket(power, temp, mode, fanSpeed, isEco, swing)
                     clean.contains("mitsubishi") -> encodeMitsubishiPacket(power, temp, mode, fanSpeed, isEco)
                     clean.contains("lg") -> encodeLgPacket(power, temp, mode, fanSpeed, isEco)
                     clean.contains("samsung") -> encodeSamsungPacket(power, temp, mode, fanSpeed, isEco)
                     clean.contains("midea") || clean.contains("toshiba") || clean.contains("carrier") -> encodeMideaPacket(power, temp, mode, fanSpeed, isEco)
-                    else -> encodeSharpInverter104(power, temp, mode, fanSpeed, isEco)
+                    else -> encodeSharpInverter104(power, temp, mode, fanSpeed, isEco, swing)
                 }
             }
         }
@@ -323,7 +326,8 @@ class IrBlasterService(private val context: Context) {
         temp: Int,
         mode: String,
         fanSpeed: String,
-        isEco: Boolean
+        isEco: Boolean,
+        swing: Boolean = false
     ): IntArray {
         val bytes = IntArray(13)
         bytes[0] = 0xAA
@@ -358,8 +362,8 @@ class IrBlasterService(private val context: Context) {
         // Byte 7: Timer settings (0x00 for off)
         bytes[7] = 0x00
 
-        // Byte 8: Swing (0x08 default)
-        bytes[8] = 0x08
+        // Byte 8: Swing (0x08 auto swing, 0x00 fixed)
+        bytes[8] = if (swing) 0x08 else 0x00
 
         // Byte 9: Fixed constant 0x80
         bytes[9] = 0x80
@@ -467,7 +471,8 @@ class IrBlasterService(private val context: Context) {
         temp: Int,
         mode: String,
         fanSpeed: String,
-        isEco: Boolean
+        isEco: Boolean,
+        swing: Boolean = false
     ): IntArray {
         val bytes = IntArray(8)
         val modeCode = when (mode.lowercase(Locale.ROOT)) {
@@ -478,7 +483,8 @@ class IrBlasterService(private val context: Context) {
             else -> 0x01 // Cool
         }
         val powerBit = if (power) 0x08 else 0x00
-        bytes[0] = modeCode or powerBit
+        val swingBit = if (swing) 0x40 else 0x00
+        bytes[0] = modeCode or powerBit or swingBit
 
         val tempCode = (temp.coerceIn(16, 30) - 16) and 0x0F
         bytes[1] = tempCode
@@ -486,6 +492,7 @@ class IrBlasterService(private val context: Context) {
             "low", "quiet" -> 0x10
             "med", "medium" -> 0x20
             "high" -> 0x30
+            "turbo", "max" -> 0x30
             else -> 0x00 // Auto
         }
         bytes[3] = 0x50
@@ -567,7 +574,8 @@ class IrBlasterService(private val context: Context) {
         temp: Int,
         mode: String,
         fanSpeed: String,
-        isEco: Boolean
+        isEco: Boolean,
+        swing: Boolean = false
     ): IntArray {
         val bytes = IntArray(19)
         bytes[0] = 0x11
@@ -585,11 +593,13 @@ class IrBlasterService(private val context: Context) {
         }
         bytes[6] = modeCode
         bytes[7] = (temp.coerceIn(18, 30) * 2) and 0xFF
-        bytes[8] = when (fanSpeed.lowercase(Locale.ROOT)) {
+        val fanNibble = when (fanSpeed.lowercase(Locale.ROOT)) {
             "quiet", "low" -> 0x30
-            "high" -> 0x70
+            "high", "turbo", "max" -> 0x70
             else -> 0x50
         }
+        val swingNibble = if (swing) 0x0F else 0x00
+        bytes[8] = fanNibble or swingNibble
         bytes[9] = if (isEco) 0x04 else 0x00
         for (i in 10..17) bytes[i] = 0x00
 
@@ -653,7 +663,8 @@ class IrBlasterService(private val context: Context) {
         temp: Int,
         mode: String,
         fanSpeed: String,
-        isEco: Boolean
+        isEco: Boolean,
+        swing: Boolean = false
     ): IntArray {
         val bytes = IntArray(27)
         bytes[0] = 0x02
@@ -680,7 +691,7 @@ class IrBlasterService(private val context: Context) {
             "auto" -> 0x00
             else -> 0x30
         }
-        bytes[17] = if (isEco) 0x20 else 0x00
+        bytes[17] = (if (isEco) 0x20 else 0x00) or (if (swing) 0x01 else 0x00)
         for (i in 18..25) bytes[i] = 0x00
 
         var sum = 0

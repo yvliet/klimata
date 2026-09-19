@@ -137,6 +137,8 @@ object KlimataPreferences {
                 put("currentSetpoint", room.profile.currentSetpoint)
                 put("mode", room.profile.mode)
                 put("irCodeSet", room.profile.irCodeSet)
+                put("fanSpeed", room.profile.fanSpeed)
+                put("swing", room.profile.swing)
             }
             put("profile", profObj)
 
@@ -198,7 +200,9 @@ object KlimataPreferences {
             inverterType = profJson.getString("inverterType"),
             currentSetpoint = profJson.getInt("currentSetpoint"),
             mode = profJson.getString("mode"),
-            irCodeSet = profJson.optString("irCodeSet").takeIf { !it.isNullOrBlank() && it != "null" }
+            irCodeSet = profJson.optString("irCodeSet").takeIf { !it.isNullOrBlank() && it != "null" },
+            fanSpeed = profJson.optString("fanSpeed", "Auto").ifBlank { "Auto" },
+            swing = profJson.optBoolean("swing", false)
         )
 
         val dispJson = obj.getJSONObject("dispatchState")

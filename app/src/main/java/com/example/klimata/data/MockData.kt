@@ -25,6 +25,8 @@ data class ACProfile(
     val currentSetpoint: Int,
     val mode: String,
     val irCodeSet: String? = null,
+    val fanSpeed: String = "Auto",
+    val swing: Boolean = false,
 )
 
 @Immutable

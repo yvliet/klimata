@@ -33,6 +33,7 @@ import com.example.klimata.ui.screens.CarbonDetailScreen
 import com.example.klimata.ui.screens.RoomThermalDetailScreen
 import com.example.klimata.ui.screens.SavingsDetailScreen
 import com.example.klimata.data.ir.IrBlasterService
+import com.example.klimata.ui.components.AcRemotePairingModal
 import com.example.klimata.ui.screens.ScheduleDetailScreen
 import com.example.klimata.ui.screens.provisioning.AddRoomWizardScreen
 import com.example.klimata.ui.theme.DiurnalPhase
@@ -76,6 +77,7 @@ fun KlimataNavGraph(
     var rooms by remember { mutableStateOf(KlimataPreferences.loadRooms(context)) }
     var weatherReport by remember { mutableStateOf<AmbientWeatherReport?>(KlimataPreferences.loadWeather(context)) }
     var hasCompletedOnboarding by remember { mutableStateOf(false) }
+    var activeCalibrationRoomId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         val loc = LocationHelper.detectLocation(context)
@@ -173,7 +175,9 @@ fun KlimataNavGraph(
                                     power = isPowerOn,
                                     temp = target.targetTemp,
                                     mode = target.profile.mode,
+                                    fanSpeed = target.profile.fanSpeed,
                                     isEco = target.isEcoEnabled,
+                                    swing = target.profile.swing,
                                     codeSetId = target.profile.irCodeSet
                                 )
                             }
@@ -189,7 +193,9 @@ fun KlimataNavGraph(
                                     power = target.isPowerOn,
                                     temp = target.targetTemp,
                                     mode = target.profile.mode,
+                                    fanSpeed = target.profile.fanSpeed,
                                     isEco = isEnabled,
+                                    swing = target.profile.swing,
                                     codeSetId = target.profile.irCodeSet
                                 )
                             }
@@ -218,7 +224,9 @@ fun KlimataNavGraph(
                                     power = target.isPowerOn,
                                     temp = setpoint,
                                     mode = target.profile.mode,
+                                    fanSpeed = target.profile.fanSpeed,
                                     isEco = target.isEcoEnabled,
+                                    swing = target.profile.swing,
                                     codeSetId = target.profile.irCodeSet
                                 )
                             }
@@ -238,10 +246,59 @@ fun KlimataNavGraph(
                                     power = target.isPowerOn,
                                     temp = target.targetTemp,
                                     mode = mode,
+                                    fanSpeed = target.profile.fanSpeed,
                                     isEco = target.isEcoEnabled,
+                                    swing = target.profile.swing,
                                     codeSetId = target.profile.irCodeSet
                                 )
                             }
+                        },
+                        onFanSpeedChange = { roomId, fanSpeed ->
+                            rooms = rooms.map { room ->
+                                if (room.id == roomId) {
+                                    room.copy(profile = room.profile.copy(fanSpeed = fanSpeed))
+                                } else {
+                                    room
+                                }
+                            }
+                            KlimataPreferences.saveRooms(context, rooms)
+                            rooms.find { it.id == roomId }?.let { target ->
+                                irBlaster.dispatchAcCommand(
+                                    brand = target.profile.brand,
+                                    power = target.isPowerOn,
+                                    temp = target.targetTemp,
+                                    mode = target.profile.mode,
+                                    fanSpeed = fanSpeed,
+                                    isEco = target.isEcoEnabled,
+                                    swing = target.profile.swing,
+                                    codeSetId = target.profile.irCodeSet
+                                )
+                            }
+                        },
+                        onSwingToggle = { roomId, isSwing ->
+                            rooms = rooms.map { room ->
+                                if (room.id == roomId) {
+                                    room.copy(profile = room.profile.copy(swing = isSwing))
+                                } else {
+                                    room
+                                }
+                            }
+                            KlimataPreferences.saveRooms(context, rooms)
+                            rooms.find { it.id == roomId }?.let { target ->
+                                irBlaster.dispatchAcCommand(
+                                    brand = target.profile.brand,
+                                    power = target.isPowerOn,
+                                    temp = target.targetTemp,
+                                    mode = target.profile.mode,
+                                    fanSpeed = target.profile.fanSpeed,
+                                    isEco = target.isEcoEnabled,
+                                    swing = isSwing,
+                                    codeSetId = target.profile.irCodeSet
+                                )
+                            }
+                        },
+                        onCalibrateRemote = { roomId ->
+                            activeCalibrationRoomId = roomId
                         },
                         onScheduleClick = { roomId ->
                             navigateSafely(Screen.ScheduleDetail.createRoute(roomId))
@@ -412,6 +469,30 @@ fun KlimataNavGraph(
                             navController.popBackStack()
                         }
                     )
+                }
+            }
+
+            activeCalibrationRoomId?.let { calibRoomId ->
+                val targetRoom = rooms.find { it.id == calibRoomId }
+                if (targetRoom != null) {
+                    AcRemotePairingModal(
+                        brand = targetRoom.profile.brand,
+                        currentCodeSetId = targetRoom.profile.irCodeSet,
+                        onCodeSetSelected = { newCodeSetId ->
+                            rooms = rooms.map {
+                                if (it.id == calibRoomId) {
+                                    it.copy(profile = it.profile.copy(irCodeSet = newCodeSetId))
+                                } else {
+                                    it
+                                }
+                            }
+                            KlimataPreferences.saveRooms(context, rooms)
+                            activeCalibrationRoomId = null
+                        },
+                        onDismiss = { activeCalibrationRoomId = null }
+                    )
+                } else {
+                    activeCalibrationRoomId = null
                 }
             }
         }
