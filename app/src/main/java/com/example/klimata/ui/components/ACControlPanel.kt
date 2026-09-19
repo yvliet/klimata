@@ -406,7 +406,41 @@ fun ACTelemetryCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Signal Protocol Badge
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color.White.copy(alpha = 0.05f))
+                    .padding(horizontal = 8.dp, vertical = 5.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
+                ) {
+                    Icon(
+                        imageVector = PhosphorIcons.Light.Broadcast,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.50f),
+                        modifier = Modifier.size(11.dp)
+                    )
+                    Text(
+                        text = profile.irCodeSet?.replace('_', ' ')?.uppercase(Locale.ROOT) ?: "AUTO PROTOCOL",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 9.sp,
+                            letterSpacing = 0.3.sp,
+                            color = Color.White.copy(alpha = 0.60f)
+                        ),
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
@@ -642,20 +676,21 @@ fun ACDigitalRemoteCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // Tactile Action Keys (Power, Mode, Swing, Eco Leaf)
+            // Primary Control Row (Power & Mode)
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Power Key
+                // Power Pill
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(13.dp))
                         .background(powerButtonColor)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
@@ -663,21 +698,38 @@ fun ACDigitalRemoteCard(
                         ) {
                             onPowerToggle(!isPowerOn)
                         }
+                        .padding(horizontal = 6.dp)
                 ) {
-                    Icon(
-                        imageVector = PhosphorIcons.Light.Power,
-                        contentDescription = "Toggle AC Power",
-                        tint = powerIconColor,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Power,
+                            contentDescription = "Toggle AC Power",
+                            tint = powerIconColor,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = if (isPowerOn) "ON" else "OFF",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = powerIconColor
+                            ),
+                            maxLines = 1
+                        )
+                    }
                 }
 
-                // Mode Cycle Key
+                // Mode Cycle Pill
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(13.dp))
                         .background(modeBtnBgColor)
                         .clickable(
                             enabled = isPowerOn,
@@ -686,35 +738,62 @@ fun ACDigitalRemoteCard(
                         ) {
                             onModeCycle()
                         }
+                        .padding(horizontal = 6.dp)
                 ) {
-                    Crossfade(
-                        targetState = currentMode,
-                        animationSpec = tween(180),
-                        label = "RemoteModeIconCrossfade"
-                    ) { mode ->
-                        val modeIcon = when (mode) {
-                            "Cool" -> PhosphorIcons.Light.Snowflake
-                            "Dry" -> PhosphorIcons.Light.Drop
-                            "Fan" -> PhosphorIcons.Light.Fan
-                            "Auto" -> PhosphorIcons.Light.ArrowsClockwise
-                            else -> PhosphorIcons.Light.Snowflake
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Crossfade(
+                            targetState = currentMode,
+                            animationSpec = tween(180),
+                            label = "RemoteModeIconCrossfade"
+                        ) { mode ->
+                            val modeIcon = when (mode) {
+                                "Cool" -> PhosphorIcons.Light.Snowflake
+                                "Dry" -> PhosphorIcons.Light.Drop
+                                "Fan" -> PhosphorIcons.Light.Fan
+                                "Auto" -> PhosphorIcons.Light.ArrowsClockwise
+                                else -> PhosphorIcons.Light.Snowflake
+                            }
+
+                            Icon(
+                                imageVector = modeIcon,
+                                contentDescription = "Cycle AC Mode (Current: $mode)",
+                                tint = modeIconColor,
+                                modifier = Modifier.size(15.dp)
+                            )
                         }
 
-                        Icon(
-                            imageVector = modeIcon,
-                            contentDescription = "Cycle AC Mode (Current: $mode)",
-                            tint = modeIconColor,
-                            modifier = Modifier.size(16.dp)
+                        Text(
+                            text = currentMode,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = modeIconColor
+                            ),
+                            maxLines = 1
                         )
                     }
                 }
+            }
 
-                // Auto Swing Louvre Key
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Comfort & Efficiency Row (Auto Swing & Eco Leaf)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Auto Swing Louvre Pill
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(13.dp))
                         .background(swingButtonColor)
                         .clickable(
                             enabled = isPowerOn,
@@ -723,21 +802,38 @@ fun ACDigitalRemoteCard(
                         ) {
                             onSwingToggle(!isSwingEnabled)
                         }
+                        .padding(horizontal = 6.dp)
                 ) {
-                    Icon(
-                        imageVector = PhosphorIcons.Light.Wind,
-                        contentDescription = "Toggle Auto Swing",
-                        tint = swingIconColor,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Wind,
+                            contentDescription = "Toggle Auto Swing",
+                            tint = swingIconColor,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            text = if (isSwingEnabled) "Swing" else "Fixed",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = swingIconColor
+                            ),
+                            maxLines = 1
+                        )
+                    }
                 }
 
-                // Eco Leaf Key
+                // Eco Leaf Pill
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
+                        .weight(1f)
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(13.dp))
                         .background(ecoButtonColor)
                         .clickable(
                             enabled = isPowerOn,
@@ -746,13 +842,29 @@ fun ACDigitalRemoteCard(
                         ) {
                             onEcoToggle(!isEcoEnabled)
                         }
+                        .padding(horizontal = 6.dp)
                 ) {
-                    Icon(
-                        imageVector = PhosphorIcons.Light.Leaf,
-                        contentDescription = "Toggle Eco Mode",
-                        tint = ecoIconColor,
-                        modifier = Modifier.size(16.dp)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Leaf,
+                            contentDescription = "Toggle Eco Mode",
+                            tint = ecoIconColor,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            text = if (isEcoEnabled) "Eco On" else "Eco",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = ecoIconColor
+                            ),
+                            maxLines = 1
+                        )
+                    }
                 }
             }
 
@@ -762,7 +874,8 @@ fun ACDigitalRemoteCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
+                    .height(38.dp)
+                    .clip(RoundedCornerShape(13.dp))
                     .background(Color.White.copy(alpha = 0.06f))
                     .clickable(
                         enabled = isPowerOn,
@@ -772,7 +885,7 @@ fun ACDigitalRemoteCard(
                         val nextSpeed = cycleFanSpeed(fanSpeed)
                         onFanSpeedChange(nextSpeed)
                     }
-                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                    .padding(horizontal = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
