@@ -35,7 +35,6 @@ import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.Car
 import com.adamglin.phosphoricons.light.DeviceMobile
 import com.adamglin.phosphoricons.light.Lightbulb
-import com.adamglin.phosphoricons.light.MoonStars
 import com.adamglin.phosphoricons.light.Tree
 import com.example.klimata.data.CarbonEquivalentFact
 import com.example.klimata.data.CarbonFactIcon
@@ -211,68 +210,6 @@ fun CarbonDetailScreen(
             }
         }
 
-        // Sleep Biology & Natural Comfort Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(DetailCardSurface)
-                .padding(18.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(MineralMintActive.copy(alpha = 0.16f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Light.MoonStars,
-                            contentDescription = null,
-                            tint = MineralMintActive,
-                            modifier = Modifier.size(17.dp)
-                        )
-                    }
-
-                    Column {
-                        Text(
-                            text = "Better sleep, less waste",
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.5.sp,
-                                color = DetailTextPrimary
-                            )
-                        )
-                        Text(
-                            text = "Why you don't wake up shivering",
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 11.sp,
-                                color = DetailTextMuted
-                            )
-                        )
-                    }
-                }
-
-                Text(
-                    text = "Your body cools down naturally during deep sleep. Keeping your AC locked at a cold temperature just makes you reach for blankets and wastes electricity. Stepping the temperature up 1 or 2 degrees matches how you sleep and uses way less power.",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 12.5.sp,
-                        lineHeight = 18.sp,
-                        color = DetailTextSecondary
-                    )
-                )
-            }
-        }
 
         // Lifetime Cumulative Milestone
         Box(
