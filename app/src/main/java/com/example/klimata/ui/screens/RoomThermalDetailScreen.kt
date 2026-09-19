@@ -1,0 +1,776 @@
+package com.example.klimata.ui.screens
+
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.adamglin.PhosphorIcons
+import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.Cube
+import com.adamglin.phosphoricons.light.Fan
+import com.adamglin.phosphoricons.light.Sparkle
+import com.adamglin.phosphoricons.light.Thermometer
+import com.adamglin.phosphoricons.light.Wind
+import com.example.klimata.data.MockData
+import com.example.klimata.data.RoomState
+import com.example.klimata.data.volumeCubicMeters
+import com.example.klimata.ui.components.DetailPageScaffold
+import com.example.klimata.ui.theme.DetailCardSurface
+import com.example.klimata.ui.theme.DetailCardSurfaceElevated
+import com.example.klimata.ui.theme.DetailCurveAmbient
+import com.example.klimata.ui.theme.DetailTextMuted
+import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
+import com.example.klimata.ui.theme.JakartaFamily
+import com.example.klimata.ui.theme.MineralMint
+import com.example.klimata.ui.theme.MineralMintActive
+import kotlin.math.cos
+import kotlin.math.sin
+
+@Composable
+fun RoomThermalDetailScreen(
+    room: RoomState = MockData.masterBedRoom,
+    onBackClick: () -> Unit = {},
+) {
+    DetailPageScaffold(
+        title = "Room Space & Cooling",
+        subtitle = "${room.name} • Thermal Dynamics",
+        onBackClick = onBackClick
+    ) {
+        // Hero Room Architecture & 3D Spatial Canvas
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(DetailCardSurface)
+                .padding(20.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MineralMintActive.copy(alpha = 0.18f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Cube,
+                            contentDescription = null,
+                            tint = MineralMintActive,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MineralMintActive.copy(alpha = 0.16f))
+                            .padding(horizontal = 9.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${room.areaSquareMeters} m² • ${room.volumeCubicMeters} m³",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp,
+                                color = MineralMintActive
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "${room.volumeCubicMeters} m³ Air Volume",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        letterSpacing = (-0.5).sp,
+                        color = DetailTextPrimary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Room dimensions and cooling air distribution",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = DetailTextSecondary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                DetailedIsometricRoomCanvas(
+                    areaM2 = room.areaSquareMeters,
+                    heightM = room.ceilingHeightMeters,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Dimension metric chips
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DimensionChip(
+                        title = "Floor Area",
+                        value = "${room.areaSquareMeters} m²",
+                        modifier = Modifier.weight(1f)
+                    )
+                    DimensionChip(
+                        title = "Ceiling Height",
+                        value = "${room.ceilingHeightMeters} m",
+                        modifier = Modifier.weight(1f)
+                    )
+                    DimensionChip(
+                        title = "Cooling Load",
+                        value = "${room.coolingLoadBtu} BTU/h",
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        }
+
+        // AC Unit & Power Matching Card
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(DetailCardSurface)
+                .padding(18.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Sparkle,
+                            contentDescription = null,
+                            tint = MineralMintActive,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Cooling Power Match",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = DetailTextPrimary
+                            )
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MineralMintActive.copy(alpha = 0.16f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = "Optimal Match",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = MineralMintActive
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Your ${room.profile.brand} ${room.profile.model} (${room.profile.capacity}) produces ~9,000 BTU/h, comfortably covering this room's ${room.coolingLoadBtu} BTU/h evening cooling requirement without straining or wasting excess energy.",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp,
+                        color = DetailTextSecondary
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Hardware Profile",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = DetailTextMuted
+                        )
+                    )
+                    Text(
+                        text = "${room.profile.brand} • ${room.profile.capacity} ${room.profile.inverterType}",
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = DetailTextPrimary
+                        )
+                    )
+                }
+            }
+        }
+
+        // How Your Room Holds Cool Air (Thermal Battery)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(DetailCardSurface)
+                .padding(18.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Thermometer,
+                            contentDescription = null,
+                            tint = DetailCurveAmbient,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "How Your Room Holds Cool Air",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = DetailTextPrimary
+                            )
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(DetailCardSurfaceElevated)
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = room.thermalMassLabel,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = DetailTextSecondary
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = "Your walls and floor act like a natural cool-air battery. During the evening pre-cool phase, they absorb the cold air. Later at night, they slowly release that trapped chill back into the bedroom, allowing the AC to dial down power without you noticing any warmth.",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp,
+                        color = DetailTextSecondary
+                    )
+                )
+            }
+        }
+
+        // Why Morning Fan Coasting Works Card
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(DetailCardSurface)
+                .padding(18.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = PhosphorIcons.Light.Fan,
+                            contentDescription = null,
+                            tint = MineralMintActive,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Why Morning Coasting Works",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = DetailTextPrimary
+                            )
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MineralMintActive.copy(alpha = 0.16f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        Text(
+                            text = "06:00 – 07:00 AM",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp,
+                                color = MineralMintActive
+                            )
+                        )
+                    }
+                }
+
+                Text(
+                    text = "By 6:00 AM, the outdoor temperature reaches its lowest baseline and your room is already fully chilled. Klimata shuts off the power-heavy compressor and runs only the quiet fan to circulate the trapped coolness until you wake up.",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp,
+                        color = DetailTextSecondary
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DimensionChip(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(14.dp))
+            .background(DetailCardSurfaceElevated)
+            .padding(vertical = 10.dp, horizontal = 10.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 11.sp,
+                    color = DetailTextMuted
+                )
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 13.5.sp,
+                    color = DetailTextPrimary
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun DetailedIsometricRoomCanvas(
+    areaM2: Int,
+    heightM: Float,
+    modifier: Modifier = Modifier,
+) {
+    val targetNormArea = (areaM2 / 35f).coerceIn(0.40f, 1.0f)
+    val targetNormHeight = (heightM / 3.0f).coerceIn(0.65f, 1.0f)
+
+    val animatedArea by animateFloatAsState(
+        targetValue = targetNormArea,
+        animationSpec = spring(
+            dampingRatio = 0.80f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "IsoAreaSpring"
+    )
+
+    val animatedHeight by animateFloatAsState(
+        targetValue = targetNormHeight,
+        animationSpec = spring(
+            dampingRatio = 0.80f,
+            stiffness = Spring.StiffnessMediumLow
+        ),
+        label = "IsoHeightSpring"
+    )
+
+    val floorPath = remember { Path() }
+    val leftWallPath = remember { Path() }
+    val rightWallPath = remember { Path() }
+    val coolingConePath = remember { Path() }
+    val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f) }
+
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+
+        val isoAngleRad = 0.488f // ~28 degrees
+        val cosA = cos(isoAngleRad)
+        val sinA = sin(isoAngleRad)
+
+        val maxVerticalSpan = h * 0.78f
+        val baseRoomH = maxVerticalSpan * 0.38f * (0.80f + animatedHeight * 0.20f)
+        val baseGroundSpan = (maxVerticalSpan - baseRoomH) / sinA
+        val areaScale = (0.75f + animatedArea * 0.25f)
+        val roomW = baseGroundSpan * 0.53f * areaScale
+        val roomD = baseGroundSpan * 0.47f * areaScale
+        val roomH = baseRoomH
+        val acDepth = 7.dp.toPx()
+
+        val minRelX = -roomD * cosA - acDepth * cosA
+        val maxRelX = roomW * cosA
+        val relCenterX = (minRelX + maxRelX) / 2f
+        val originX = (w / 2f) - relCenterX
+
+        val minRelY = -(roomW + roomD) * sinA - roomH
+        val maxRelY = 0f
+        val relCenterY = (minRelY + maxRelY) / 2f
+        val originY = (h / 2f) - relCenterY
+
+        fun iso(x: Float, y: Float, z: Float): Offset {
+            val px = originX + (x - y) * cosA
+            val py = originY - (x + y) * sinA - z
+            return Offset(px, py)
+        }
+
+        val pOrigin = iso(0f, 0f, 0f)
+        val pX = iso(roomW, 0f, 0f)
+        val pY = iso(0f, roomD, 0f)
+        val pCorner = iso(roomW, roomD, 0f)
+
+        val pTopOrigin = iso(0f, 0f, roomH)
+        val pTopX = iso(roomW, 0f, roomH)
+        val pTopY = iso(0f, roomD, roomH)
+        val pTopCorner = iso(roomW, roomD, roomH)
+
+        // Back-Left Wall
+        leftWallPath.rewind()
+        leftWallPath.moveTo(pOrigin.x, pOrigin.y)
+        leftWallPath.lineTo(pY.x, pY.y)
+        leftWallPath.lineTo(pTopY.x, pTopY.y)
+        leftWallPath.lineTo(pTopOrigin.x, pTopOrigin.y)
+        leftWallPath.close()
+
+        drawPath(
+            path = leftWallPath,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.08f),
+                    Color.White.copy(alpha = 0.02f)
+                ),
+                startY = pTopY.y,
+                endY = pOrigin.y
+            )
+        )
+        drawPath(
+            path = leftWallPath,
+            color = Color.White.copy(alpha = 0.12f),
+            style = Stroke(width = 1f)
+        )
+
+        // Back-Right Wall
+        rightWallPath.rewind()
+        rightWallPath.moveTo(pY.x, pY.y)
+        rightWallPath.lineTo(pCorner.x, pCorner.y)
+        rightWallPath.lineTo(pTopCorner.x, pTopCorner.y)
+        rightWallPath.lineTo(pTopY.x, pTopY.y)
+        rightWallPath.close()
+
+        drawPath(
+            path = rightWallPath,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    Color.White.copy(alpha = 0.10f),
+                    Color.White.copy(alpha = 0.03f)
+                ),
+                startY = pTopCorner.y,
+                endY = pY.y
+            )
+        )
+        drawPath(
+            path = rightWallPath,
+            color = Color.White.copy(alpha = 0.15f),
+            style = Stroke(width = 1f)
+        )
+
+        // Floor Grid
+        val gridSteps = 4
+        for (i in 1 until gridSteps) {
+            val frac = i / gridSteps.toFloat()
+            val start1 = iso(roomW * frac, 0f, 0f)
+            val end1 = iso(roomW * frac, roomD, 0f)
+            drawLine(
+                color = Color.White.copy(alpha = 0.07f),
+                start = start1,
+                end = end1,
+                strokeWidth = 1f
+            )
+
+            val start2 = iso(0f, roomD * frac, 0f)
+            val end2 = iso(roomW, roomD * frac, 0f)
+            drawLine(
+                color = Color.White.copy(alpha = 0.07f),
+                start = start2,
+                end = end2,
+                strokeWidth = 1f
+            )
+        }
+
+        // Floor boundary
+        floorPath.rewind()
+        floorPath.moveTo(pOrigin.x, pOrigin.y)
+        floorPath.lineTo(pX.x, pX.y)
+        floorPath.lineTo(pCorner.x, pCorner.y)
+        floorPath.lineTo(pY.x, pY.y)
+        floorPath.close()
+
+        drawPath(
+            path = floorPath,
+            color = Color.White.copy(alpha = 0.04f),
+            style = Fill
+        )
+        drawPath(
+            path = floorPath,
+            color = Color.White.copy(alpha = 0.18f),
+            style = Stroke(width = 1.2f)
+        )
+
+        // Split AC Wall Unit mounted on Back-Right wall
+        val acYStart = roomD * 0.35f
+        val acYEnd = roomD * 0.72f
+        val acZBottom = roomH * 0.68f
+        val acZTop = roomH * 0.88f
+
+        val acBack1 = iso(roomW, acYStart, acZBottom)
+        val acBack2 = iso(roomW, acYEnd, acZBottom)
+        val acBack3 = iso(roomW, acYEnd, acZTop)
+        val acBack4 = iso(roomW, acYStart, acZTop)
+
+        val acFront1 = Offset(acBack1.x - acDepth * cosA, acBack1.y - acDepth * sinA)
+        val acFront2 = Offset(acBack2.x - acDepth * cosA, acBack2.y - acDepth * sinA)
+        val acFront3 = Offset(acBack3.x - acDepth * cosA, acBack3.y - acDepth * sinA)
+        val acFront4 = Offset(acBack4.x - acDepth * cosA, acBack4.y - acDepth * sinA)
+
+        val acFrontPath = Path().apply {
+            moveTo(acFront1.x, acFront1.y)
+            lineTo(acFront2.x, acFront2.y)
+            lineTo(acFront3.x, acFront3.y)
+            lineTo(acFront4.x, acFront4.y)
+            close()
+        }
+        drawPath(acFrontPath, Color.White.copy(alpha = 0.88f))
+        drawPath(path = acFrontPath, color = Color.White, style = Stroke(width = 1.2f))
+
+        val acTopPath = Path().apply {
+            moveTo(acFront4.x, acFront4.y)
+            lineTo(acFront3.x, acFront3.y)
+            lineTo(acBack3.x, acBack3.y)
+            lineTo(acBack4.x, acBack4.y)
+            close()
+        }
+        drawPath(acTopPath, Color.White.copy(alpha = 0.72f))
+
+        val acBottomPath = Path().apply {
+            moveTo(acFront1.x, acFront1.y)
+            lineTo(acFront2.x, acFront2.y)
+            lineTo(acBack2.x, acBack2.y)
+            lineTo(acBack1.x, acBack1.y)
+            close()
+        }
+        drawPath(acBottomPath, Color.White.copy(alpha = 0.45f))
+
+        // Active cooling LED strip on AC unit
+        drawLine(
+            color = MineralMintActive,
+            start = Offset(
+                acFront1.x + (acFront2.x - acFront1.x) * 0.15f,
+                acFront1.y + (acFront2.y - acFront1.y) * 0.15f - 1.5f
+            ),
+            end = Offset(
+                acFront1.x + (acFront2.x - acFront1.x) * 0.85f,
+                acFront1.y + (acFront2.y - acFront1.y) * 0.85f - 1.5f
+            ),
+            strokeWidth = 2.4f,
+            cap = StrokeCap.Round
+        )
+
+        // Downward Cooling Thermal Streamlines from AC Vent
+        val ventCenter = Offset(
+            (acFront1.x + acFront2.x) * 0.5f,
+            (acFront1.y + acFront2.y) * 0.5f
+        )
+        val floorTarget1 = iso(roomW * 0.35f, roomD * 0.25f, 0f)
+        val floorTarget2 = iso(roomW * 0.20f, roomD * 0.55f, 0f)
+        val floorTarget3 = iso(roomW * 0.50f, roomD * 0.75f, 0f)
+
+        coolingConePath.rewind()
+        coolingConePath.moveTo(acFront1.x, acFront1.y)
+        coolingConePath.lineTo(acFront2.x, acFront2.y)
+        coolingConePath.lineTo(floorTarget3.x, floorTarget3.y)
+        coolingConePath.lineTo(floorTarget1.x, floorTarget1.y)
+        coolingConePath.close()
+
+        drawPath(
+            path = coolingConePath,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    MineralMintActive.copy(alpha = 0.22f),
+                    MineralMint.copy(alpha = 0.08f),
+                    Color.Transparent
+                ),
+                startY = ventCenter.y,
+                endY = floorTarget2.y
+            )
+        )
+
+        val streamLine1 = Path().apply {
+            moveTo(ventCenter.x, ventCenter.y)
+            cubicTo(
+                ventCenter.x - 24f, ventCenter.y + 18f,
+                floorTarget1.x + 12f, floorTarget1.y - 22f,
+                floorTarget1.x, floorTarget1.y
+            )
+        }
+        drawPath(
+            path = streamLine1,
+            color = MineralMintActive.copy(alpha = 0.70f),
+            style = Stroke(width = 1.5f, pathEffect = dashEffect)
+        )
+
+        val streamLine2 = Path().apply {
+            moveTo(ventCenter.x, ventCenter.y)
+            cubicTo(
+                ventCenter.x - 18f, ventCenter.y + 28f,
+                floorTarget2.x + 16f, floorTarget2.y - 18f,
+                floorTarget2.x, floorTarget2.y
+            )
+        }
+        drawPath(
+            path = streamLine2,
+            color = MineralMintActive.copy(alpha = 0.55f),
+            style = Stroke(width = 1.3f, pathEffect = dashEffect)
+        )
+
+        // Front Room Wireframe Bounding Highlights
+        drawLine(
+            color = Color.White.copy(alpha = 0.24f),
+            start = pX,
+            end = pTopX,
+            strokeWidth = 1f
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.24f),
+            start = pOrigin,
+            end = pTopOrigin,
+            strokeWidth = 1f
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.16f),
+            start = pTopOrigin,
+            end = pTopX,
+            strokeWidth = 1f
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.16f),
+            start = pTopOrigin,
+            end = pTopY,
+            strokeWidth = 1f
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.16f),
+            start = pTopX,
+            end = pTopCorner,
+            strokeWidth = 1f
+        )
+        drawLine(
+            color = Color.White.copy(alpha = 0.16f),
+            start = pTopY,
+            end = pTopCorner,
+            strokeWidth = 1f
+        )
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xFF000000)
+@Composable
+private fun RoomThermalDetailScreenPreview() {
+    RoomThermalDetailScreen(room = MockData.masterBedRoom)
+}

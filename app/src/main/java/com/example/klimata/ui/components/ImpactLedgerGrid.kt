@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CaretRight
 import com.adamglin.phosphoricons.light.CurrencyDollar
 import com.adamglin.phosphoricons.light.Tree
 import com.example.klimata.data.ImpactMetric
@@ -145,15 +146,27 @@ private fun FrostedMetricCard(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Column {
-                Text(
-                    text = title,
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.60f)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = title,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.60f)
+                        )
                     )
-                )
+                    Icon(
+                        imageVector = PhosphorIcons.Light.CaretRight,
+                        contentDescription = "View details",
+                        tint = Color.White.copy(alpha = 0.50f),
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(4.dp))
 

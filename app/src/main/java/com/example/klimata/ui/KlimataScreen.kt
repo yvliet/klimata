@@ -76,6 +76,7 @@ fun KlimataScreen(
     rooms: List<RoomState> = MockData.rooms,
     onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
     onScheduleClick: (roomId: String) -> Unit = {},
+    onThermalClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
     onCarbonClick: (roomId: String) -> Unit = {},
 ) {
@@ -282,6 +283,7 @@ fun KlimataScreen(
 
                         RoomThermalVisualizerCard(
                             room = room,
+                            onClick = { onThermalClick(room.id) },
                             modifier = Modifier.fillMaxWidth()
                         )
 

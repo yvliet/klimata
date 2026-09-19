@@ -8,6 +8,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.CaretRight
 import com.adamglin.phosphoricons.light.Cube
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -60,6 +62,7 @@ import kotlin.math.sin
 fun RoomThermalVisualizerCard(
     room: RoomState,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
 ) {
     val diurnal = LocalDiurnalColors.current
 
@@ -74,6 +77,7 @@ fun RoomThermalVisualizerCard(
             )
             .clip(RoundedCornerShape(24.dp))
             .background(diurnal.frostedCardBackground)
+            .clickable(onClick = onClick)
             .padding(18.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -94,22 +98,22 @@ fun RoomThermalVisualizerCard(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Icon(
-                        imageVector = PhosphorIcons.Light.Cube,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.50f),
-                        modifier = Modifier.size(13.dp)
-                    )
                     Text(
-                        text = "${room.coolingLoadBtu} BTU/h",
+                        text = "More Details",
                         style = TextStyle(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 11.5.sp,
+                            fontSize = 12.sp,
                             color = Color.White.copy(alpha = 0.60f)
                         )
+                    )
+                    Icon(
+                        imageVector = PhosphorIcons.Light.CaretRight,
+                        contentDescription = "Open room thermal details",
+                        tint = Color.White.copy(alpha = 0.50f),
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
@@ -136,7 +140,7 @@ fun RoomThermalVisualizerCard(
                     Spacer(modifier = Modifier.height(3.dp))
 
                     Text(
-                        text = "${curRoom.thermalMassLabel} • ${curRoom.profile.capacity} Match",
+                        text = "${curRoom.thermalMassLabel} • ${curRoom.coolingLoadBtu} BTU/h • ${curRoom.profile.capacity} Match",
                         style = TextStyle(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Normal,

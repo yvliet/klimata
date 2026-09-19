@@ -23,6 +23,7 @@ import androidx.navigation.navArgument
 import com.example.klimata.data.MockData
 import com.example.klimata.ui.KlimataScreen
 import com.example.klimata.ui.screens.CarbonDetailScreen
+import com.example.klimata.ui.screens.RoomThermalDetailScreen
 import com.example.klimata.ui.screens.SavingsDetailScreen
 import com.example.klimata.ui.screens.ScheduleDetailScreen
 import com.example.klimata.ui.theme.DiurnalPhase
@@ -35,6 +36,9 @@ sealed class Screen(val route: String) {
     data object ScheduleDetail : Screen("schedule/{roomId}") {
         fun createRoute(roomId: String) = "schedule/$roomId"
     }
+    data object RoomThermalDetail : Screen("thermal/{roomId}") {
+        fun createRoute(roomId: String) = "thermal/$roomId"
+    }
     data object SavingsDetail : Screen("savings/{roomId}") {
         fun createRoute(roomId: String) = "savings/$roomId"
     }
@@ -44,8 +48,8 @@ sealed class Screen(val route: String) {
 }
 
 /**
- * Root navigation graph managing bottom-sheet style vertical transitions
- * across telemetry detail destinations while preserving the atmospheric sky canvas.
+ * Root navigation graph managing horizontal slide transitions across detail
+ * destinations while preserving the atmospheric sky canvas.
  */
 @Composable
 fun KlimataNavGraph(
@@ -92,6 +96,9 @@ fun KlimataNavGraph(
                         onScheduleClick = { roomId ->
                             navController.navigate(Screen.ScheduleDetail.createRoute(roomId))
                         },
+                        onThermalClick = { roomId ->
+                            navController.navigate(Screen.RoomThermalDetail.createRoute(roomId))
+                        },
                         onSavingsClick = { roomId ->
                             navController.navigate(Screen.SavingsDetail.createRoute(roomId))
                         },
@@ -106,19 +113,19 @@ fun KlimataNavGraph(
                     arguments = listOf(navArgument("roomId") { type = NavType.StringType }),
                     enterTransition = {
                         slideIntoContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
                         ) + fadeIn(animationSpec = tween(320))
                     },
                     exitTransition = {
                         slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
                             animationSpec = tween(320, easing = FastOutLinearInEasing)
                         ) + fadeOut(animationSpec = tween(240))
                     },
                     popExitTransition = {
                         slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
                             animationSpec = tween(320, easing = FastOutLinearInEasing)
                         ) + fadeOut(animationSpec = tween(240))
                     }
@@ -132,23 +139,53 @@ fun KlimataNavGraph(
                 }
 
                 composable(
-                    route = Screen.SavingsDetail.route,
+                    route = Screen.RoomThermalDetail.route,
                     arguments = listOf(navArgument("roomId") { type = NavType.StringType }),
                     enterTransition = {
                         slideIntoContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
                         ) + fadeIn(animationSpec = tween(320))
                     },
                     exitTransition = {
                         slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
                             animationSpec = tween(320, easing = FastOutLinearInEasing)
                         ) + fadeOut(animationSpec = tween(240))
                     },
                     popExitTransition = {
                         slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(320, easing = FastOutLinearInEasing)
+                        ) + fadeOut(animationSpec = tween(240))
+                    }
+                ) { backStackEntry ->
+                    val roomId = backStackEntry.arguments?.getString("roomId")
+                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
+                    RoomThermalDetailScreen(
+                        room = room,
+                        onBackClick = { navController.popBackStack() }
+                    )
+                }
+
+                composable(
+                    route = Screen.SavingsDetail.route,
+                    arguments = listOf(navArgument("roomId") { type = NavType.StringType }),
+                    enterTransition = {
+                        slideIntoContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
+                            animationSpec = tween(380, easing = FastOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(320))
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
+                            animationSpec = tween(320, easing = FastOutLinearInEasing)
+                        ) + fadeOut(animationSpec = tween(240))
+                    },
+                    popExitTransition = {
+                        slideOutOfContainer(
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
                             animationSpec = tween(320, easing = FastOutLinearInEasing)
                         ) + fadeOut(animationSpec = tween(240))
                     }
@@ -166,19 +203,19 @@ fun KlimataNavGraph(
                     arguments = listOf(navArgument("roomId") { type = NavType.StringType }),
                     enterTransition = {
                         slideIntoContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Left,
                             animationSpec = tween(380, easing = FastOutSlowInEasing)
                         ) + fadeIn(animationSpec = tween(320))
                     },
                     exitTransition = {
                         slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
                             animationSpec = tween(320, easing = FastOutLinearInEasing)
                         ) + fadeOut(animationSpec = tween(240))
                     },
                     popExitTransition = {
                         slideOutOfContainer(
-                            towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                            towards = AnimatedContentTransitionScope.SlideDirection.Right,
                             animationSpec = tween(320, easing = FastOutLinearInEasing)
                         ) + fadeOut(animationSpec = tween(240))
                     }
