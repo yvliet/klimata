@@ -1,6 +1,7 @@
 package com.example.klimata.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,11 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -43,8 +39,12 @@ import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.DetailPageScaffold
 import com.example.klimata.ui.components.PeriodDropdown
+import com.example.klimata.ui.theme.DetailCardSurface
+import com.example.klimata.ui.theme.DetailCardSurfaceElevated
+import com.example.klimata.ui.theme.DetailTextMuted
+import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
-import com.example.klimata.ui.theme.LocalDiurnalColors
 import com.example.klimata.ui.theme.MineralMintActive
 
 @Composable
@@ -52,7 +52,6 @@ fun SavingsDetailScreen(
     room: RoomState = MockData.masterBedRoom,
     onBackClick: () -> Unit = {},
 ) {
-    val diurnal = LocalDiurnalColors.current
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.savingsHistory.forPeriod(selectedPeriod)
     val breakdown = room.savingsBreakdown
@@ -73,7 +72,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -86,7 +85,7 @@ fun SavingsDetailScreen(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(MineralMintActive.copy(alpha = 0.20f)),
+                            .background(MineralMintActive.copy(alpha = 0.18f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
@@ -100,7 +99,7 @@ fun SavingsDetailScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(MineralMintActive.copy(alpha = 0.18f))
+                            .background(MineralMintActive.copy(alpha = 0.16f))
                             .padding(horizontal = 9.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -124,7 +123,7 @@ fun SavingsDetailScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp,
                         letterSpacing = (-0.5).sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
 
@@ -136,7 +135,7 @@ fun SavingsDetailScreen(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.70f)
+                        color = DetailTextSecondary
                     )
                 )
             }
@@ -147,7 +146,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -157,7 +156,7 @@ fun SavingsDetailScreen(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
 
@@ -167,7 +166,7 @@ fun SavingsDetailScreen(
                         .fillMaxWidth()
                         .height(10.dp)
                         .clip(RoundedCornerShape(5.dp))
-                        .background(Color.White.copy(alpha = 0.10f))
+                        .background(DetailCardSurfaceElevated)
                 ) {
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Box(
@@ -185,7 +184,7 @@ fun SavingsDetailScreen(
                             modifier = Modifier
                                 .weight(breakdown.fanCoastingPercent.toFloat())
                                 .fillMaxHeight()
-                                .background(Color.White.copy(alpha = 0.45f))
+                                .background(Color(0xFF48484A))
                         )
                     }
                 }
@@ -211,7 +210,7 @@ fun SavingsDetailScreen(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp,
-                                    color = Color.White
+                                    color = DetailTextPrimary
                                 )
                             )
                             Text(
@@ -220,7 +219,7 @@ fun SavingsDetailScreen(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 11.sp,
-                                    color = Color.White.copy(alpha = 0.60f)
+                                    color = DetailTextSecondary
                                 )
                             )
                         }
@@ -234,7 +233,7 @@ fun SavingsDetailScreen(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(Color.White.copy(alpha = 0.50f))
+                                .background(Color(0xFF636366))
                         )
                         Column(horizontalAlignment = Alignment.End) {
                             Text(
@@ -243,7 +242,7 @@ fun SavingsDetailScreen(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp,
-                                    color = Color.White
+                                    color = DetailTextPrimary
                                 )
                             )
                             Text(
@@ -252,7 +251,7 @@ fun SavingsDetailScreen(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 11.sp,
-                                    color = Color.White.copy(alpha = 0.60f)
+                                    color = DetailTextSecondary
                                 )
                             )
                         }
@@ -266,7 +265,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -276,7 +275,7 @@ fun SavingsDetailScreen(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
 
@@ -287,7 +286,7 @@ fun SavingsDetailScreen(
                         fontWeight = FontWeight.Normal,
                         fontSize = 12.5.sp,
                         lineHeight = 18.sp,
-                        color = Color.White.copy(alpha = 0.75f)
+                        color = DetailTextSecondary
                     )
                 )
 
@@ -304,7 +303,7 @@ fun SavingsDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.55f)
+                            color = DetailTextMuted
                         )
                     )
                     Text(
@@ -313,7 +312,7 @@ fun SavingsDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.85f)
+                            color = DetailTextPrimary
                         )
                     )
                 }
@@ -325,7 +324,7 @@ fun SavingsDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(16.dp)
         ) {
             Row(
@@ -345,7 +344,7 @@ fun SavingsDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 11.5.sp,
-                            color = Color.White.copy(alpha = 0.60f)
+                            color = DetailTextMuted
                         )
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -360,7 +359,7 @@ fun SavingsDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
-                            color = Color.White
+                            color = DetailTextPrimary
                         )
                     )
                 }
@@ -368,7 +367,7 @@ fun SavingsDetailScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.12f))
+                        .background(DetailCardSurfaceElevated)
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -377,7 +376,7 @@ fun SavingsDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.80f)
+                            color = DetailTextSecondary
                         )
                     )
                 }

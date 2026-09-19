@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.klimata.data.MockData
+import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.ACControlPanel
 import com.example.klimata.ui.components.AmbientTopBarActions
 import com.example.klimata.ui.components.AtmosphericSkyCanvas
@@ -72,6 +73,8 @@ import kotlin.math.abs
 fun KlimataScreen(
     modifier: Modifier = Modifier,
     initialPhase: DiurnalPhase? = null,
+    rooms: List<RoomState> = MockData.rooms,
+    onEcoFlowToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
     onScheduleClick: (roomId: String) -> Unit = {},
     onSavingsClick: (roomId: String) -> Unit = {},
     onCarbonClick: (roomId: String) -> Unit = {},
@@ -80,7 +83,6 @@ fun KlimataScreen(
         mutableStateOf(initialPhase ?: currentDiurnalPhase())
     }
 
-    val rooms = MockData.rooms
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size })
     val coroutineScope = rememberCoroutineScope()
     val currentRoom = rooms[pagerState.currentPage]
@@ -265,6 +267,7 @@ fun KlimataScreen(
                     ) {
                         ScheduleChart(
                             steps = room.thermalSteps,
+                            isEcoFlowEnabled = room.isEcoFlowEnabled,
                             onClick = { onScheduleClick(room.id) },
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -272,6 +275,8 @@ fun KlimataScreen(
                         ACControlPanel(
                             profile = room.profile,
                             dispatch = room.dispatchState,
+                            initialEcoFlowEnabled = room.isEcoFlowEnabled,
+                            onEcoFlowToggle = { isEnabled -> onEcoFlowToggle(room.id, isEnabled) },
                             modifier = Modifier.fillMaxWidth()
                         )
 

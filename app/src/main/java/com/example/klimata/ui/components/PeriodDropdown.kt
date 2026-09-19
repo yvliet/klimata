@@ -37,11 +37,15 @@ import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.CaretDown
 import com.adamglin.phosphoricons.light.Check
 import com.example.klimata.data.ImpactPeriod
+import com.example.klimata.ui.theme.DetailCardSurface
+import com.example.klimata.ui.theme.DetailCardSurfaceElevated
+import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
 
 /**
- * Compact frosted dropdown selector for toggling between time-horizon impact views.
+ * Minimalist dark dropdown selector for toggling time-horizon impact views.
  */
 @Composable
 fun PeriodDropdown(
@@ -54,14 +58,14 @@ fun PeriodDropdown(
     Box(modifier = modifier) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(14.dp))
-                .background(Color.White.copy(alpha = 0.12f))
+                .clip(RoundedCornerShape(12.dp))
+                .background(DetailCardSurface)
                 .clickable { expanded = true }
                 .padding(horizontal = 12.dp, vertical = 7.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 Text(
                     text = selectedPeriod.label,
@@ -69,13 +73,13 @@ fun PeriodDropdown(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
                 Icon(
                     imageVector = PhosphorIcons.Light.CaretDown,
                     contentDescription = "Select time period",
-                    tint = Color.White.copy(alpha = 0.85f),
+                    tint = DetailTextSecondary,
                     modifier = Modifier.size(12.dp)
                 )
             }
@@ -83,8 +87,8 @@ fun PeriodDropdown(
 
         MaterialTheme(
             colorScheme = MaterialTheme.colorScheme.copy(
-                surface = Color(0xFF161C2C),
-                onSurface = Color.White
+                surface = DetailCardSurfaceElevated,
+                onSurface = DetailTextPrimary
             )
         ) {
             DropdownMenu(
@@ -92,7 +96,7 @@ fun PeriodDropdown(
                 onDismissRequest = { expanded = false },
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFF161C2C).copy(alpha = 0.96f))
+                    .background(DetailCardSurfaceElevated)
             ) {
                 ImpactPeriod.entries.forEach { period ->
                     val isSelected = period == selectedPeriod
@@ -104,7 +108,7 @@ fun PeriodDropdown(
                                     fontFamily = JakartaFamily,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     fontSize = 13.sp,
-                                    color = if (isSelected) MineralMintActive else Color.White.copy(alpha = 0.85f)
+                                    color = if (isSelected) MineralMintActive else DetailTextPrimary
                                 )
                             )
                         },

@@ -38,11 +38,15 @@ import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.CaretLeft
+import com.example.klimata.ui.theme.DetailBlackBackground
+import com.example.klimata.ui.theme.DetailCardSurface
+import com.example.klimata.ui.theme.DetailTextMuted
+import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 
 /**
- * Shared structural layout for detail sheets, maintaining atmospheric sky continuity
- * and high-contrast frosted controls.
+ * Shared structural layout for detail screens in minimalist OLED black styling.
  */
 @Composable
 fun DetailPageScaffold(
@@ -58,62 +62,32 @@ fun DetailPageScaffold(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(DetailBlackBackground)
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
-        // Sticky-feel top bar
+        // Minimalist top action row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(start = 16.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(14.dp),
-                modifier = Modifier.weight(1f, fill = false)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(DetailCardSurface)
+                    .clickable(onClick = onBackClick)
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.10f))
-                        .clickable(onClick = onBackClick)
-                ) {
-                    Icon(
-                        imageVector = PhosphorIcons.Light.CaretLeft,
-                        contentDescription = "Navigate back",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-
-                Column {
-                    Text(
-                        text = title,
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp,
-                            letterSpacing = (-0.3).sp,
-                            color = Color.White
-                        )
-                    )
-                    if (subtitle != null) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = subtitle,
-                            style = TextStyle(
-                                fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = PhosphorIcons.Light.CaretLeft,
+                    contentDescription = "Navigate back",
+                    tint = DetailTextPrimary,
+                    modifier = Modifier.size(18.dp)
+                )
             }
 
             if (trailingContent != null) {
@@ -121,13 +95,45 @@ fun DetailPageScaffold(
             }
         }
 
+        // Title and context header
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = title,
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    letterSpacing = (-0.5).sp,
+                    color = DetailTextPrimary
+                )
+            )
+            if (subtitle != null) {
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.sp,
+                        color = DetailTextSecondary
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             content = content
         )
     }

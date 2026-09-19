@@ -81,7 +81,7 @@ fun ACControlPanel(
     var isPowerOn by remember { mutableStateOf(value = true) }
     var setpoint by remember(profile.currentSetpoint) { mutableIntStateOf(profile.currentSetpoint) }
     var activeMode by remember(profile.mode) { mutableStateOf(profile.mode) }
-    var isEcoFlowEnabled by remember { mutableStateOf(initialEcoFlowEnabled) }
+    var isEcoFlowEnabled by remember(initialEcoFlowEnabled) { mutableStateOf(initialEcoFlowEnabled) }
 
     Row(
         modifier = modifier

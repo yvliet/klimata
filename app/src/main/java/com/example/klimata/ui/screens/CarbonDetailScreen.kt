@@ -1,6 +1,7 @@
 package com.example.klimata.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,11 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.graphics.vector.path
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,8 +37,12 @@ import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.DetailPageScaffold
 import com.example.klimata.ui.components.PeriodDropdown
+import com.example.klimata.ui.theme.DetailCardSurface
+import com.example.klimata.ui.theme.DetailCardSurfaceElevated
+import com.example.klimata.ui.theme.DetailTextMuted
+import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
-import com.example.klimata.ui.theme.LocalDiurnalColors
 import com.example.klimata.ui.theme.MineralMintActive
 
 @Composable
@@ -50,7 +50,6 @@ fun CarbonDetailScreen(
     room: RoomState = MockData.masterBedRoom,
     onBackClick: () -> Unit = {},
 ) {
-    val diurnal = LocalDiurnalColors.current
     var selectedPeriod by remember { mutableStateOf(ImpactPeriod.MONTHLY) }
     val currentMetric = room.carbonHistory.forPeriod(selectedPeriod)
     val baseEquiv = room.carbonEquivalence
@@ -83,7 +82,7 @@ fun CarbonDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(24.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(20.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -96,13 +95,13 @@ fun CarbonDetailScreen(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.20f)),
+                            .background(MineralMintActive.copy(alpha = 0.18f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = PhosphorIcons.Light.Tree,
                             contentDescription = null,
-                            tint = Color.White,
+                            tint = MineralMintActive,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -110,7 +109,7 @@ fun CarbonDetailScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color.White.copy(alpha = 0.18f))
+                            .background(MineralMintActive.copy(alpha = 0.16f))
                             .padding(horizontal = 9.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -119,7 +118,7 @@ fun CarbonDetailScreen(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 11.5.sp,
-                                color = Color.White
+                                color = MineralMintActive
                             )
                         )
                     }
@@ -134,7 +133,7 @@ fun CarbonDetailScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 32.sp,
                         letterSpacing = (-0.5).sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
 
@@ -146,7 +145,7 @@ fun CarbonDetailScreen(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.70f)
+                        color = DetailTextSecondary
                     )
                 )
             }
@@ -163,7 +162,7 @@ fun CarbonDetailScreen(
                     fontFamily = JakartaFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp,
-                    color = Color.White
+                    color = DetailTextPrimary
                 ),
                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)
             )
@@ -203,7 +202,7 @@ fun CarbonDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(20.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(18.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -213,7 +212,7 @@ fun CarbonDetailScreen(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
 
@@ -224,7 +223,7 @@ fun CarbonDetailScreen(
                         fontWeight = FontWeight.Normal,
                         fontSize = 12.5.sp,
                         lineHeight = 18.sp,
-                        color = Color.White.copy(alpha = 0.75f)
+                        color = DetailTextSecondary
                     )
                 )
             }
@@ -235,7 +234,7 @@ fun CarbonDetailScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(18.dp))
-                .background(diurnal.frostedCardBackground)
+                .background(DetailCardSurface)
                 .padding(16.dp)
         ) {
             Row(
@@ -250,7 +249,7 @@ fun CarbonDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 11.5.sp,
-                            color = Color.White.copy(alpha = 0.60f)
+                            color = DetailTextMuted
                         )
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -268,7 +267,7 @@ fun CarbonDetailScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.12f))
+                        .background(DetailCardSurfaceElevated)
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -277,7 +276,7 @@ fun CarbonDetailScreen(
                             fontFamily = JakartaFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 11.sp,
-                            color = Color.White.copy(alpha = 0.85f)
+                            color = DetailTextSecondary
                         )
                     )
                 }
@@ -294,11 +293,10 @@ private fun EquivalenceCard(
     description: String,
     modifier: Modifier = Modifier,
 ) {
-    val diurnal = LocalDiurnalColors.current
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(18.dp))
-            .background(diurnal.frostedCardBackground)
+            .background(DetailCardSurface)
             .padding(14.dp)
     ) {
         Column {
@@ -308,7 +306,7 @@ private fun EquivalenceCard(
                     fontFamily = JakartaFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
-                    color = Color.White.copy(alpha = 0.65f)
+                    color = DetailTextSecondary
                 )
             )
 
@@ -321,7 +319,7 @@ private fun EquivalenceCard(
                         fontFamily = JakartaFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
-                        color = Color.White
+                        color = DetailTextPrimary
                     )
                 )
                 Spacer(modifier = Modifier.width(4.dp))
@@ -346,9 +344,11 @@ private fun EquivalenceCard(
                     fontWeight = FontWeight.Normal,
                     fontSize = 11.sp,
                     lineHeight = 15.sp,
-                    color = Color.White.copy(alpha = 0.55f)
+                    color = DetailTextMuted
                 )
             )
         }
     }
 }
+
+

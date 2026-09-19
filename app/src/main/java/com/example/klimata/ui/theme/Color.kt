@@ -144,4 +144,19 @@ fun glassBorderBrush(): Brush = Brush.verticalGradient(
 
 fun darkGlassBorderBrush(): Brush = Brush.verticalGradient(
     colors = listOf(Color(0x66475569), Color(0x1A1E293B))
-)
+)
+
+// Minimalist Dark Detail Tokens
+val DetailBlackBackground = Color(0xFF000000)
+val DetailCardSurface = Color(0xFF1C1C1E)
+val DetailCardSurfaceElevated = Color(0xFF242426)
+val DetailCardBorder = Color(0xFF2C2C2E)
+val DetailActiveColumnHighlight = Color(0xFF28282B)
+val DetailCurveAmbient = Color(0xFF38BDF8)
+val DetailCurveSetpoint = Color(0xFF34D399)
+val DetailCurveSetpointMint = Color(0xFF34D399)
+val DetailTextPrimary = Color(0xFFFFFFFF)
+val DetailTextSecondary = Color(0xFF9E9EA5)
+val DetailTextMuted = Color(0xFF636366)
+val DetailIconTint = Color(0xFFD1D1D6)
+

@@ -57,6 +57,8 @@ fun KlimataNavGraph(
         mutableStateOf(initialPhase ?: currentDiurnalPhase())
     }
 
+    var rooms by remember { mutableStateOf(MockData.rooms) }
+
     KlimataTheme(phase = selectedPhase) {
         val diurnal = LocalDiurnalColors.current
 
@@ -81,6 +83,12 @@ fun KlimataNavGraph(
                 ) {
                     KlimataScreen(
                         initialPhase = selectedPhase,
+                        rooms = rooms,
+                        onEcoFlowToggle = { roomId, isEnabled ->
+                            rooms = rooms.map {
+                                if (it.id == roomId) it.copy(isEcoFlowEnabled = isEnabled) else it
+                            }
+                        },
                         onScheduleClick = { roomId ->
                             navController.navigate(Screen.ScheduleDetail.createRoute(roomId))
                         },
@@ -116,7 +124,7 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = MockData.rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
+                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
                     ScheduleDetailScreen(
                         room = room,
                         onBackClick = { navController.popBackStack() }
@@ -146,7 +154,7 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = MockData.rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
+                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
                     SavingsDetailScreen(
                         room = room,
                         onBackClick = { navController.popBackStack() }
@@ -176,7 +184,7 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = MockData.rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
+                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
                     CarbonDetailScreen(
                         room = room,
                         onBackClick = { navController.popBackStack() }
