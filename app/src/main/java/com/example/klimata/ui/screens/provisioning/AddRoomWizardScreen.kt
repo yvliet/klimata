@@ -318,9 +318,7 @@ fun AddRoomWizardScreen(
             tempPhotoUri = uri
             cameraLauncher.launch(uri)
         } catch (e: Exception) {
-            try {
-                galleryLauncher.launch("image/*")
-            } catch (ignored: Exception) {}
+            android.util.Log.e("AddRoomWizard", "Failed to launch camera via FileProvider", e)
         }
     }
 
@@ -330,9 +328,7 @@ fun AddRoomWizardScreen(
         if (isGranted) {
             launchHighResCamera()
         } else {
-            try {
-                galleryLauncher.launch("image/*")
-            } catch (ignored: Exception) {}
+            android.util.Log.w("AddRoomWizard", "Camera permission denied")
         }
     }
 
@@ -1076,13 +1072,7 @@ fun AddRoomWizardScreen(
                                                     ) == PackageManager.PERMISSION_GRANTED
 
                                                     if (hasCameraPermission) {
-                                                        try {
-                                                            cameraLauncher.launch(null)
-                                                        } catch (e: Exception) {
-                                                            try {
-                                                                galleryLauncher.launch("image/*")
-                                                            } catch (ignored: Exception) {}
-                                                        }
+                                                        launchHighResCamera()
                                                     } else {
                                                         cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                                                     }

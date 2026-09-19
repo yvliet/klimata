@@ -32,7 +32,6 @@ import com.example.klimata.ui.KlimataScreen
 import com.example.klimata.ui.screens.CarbonDetailScreen
 import com.example.klimata.ui.screens.RoomThermalDetailScreen
 import com.example.klimata.ui.screens.SavingsDetailScreen
-import android.widget.Toast
 import com.example.klimata.data.ir.IrBlasterService
 import com.example.klimata.ui.screens.ScheduleDetailScreen
 import com.example.klimata.ui.screens.provisioning.AddRoomWizardScreen
@@ -176,11 +175,6 @@ fun KlimataNavGraph(
                                     mode = target.profile.mode,
                                     isEco = target.isEcoEnabled
                                 )
-                                Toast.makeText(
-                                    context,
-                                    "IR Sent: ${target.profile.brand} Power ${if (isPowerOn) "ON" else "OFF"}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
                         },
                         onEcoToggle = { roomId, isEnabled ->
@@ -196,11 +190,6 @@ fun KlimataNavGraph(
                                     mode = target.profile.mode,
                                     isEco = isEnabled
                                 )
-                                Toast.makeText(
-                                    context,
-                                    "IR Sent: ${target.profile.brand} Eco ${if (isEnabled) "ON" else "OFF"}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
                         },
                         onTempChange = { roomId, setpoint ->
@@ -229,11 +218,6 @@ fun KlimataNavGraph(
                                     mode = target.profile.mode,
                                     isEco = target.isEcoEnabled
                                 )
-                                Toast.makeText(
-                                    context,
-                                    "IR Sent: ${target.profile.brand} $setpoint°C",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
                         },
                         onModeChange = { roomId, mode ->
@@ -253,11 +237,6 @@ fun KlimataNavGraph(
                                     mode = mode,
                                     isEco = target.isEcoEnabled
                                 )
-                                Toast.makeText(
-                                    context,
-                                    "IR Sent: ${target.profile.brand} Mode $mode",
-                                    Toast.LENGTH_SHORT
-                                ).show()
                             }
                         },
                         onScheduleClick = { roomId ->
