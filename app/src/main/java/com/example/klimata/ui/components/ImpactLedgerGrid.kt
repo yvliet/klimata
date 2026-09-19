@@ -9,11 +9,13 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -23,6 +25,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,6 +68,7 @@ fun ImpactLedgerGrid(
             title = savings.title.ifEmpty { "Monthly Savings" },
             primaryValue = savings.primaryValue.ifEmpty { "Rp 84.500" },
             badgeText = "-38% kWh",
+            progressFraction = 0.38f,
             icon = safeCurrencyDollarIcon(),
             accentColor = com.example.klimata.ui.theme.MineralMintActive,
             onClick = onSavingsClick,
@@ -72,8 +79,9 @@ fun ImpactLedgerGrid(
             title = carbon.title.ifEmpty { "Avoided Carbon" },
             primaryValue = carbon.primaryValue.ifEmpty { "34.2 kg" },
             badgeText = "1.4 Trees eq.",
+            progressFraction = 0.48f,
             icon = safeLeafIcon(),
-            accentColor = Color.White,
+            accentColor = Color(0xFF6EE7B7),
             onClick = onCarbonClick,
             modifier = Modifier.weight(1f)
         )
@@ -85,6 +93,7 @@ private fun FrostedMetricCard(
     title: String,
     primaryValue: String,
     badgeText: String,
+    progressFraction: Float,
     icon: ImageVector,
     accentColor: Color,
     onClick: () -> Unit = {},
@@ -100,6 +109,13 @@ private fun FrostedMetricCard(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
             .background(diurnal.frostedCardBackground)
             .clickable(onClick = onClick)
             .padding(18.dp)
@@ -109,71 +125,119 @@ private fun FrostedMetricCard(
             animationSpec = tween(220),
             label = "FrostedMetricCardCrossfade"
         ) { (curTitle, curVal, curBadge) ->
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = curTitle,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.60f)
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(3.dp))
+
+                    Text(
+                        text = curVal,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 19.sp,
+                            letterSpacing = (-0.3).sp,
+                            color = Color.White
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(accentColor.copy(alpha = 0.18f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = accentColor,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(accentColor.copy(alpha = 0.18f))
-                            .padding(horizontal = 7.dp, vertical = 3.dp)
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(accentColor.copy(alpha = 0.16f))
+                            .padding(horizontal = 6.dp, vertical = 3.dp)
                     ) {
                         Text(
                             text = curBadge,
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.5.sp,
                                 color = accentColor
                             )
                         )
                     }
+
+                    MetricArcGauge(
+                        progress = progressFraction,
+                        accentColor = accentColor,
+                        icon = icon,
+                        modifier = Modifier.size(44.dp)
+                    )
                 }
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(14.dp))
+@Composable
+private fun MetricArcGauge(
+    progress: Float,
+    accentColor: Color,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val strokeWidth = 3.5.dp.toPx()
+            val diameter = size.minDimension - strokeWidth
+            val arcSize = Size(diameter, diameter)
+            val topLeft = Offset(strokeWidth / 2f, strokeWidth / 2f)
+            val startAngle = 135f
+            val totalSweep = 270f
 
-                Text(
-                    text = curVal,
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 19.sp,
-                        letterSpacing = (-0.3).sp,
-                        color = Color.White
-                    )
-                )
+            drawArc(
+                color = Color.White.copy(alpha = 0.14f),
+                startAngle = startAngle,
+                sweepAngle = totalSweep,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
 
-                Spacer(modifier = Modifier.height(3.dp))
-
-                Text(
-                    text = curTitle,
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.70f)
-                    )
+            if (progress > 0f) {
+                drawArc(
+                    color = accentColor,
+                    startAngle = startAngle,
+                    sweepAngle = totalSweep * progress.coerceIn(0f, 1f),
+                    useCenter = false,
+                    topLeft = topLeft,
+                    size = arcSize,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                 )
             }
         }
+
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = accentColor,
+            modifier = Modifier.size(14.dp)
+        )
     }
 }
 

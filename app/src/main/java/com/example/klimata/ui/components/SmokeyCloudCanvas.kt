@@ -26,8 +26,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -144,7 +144,10 @@ fun AtmosphericSkyCanvas(
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .blur(radius = (cloudBlurProgress * 8f).dp)
+                .graphicsLayer {
+                    val blurPx = cloudBlurProgress * 14.dp.toPx()
+                    renderEffect = if (blurPx > 0.5f) BlurEffect(blurPx, blurPx) else null
+                }
         ) {
             val width = size.width
             val height = size.height
@@ -187,7 +190,7 @@ fun AtmosphericSkyCanvas(
             }
         }
 
-        val cloudHeight = 680.dp
+        val cloudHeight = 740.dp
 
         Canvas(
             modifier = Modifier
@@ -195,8 +198,10 @@ fun AtmosphericSkyCanvas(
                 .height(cloudHeight)
                 .align(Alignment.TopStart)
                 .graphicsLayer {
-                    translationY = -animatedScroll * 0.10f
+                    translationY = -60.dp.toPx() - animatedScroll * 0.10f
                     alpha = (targetCloudAlpha - cloudBlurProgress * 0.20f).coerceAtLeast(0.0f)
+                    val blurPx = cloudBlurProgress * 14.dp.toPx()
+                    renderEffect = if (blurPx > 0.5f) BlurEffect(blurPx, blurPx) else null
                 }
         ) {
             val w = size.width
@@ -269,6 +274,9 @@ fun CloudForegroundVeil(
             val scroll = scrollOffsetProvider()
             val scrollFade = (1f - scroll / 160f).coerceIn(0f, 1f)
             alpha = scrollFade
+            val blurProgress = (scroll / 260f).coerceIn(0f, 1f)
+            val blurPx = blurProgress * 14.dp.toPx()
+            renderEffect = if (blurPx > 0.5f) BlurEffect(blurPx, blurPx) else null
         }
     ) {
         val progress = frontDriftProgress.value

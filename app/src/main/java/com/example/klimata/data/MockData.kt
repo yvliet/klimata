@@ -1,6 +1,7 @@
 package com.example.klimata.data
 
 import androidx.compose.runtime.Immutable
+import kotlin.math.roundToInt
 
 @Immutable
 data class AmbientWeather(
@@ -102,7 +103,14 @@ data class RoomState(
     val carbonHistory: TimeBucketedImpact,
     val savingsBreakdown: SavingsBreakdown,
     val carbonEquivalence: CarbonEquivalence,
+    val areaSquareMeters: Int = 20,
+    val ceilingHeightMeters: Float = 2.8f,
+    val thermalMassLabel: String = "Medium Thermal Mass",
+    val coolingLoadBtu: Int = 7000,
 )
+
+val RoomState.volumeCubicMeters: Int
+    get() = (areaSquareMeters * ceilingHeightMeters).roundToInt()
 
 object MockData {
 
@@ -231,6 +239,10 @@ object MockData {
             ledHoursEquivalent = 57.2f,
             gridEmissionFactor = 0.78f,
         ),
+        areaSquareMeters = 20,
+        ceilingHeightMeters = 2.8f,
+        thermalMassLabel = "Medium Thermal Mass",
+        coolingLoadBtu = 7000,
     )
 
     val livingRoom = RoomState(
@@ -332,6 +344,10 @@ object MockData {
             ledHoursEquivalent = 81.0f,
             gridEmissionFactor = 0.78f,
         ),
+        areaSquareMeters = 35,
+        ceilingHeightMeters = 3.0f,
+        thermalMassLabel = "High Thermal Inertia",
+        coolingLoadBtu = 15000,
     )
 
     val studyRoom = RoomState(
@@ -433,6 +449,10 @@ object MockData {
             ledHoursEquivalent = 30.6f,
             gridEmissionFactor = 0.78f,
         ),
+        areaSquareMeters = 14,
+        ceilingHeightMeters = 2.7f,
+        thermalMassLabel = "Low Thermal Mass",
+        coolingLoadBtu = 4800,
     )
 
     val rooms: List<RoomState> = listOf(masterBedRoom, livingRoom, studyRoom)

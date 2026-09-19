@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,10 +39,10 @@ import com.example.klimata.data.MockData
 import com.example.klimata.ui.components.ACControlPanel
 import com.example.klimata.ui.components.AmbientTopBarActions
 import com.example.klimata.ui.components.AtmosphericSkyCanvas
-import com.example.klimata.ui.components.CloudForegroundVeil
 import com.example.klimata.ui.components.HeroTemperatureDisplay
 import com.example.klimata.ui.components.ImpactLedgerGrid
 import com.example.klimata.ui.components.RoomIndicator
+import com.example.klimata.ui.components.RoomThermalVisualizerCard
 import com.example.klimata.ui.components.ScheduleChart
 import com.example.klimata.ui.theme.DiurnalPhase
 import com.example.klimata.ui.theme.JakartaFamily
@@ -209,6 +210,8 @@ fun KlimataScreen(
                                 val heroProgress = (scrollOffset / 200f).coerceIn(0f, 1f)
                                 alpha = (1f - heroProgress * 0.85f).coerceIn(0f, 1f)
                                 translationY = -scrollOffset * 0.20f
+                                val blurPx = heroProgress * 14.dp.toPx()
+                                renderEffect = if (blurPx > 0.5f) BlurEffect(blurPx, blurPx) else null
                             }
                     ) {
                         HeroTemperatureDisplay(
@@ -221,19 +224,6 @@ fun KlimataScreen(
                             tempScale = animatedTempScale,
                             tempAlpha = animatedTempAlpha,
                             modifier = Modifier.padding(horizontal = 24.dp)
-                        )
-
-                        CloudForegroundVeil(
-                            scrollOffsetProvider = { scrollState.value.toFloat() },
-                            phase = selectedPhase,
-                            weatherCondition = effectiveCondition,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                                .align(Alignment.TopStart)
-                                .graphicsLayer {
-                                    translationY = 8.dp.toPx()
-                                }
                         )
                     }
 
@@ -269,6 +259,11 @@ fun KlimataScreen(
                         ACControlPanel(
                             profile = room.profile,
                             dispatch = room.dispatchState,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        RoomThermalVisualizerCard(
+                            room = room,
                             modifier = Modifier.fillMaxWidth()
                         )
 

@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -82,6 +83,13 @@ fun ACControlPanel(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
             .background(diurnal.frostedCardBackground)
             .padding(18.dp),
     ) {
@@ -106,7 +114,7 @@ fun ACControlPanel(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.Normal,
                                 fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.65f)
+                                color = Color.White.copy(alpha = 0.60f)
                             )
                         )
 

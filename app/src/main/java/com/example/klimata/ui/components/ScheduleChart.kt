@@ -99,6 +99,13 @@ fun ScheduleChart(
                 )
             )
             .clip(RoundedCornerShape(24.dp))
+            .border(
+                width = 1.dp,
+                brush = Brush.verticalGradient(
+                    listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                ),
+                shape = RoundedCornerShape(24.dp)
+            )
             .background(diurnal.frostedCardBackground)
             .clickable(onClick = onClick)
             .padding(18.dp)
@@ -113,35 +120,34 @@ fun ScheduleChart(
                     text = "Tonight's Schedule",
                     style = TextStyle(
                         fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = Color.White
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        color = Color.White.copy(alpha = 0.60f)
                     )
                 )
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
-                ) {
-                    Text(
-                        text = "Stepped Drift",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.60f)
-                        )
-                    )
-                    Icon(
-                        imageVector = safeCaretRightIcon(),
-                        contentDescription = "Open schedule details",
-                        tint = Color.White.copy(alpha = 0.50f),
-                        modifier = Modifier.size(12.dp)
-                    )
-                }
+                Icon(
+                    imageVector = safeCaretRightIcon(),
+                    contentDescription = "Open schedule details",
+                    tint = Color.White.copy(alpha = 0.50f),
+                    modifier = Modifier.size(14.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = "Stepped Drift",
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    letterSpacing = (-0.3).sp
+                )
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
 
             val chartHeight = 84.dp
             BoxWithConstraints(
