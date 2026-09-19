@@ -20,12 +20,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,11 +51,13 @@ import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.CaretRight
 import com.adamglin.phosphoricons.light.Fan
+import com.adamglin.phosphoricons.light.Leaf
 import com.example.klimata.data.MockData
 import com.example.klimata.data.ThermalStep
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.KlimataTheme
 import com.example.klimata.ui.theme.LocalDiurnalColors
+import com.example.klimata.ui.theme.MineralMintActive
 import kotlin.math.roundToInt
 
 /**
@@ -73,6 +78,14 @@ fun ScheduleChart(
     val colWidth = 64.dp
     val totalWidth = colWidth * count
     val scrollState = rememberScrollState()
+    var showEcoInfoDialog by remember { mutableStateOf(false) }
+
+    if (showEcoInfoDialog) {
+        EcoFlowInfoDialog(
+            isEcoFlowEnabled = isEcoFlowEnabled,
+            onDismissRequest = { showEcoInfoDialog = false }
+        )
+    }
 
     val color1 by animateColorAsState(
         targetValue = if (isEcoFlowEnabled) Color(0xFF60A5FA) else Color.White.copy(alpha = 0.22f),
@@ -186,17 +199,47 @@ fun ScheduleChart(
 
             Spacer(modifier = Modifier.height(3.dp))
 
-            Text(
-                text = "Stepped Drift",
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    color = Color.White,
-                    letterSpacing = (-0.3).sp
-                ),
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(horizontal = 18.dp)
-            )
+            ) {
+                Text(
+                    text = "Stepped Drift",
+                    style = TextStyle(
+                        fontFamily = JakartaFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        letterSpacing = (-0.3).sp
+                    )
+                )
+
+                val leafColor by animateColorAsState(
+                    targetValue = if (isEcoFlowEnabled) MineralMintActive else Color.White.copy(alpha = 0.35f),
+                    label = "homeLeafIconTint"
+                )
+                val leafBgColor by animateColorAsState(
+                    targetValue = if (isEcoFlowEnabled) MineralMintActive.copy(alpha = 0.15f) else Color.White.copy(alpha = 0.08f),
+                    label = "homeLeafBg"
+                )
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(leafBgColor)
+                        .clickable { showEcoInfoDialog = true }
+                ) {
+                    Icon(
+                        imageVector = PhosphorIcons.Light.Leaf,
+                        contentDescription = "Eco Flow info",
+                        tint = leafColor,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(10.dp))
 

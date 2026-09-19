@@ -6,6 +6,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,12 +21,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +52,7 @@ import com.adamglin.phosphoricons.Light
 import com.adamglin.phosphoricons.light.CaretDown
 import com.adamglin.phosphoricons.light.CaretUp
 import com.adamglin.phosphoricons.light.Fan
+import com.adamglin.phosphoricons.light.Leaf
 import com.adamglin.phosphoricons.light.Moon
 import com.adamglin.phosphoricons.light.Thermometer
 import com.adamglin.phosphoricons.light.Wind
@@ -55,6 +60,7 @@ import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.data.ThermalStep
 import com.example.klimata.ui.components.DetailPageScaffold
+import com.example.klimata.ui.components.EcoFlowInfoDialog
 import com.example.klimata.ui.theme.DetailActiveColumnHighlight
 import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCurveAmbient
@@ -71,10 +77,45 @@ fun ScheduleDetailScreen(
     room: RoomState = MockData.masterBedRoom,
     onBackClick: () -> Unit = {},
 ) {
+    var showEcoInfoDialog by remember { mutableStateOf(false) }
+
+    if (showEcoInfoDialog) {
+        EcoFlowInfoDialog(
+            isEcoFlowEnabled = room.isEcoFlowEnabled,
+            onDismissRequest = { showEcoInfoDialog = false }
+        )
+    }
+
+    val leafColor by animateColorAsState(
+        targetValue = if (room.isEcoFlowEnabled) MineralMintActive else DetailTextSecondary.copy(alpha = 0.40f),
+        label = "detailLeafIconTint"
+    )
+    val leafBgColor by animateColorAsState(
+        targetValue = if (room.isEcoFlowEnabled) MineralMintActive.copy(alpha = 0.15f) else DetailCardSurface,
+        label = "detailLeafBg"
+    )
+
     DetailPageScaffold(
         title = "Tonight's Schedule",
         subtitle = "${room.name} • ${if (room.isEcoFlowEnabled) "Adaptive Thermal Drift" else "Eco Flow Off"}",
         onBackClick = onBackClick,
+        trailingContent = {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(leafBgColor)
+                    .clickable { showEcoInfoDialog = true }
+            ) {
+                Icon(
+                    imageVector = PhosphorIcons.Light.Leaf,
+                    contentDescription = "Eco Flow info",
+                    tint = leafColor,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     ) {
         MinimalistThermalForecastCard(
             steps = room.thermalSteps,
