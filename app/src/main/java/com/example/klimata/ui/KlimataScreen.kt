@@ -27,6 +27,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,21 +98,31 @@ fun KlimataScreen(
     var scrollJob by remember { mutableStateOf<Job?>(null) }
 
     // Real-time drag progress towards the 50% midpoint tipping line
-    val dragOffsetFraction = abs(pagerState.currentPageOffsetFraction)
-    val isDraggingPager = pagerState.isScrollInProgress || dragOffsetFraction > 0.005f
-    val dragTransitionProgress = (dragOffsetFraction / 0.5f).coerceIn(0f, 1f)
-
-    // Subtle 25% shrink combined with steep quadratic fade to invisibility by midpoint
-    val targetTempScale = if (isDraggingPager) {
-        (1f - dragTransitionProgress * 0.25f).coerceIn(0.75f, 1f)
-    } else {
-        1f
+    // Wrapped in derivedStateOf to prevent full screen recompositions on subpixel drag deltas
+    val targetTempScale by remember {
+        derivedStateOf {
+            val dragOffsetFraction = abs(pagerState.currentPageOffsetFraction)
+            val isDraggingPager = pagerState.isScrollInProgress || dragOffsetFraction > 0.005f
+            val dragTransitionProgress = (dragOffsetFraction / 0.5f).coerceIn(0f, 1f)
+            if (isDraggingPager) {
+                (1f - dragTransitionProgress * 0.25f).coerceIn(0.75f, 1f)
+            } else {
+                1f
+            }
+        }
     }
-    val targetTempAlpha = if (isDraggingPager) {
-        val remaining = (1f - dragTransitionProgress).coerceIn(0f, 1f)
-        remaining * remaining
-    } else {
-        1f
+    val targetTempAlpha by remember {
+        derivedStateOf {
+            val dragOffsetFraction = abs(pagerState.currentPageOffsetFraction)
+            val isDraggingPager = pagerState.isScrollInProgress || dragOffsetFraction > 0.005f
+            val dragTransitionProgress = (dragOffsetFraction / 0.5f).coerceIn(0f, 1f)
+            if (isDraggingPager) {
+                val remaining = (1f - dragTransitionProgress).coerceIn(0f, 1f)
+                remaining * remaining
+            } else {
+                1f
+            }
+        }
     }
 
     val animatedTempScale by animateFloatAsState(

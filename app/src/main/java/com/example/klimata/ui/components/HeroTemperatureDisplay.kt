@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -47,22 +48,24 @@ fun HeroTemperatureDisplay(
     tempScale: Float = 1f,
     tempAlpha: Float = 1f,
 ) {
-    val reflectionGradient = when (phase) {
-        DiurnalPhase.DAY -> Brush.verticalGradient(
-            0.0f to Color.White,
-            0.45f to Color(0xFFF0F7FF),
-            1.0f to Color(0xFF8AC5F8),
-        )
-        DiurnalPhase.EVENING -> Brush.verticalGradient(
-            0.0f to Color.White,
-            0.50f to Color(0xFFFFF8F0),
-            1.0f to Color(0xFFFFB74D),
-        )
-        DiurnalPhase.NIGHT -> Brush.verticalGradient(
-            0.0f to Color.White,
-            0.50f to Color(0xFFF1F5F9),
-            1.0f to Color(0xFFA5B4FC),
-        )
+    val reflectionGradient = remember(phase) {
+        when (phase) {
+            DiurnalPhase.DAY -> Brush.verticalGradient(
+                0.0f to Color.White,
+                0.45f to Color(0xFFF0F7FF),
+                1.0f to Color(0xFF8AC5F8),
+            )
+            DiurnalPhase.EVENING -> Brush.verticalGradient(
+                0.0f to Color.White,
+                0.50f to Color(0xFFFFF8F0),
+                1.0f to Color(0xFFFFB74D),
+            )
+            DiurnalPhase.NIGHT -> Brush.verticalGradient(
+                0.0f to Color.White,
+                0.50f to Color(0xFFF1F5F9),
+                1.0f to Color(0xFFA5B4FC),
+            )
+        }
     }
 
     Crossfade(

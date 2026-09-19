@@ -277,24 +277,18 @@ fun ScheduleChart(
                         val bottomMargin = with(density) { 14.dp.toPx() }
                         val usableHeight = heightPx - topMargin - bottomMargin
 
-                        val targetYList = steps.map { step ->
-                            if (step.setpointCelsius > 0) {
-                                val norm = ((step.setpointCelsius - 23f) / 4f).coerceIn(0.05f, 0.95f)
-                                topMargin + usableHeight * (1.0f - norm * 0.75f)
-                            } else {
-                                topMargin + usableHeight * 0.12f
+                        val points = remember(steps, colCenters, usableHeight, topMargin) {
+                            colCenters.mapIndexed { idx, cx ->
+                                val step = steps[idx]
+                                val y = if (step.setpointCelsius > 0) {
+                                    val norm = ((step.setpointCelsius - 23f) / 4f).coerceIn(0.05f, 0.95f)
+                                    topMargin + usableHeight * (1.0f - norm * 0.75f)
+                                } else {
+                                    topMargin + usableHeight * 0.12f
+                                }
+                                Offset(cx, y)
                             }
                         }
-
-                        val animYList = targetYList.mapIndexed { idx, target ->
-                            animateFloatAsState(
-                                targetValue = target,
-                                animationSpec = spring(dampingRatio = 0.82f, stiffness = Spring.StiffnessMediumLow),
-                                label = "animHomeY$idx"
-                            ).value
-                        }
-
-                        val points = colCenters.zip(animYList) { x, y -> Offset(x, y) }
 
                         val curvePath = remember { Path() }
                         val fillPath = remember { Path() }
@@ -381,53 +375,55 @@ fun ScheduleChart(
                         points.forEachIndexed { index, point ->
                             val step = steps.getOrNull(index) ?: return@forEachIndexed
                             val isFanOnly = step.setpointCelsius == 0
-                            Box(
-                                modifier = Modifier
-                                    .width(colWidth)
-                                    .layout { measurable, constraints ->
-                                        val placeable = measurable.measure(constraints)
-                                        layout(placeable.width, placeable.height) {
-                                            val posX = (point.x - placeable.width / 2f).roundToInt()
-                                            val posY = (point.y - placeable.height - 6.dp.toPx()).roundToInt()
-                                            placeable.placeRelative(posX, posY)
+                            androidx.compose.runtime.key(step.time) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(colWidth)
+                                        .layout { measurable, constraints ->
+                                            val placeable = measurable.measure(constraints)
+                                            layout(placeable.width, placeable.height) {
+                                                val posX = (point.x - placeable.width / 2f).roundToInt()
+                                                val posY = (point.y - placeable.height - 6.dp.toPx()).roundToInt()
+                                                placeable.placeRelative(posX, posY)
+                                            }
                                         }
-                                    }
-                            ) {
-                                if (isFanOnly) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Icon(
-                                            imageVector = PhosphorIcons.Light.Fan,
-                                            contentDescription = "Fan Only",
-                                            tint = Color.White.copy(alpha = tempLabelAlpha),
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(2.dp))
+                                ) {
+                                    if (isFanOnly) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Icon(
+                                                imageVector = PhosphorIcons.Light.Fan,
+                                                contentDescription = "Fan Only",
+                                                tint = Color.White.copy(alpha = tempLabelAlpha),
+                                                modifier = Modifier.size(12.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(2.dp))
+                                            Text(
+                                                text = "Fan",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 11.5.sp,
+                                                    color = Color.White.copy(alpha = tempLabelAlpha)
+                                                )
+                                            )
+                                        }
+                                    } else {
                                         Text(
-                                            text = "Fan",
+                                            text = "${step.setpointCelsius}°",
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
                                                 fontWeight = FontWeight.SemiBold,
-                                                fontSize = 11.5.sp,
-                                                color = Color.White.copy(alpha = tempLabelAlpha)
-                                            )
+                                                fontSize = 13.sp,
+                                                color = Color.White.copy(alpha = tempLabelAlpha),
+                                                textAlign = TextAlign.Center
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
                                         )
                                     }
-                                } else {
-                                    Text(
-                                        text = "${step.setpointCelsius}°",
-                                        style = TextStyle(
-                                            fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.sp,
-                                            color = Color.White.copy(alpha = tempLabelAlpha),
-                                            textAlign = TextAlign.Center
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
                                 }
                             }
                         }
@@ -439,33 +435,35 @@ fun ScheduleChart(
                     Row(modifier = Modifier.width(totalWidth)) {
                         steps.forEachIndexed { index, step ->
                             val isActive = index == activeIndex
-                            Column(
-                                modifier = Modifier.width(colWidth),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = step.time,
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-                                        fontSize = 12.sp,
-                                        color = Color.White.copy(alpha = if (isActive) activeTimeLabelAlpha else timeLabelAlpha),
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = step.label,
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.Normal,
-                                        fontSize = 11.sp,
-                                        color = if (step.setpointCelsius == 0) coastPhaseLabelColor else Color.White.copy(alpha = phaseLabelAlpha),
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                            androidx.compose.runtime.key(step.time) {
+                                Column(
+                                    modifier = Modifier.width(colWidth),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = step.time,
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                                            fontSize = 12.sp,
+                                            color = Color.White.copy(alpha = if (isActive) activeTimeLabelAlpha else timeLabelAlpha),
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = step.label,
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 11.sp,
+                                            color = if (step.setpointCelsius == 0) coastPhaseLabelColor else Color.White.copy(alpha = phaseLabelAlpha),
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
                     }

@@ -2,7 +2,6 @@ package com.example.klimata.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,16 +18,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -51,6 +49,18 @@ import com.example.klimata.ui.theme.LocalDiurnalColors
 import kotlin.math.cos
 import kotlin.math.sin
 
+private val SavingsGradients = listOf(
+    Color(0xFF6EE7B7),
+    Color(0xFF34D399),
+    Color(0xFF10B981)
+)
+
+private val CarbonGradients = listOf(
+    Color(0xFF6EE7B7),
+    Color(0xFF2DD4BF),
+    Color(0xFF0EA5E9)
+)
+
 /**
  * Dual metric summary cards displaying estimated billing reductions and avoided emissions
  * with circular arc gauges and milestone indicators.
@@ -64,14 +74,17 @@ fun ImpactLedgerGrid(
     onCarbonClick: () -> Unit = {},
 ) {
     // 1 Tree absorbs ~22.0 kg CO2 / year baseline (EPA / Forestry standard)
-    val carbonValueNumeric = carbon.primaryValue
-        .filter { it.isDigit() || it == '.' }
-        .toFloatOrNull() ?: 34.2f
-    val treeEquivKg = 22.0f
-    val currentTreeRemainder = carbonValueNumeric % treeEquivKg
-    val nextTreeRemaining = (treeEquivKg - currentTreeRemainder).coerceAtLeast(0.1f)
-    val carbonProgress = (currentTreeRemainder / treeEquivKg).coerceIn(0.08f, 1.0f)
-    val carbonSubtitle = String.format(java.util.Locale.US, "%.1f kg to next tree", nextTreeRemaining)
+    val (carbonProgress, carbonSubtitle) = remember(carbon.primaryValue) {
+        val carbonValueNumeric = carbon.primaryValue
+            .filter { it.isDigit() || it == '.' }
+            .toFloatOrNull() ?: 34.2f
+        val treeEquivKg = 22.0f
+        val currentTreeRemainder = carbonValueNumeric % treeEquivKg
+        val nextTreeRemaining = (treeEquivKg - currentTreeRemainder).coerceAtLeast(0.1f)
+        val progress = (currentTreeRemainder / treeEquivKg).coerceIn(0.08f, 1.0f)
+        val subtitle = String.format(java.util.Locale.US, "%.1f kg to next tree", nextTreeRemaining)
+        Pair(progress, subtitle)
+    }
 
     val savingsSubtitle = "Rp 15.5k to goal"
     val savingsProgress = 0.845f
@@ -88,11 +101,7 @@ fun ImpactLedgerGrid(
             subtitle = savingsSubtitle,
             progressFraction = savingsProgress,
             centerIcon = PhosphorIcons.Light.CurrencyDollar,
-            gradientColors = listOf(
-                Color(0xFF6EE7B7),
-                Color(0xFF34D399),
-                Color(0xFF10B981)
-            ),
+            gradientColors = SavingsGradients,
             iconTint = Color(0xFF34D399),
             onClick = onSavingsClick,
             modifier = Modifier
@@ -106,11 +115,7 @@ fun ImpactLedgerGrid(
             subtitle = carbonSubtitle,
             progressFraction = carbonProgress,
             centerIcon = PhosphorIcons.Light.Tree,
-            gradientColors = listOf(
-                Color(0xFF6EE7B7),
-                Color(0xFF2DD4BF),
-                Color(0xFF0EA5E9)
-            ),
+            gradientColors = CarbonGradients,
             iconTint = Color(0xFF2DD4BF),
             onClick = onCarbonClick,
             modifier = Modifier

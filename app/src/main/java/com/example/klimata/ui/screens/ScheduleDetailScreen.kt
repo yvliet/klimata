@@ -294,36 +294,24 @@ private fun MinimalistThermalForecastCard(
                         val ambientMax = (steps.maxOfOrNull { it.outdoorTemp } ?: 30).toFloat()
                         val ambientSpan = (ambientMax - ambientMin).coerceAtLeast(1f)
 
-                        val targetUpperY = steps.map { step ->
-                            val norm = 1f - ((step.outdoorTemp - ambientMin) / ambientSpan).coerceIn(0f, 1f)
-                            with(density) { 28.dp.toPx() } + norm * with(density) { 38.dp.toPx() }
+                        val upperPoints = remember(steps, colCenters, ambientMin, ambientSpan, density) {
+                            colCenters.mapIndexed { idx, cx ->
+                                val step = steps[idx]
+                                val norm = 1f - ((step.outdoorTemp - ambientMin) / ambientSpan).coerceIn(0f, 1f)
+                                val y = with(density) { 28.dp.toPx() } + norm * with(density) { 38.dp.toPx() }
+                                Offset(cx, y)
+                            }
                         }
 
-                        // Bottom spline target coordinates (AC setpoints: 24° up to 26°/Fan)
-                        val targetLowerY = steps.map { step ->
-                            val setpoint = if (step.setpointCelsius > 0) step.setpointCelsius.toFloat() else 26.5f
-                            val norm = ((setpoint - 24f) / 3f).coerceIn(0f, 1f)
-                            with(density) { 110.dp.toPx() } + norm * with(density) { 36.dp.toPx() }
+                        val lowerPoints = remember(steps, colCenters, density) {
+                            colCenters.mapIndexed { idx, cx ->
+                                val step = steps[idx]
+                                val setpoint = if (step.setpointCelsius > 0) step.setpointCelsius.toFloat() else 26.5f
+                                val norm = ((setpoint - 24f) / 3f).coerceIn(0f, 1f)
+                                val y = with(density) { 110.dp.toPx() } + norm * with(density) { 36.dp.toPx() }
+                                Offset(cx, y)
+                            }
                         }
-
-                        val animUpperY = targetUpperY.mapIndexed { idx, target ->
-                            animateFloatAsState(
-                                targetValue = target,
-                                animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
-                                label = "upperY$idx"
-                            ).value
-                        }
-
-                        val animLowerY = targetLowerY.mapIndexed { idx, target ->
-                            animateFloatAsState(
-                                targetValue = target,
-                                animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
-                                label = "lowerY$idx"
-                            ).value
-                        }
-
-                        val upperPoints = colCenters.zip(animUpperY) { x, y -> Offset(x, y) }
-                        val lowerPoints = colCenters.zip(animLowerY) { x, y -> Offset(x, y) }
 
                         val ambientCurvePath = remember { Path() }
                         val setpointCurvePath = remember { Path() }
@@ -432,29 +420,31 @@ private fun MinimalistThermalForecastCard(
                         // Upper temperature labels positioned above ambient curve
                         upperPoints.forEachIndexed { index, pt ->
                             val step = steps.getOrNull(index) ?: return@forEachIndexed
-                            Box(
-                                modifier = Modifier
-                                    .width(colWidth)
-                                    .layout { measurable, constraints ->
-                                        val placeable = measurable.measure(constraints)
-                                        layout(placeable.width, placeable.height) {
-                                            val posX = (pt.x - placeable.width / 2f).roundToInt()
-                                            val posY = (pt.y - placeable.height - 5.dp.toPx()).roundToInt()
-                                            placeable.placeRelative(posX, posY)
+                            androidx.compose.runtime.key("upper_${step.time}") {
+                                Box(
+                                    modifier = Modifier
+                                        .width(colWidth)
+                                        .layout { measurable, constraints ->
+                                            val placeable = measurable.measure(constraints)
+                                            layout(placeable.width, placeable.height) {
+                                                val posX = (pt.x - placeable.width / 2f).roundToInt()
+                                                val posY = (pt.y - placeable.height - 5.dp.toPx()).roundToInt()
+                                                placeable.placeRelative(posX, posY)
+                                            }
                                         }
-                                    }
-                            ) {
-                                Text(
-                                    text = "${step.outdoorTemp}°",
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        color = DetailTextPrimary,
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                ) {
+                                    Text(
+                                        text = "${step.outdoorTemp}°",
+                                        style = TextStyle(
+                                            fontFamily = JakartaFamily,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            color = DetailTextPrimary,
+                                            textAlign = TextAlign.Center
+                                        ),
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
 
@@ -462,53 +452,55 @@ private fun MinimalistThermalForecastCard(
                         lowerPoints.forEachIndexed { index, pt ->
                             val step = steps.getOrNull(index) ?: return@forEachIndexed
                             val isFanOnly = step.setpointCelsius == 0
-                            Box(
-                                modifier = Modifier
-                                    .width(colWidth)
-                                    .layout { measurable, constraints ->
-                                        val placeable = measurable.measure(constraints)
-                                        layout(placeable.width, placeable.height) {
-                                            val posX = (pt.x - placeable.width / 2f).roundToInt()
-                                            val posY = (pt.y + 6.dp.toPx()).roundToInt()
-                                            placeable.placeRelative(posX, posY)
+                            androidx.compose.runtime.key("lower_${step.time}") {
+                                Box(
+                                    modifier = Modifier
+                                        .width(colWidth)
+                                        .layout { measurable, constraints ->
+                                            val placeable = measurable.measure(constraints)
+                                            layout(placeable.width, placeable.height) {
+                                                val posX = (pt.x - placeable.width / 2f).roundToInt()
+                                                val posY = (pt.y + 6.dp.toPx()).roundToInt()
+                                                placeable.placeRelative(posX, posY)
+                                            }
                                         }
-                                    }
-                            ) {
-                                if (isFanOnly) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Icon(
-                                            imageVector = PhosphorIcons.Light.Fan,
-                                            contentDescription = null,
-                                            tint = fanTagColor,
-                                            modifier = Modifier.size(11.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(2.dp))
+                                ) {
+                                    if (isFanOnly) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Icon(
+                                                imageVector = PhosphorIcons.Light.Fan,
+                                                contentDescription = null,
+                                                tint = fanTagColor,
+                                                modifier = Modifier.size(11.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(2.dp))
+                                            Text(
+                                                text = "Fan",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 11.5.sp,
+                                                    color = fanTagColor
+                                                )
+                                            )
+                                        }
+                                    } else {
                                         Text(
-                                            text = "Fan",
+                                            text = "${step.setpointCelsius}°",
                                             style = TextStyle(
                                                 fontFamily = JakartaFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 11.5.sp,
-                                                color = fanTagColor
-                                            )
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = DetailTextPrimary.copy(alpha = setpointTextAlpha),
+                                                textAlign = TextAlign.Center
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
                                         )
                                     }
-                                } else {
-                                    Text(
-                                        text = "${step.setpointCelsius}°",
-                                        style = TextStyle(
-                                            fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp,
-                                            color = DetailTextPrimary.copy(alpha = setpointTextAlpha),
-                                            textAlign = TextAlign.Center
-                                        ),
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
                                 }
                             }
                         }
@@ -521,62 +513,63 @@ private fun MinimalistThermalForecastCard(
                         steps.forEachIndexed { index, step ->
                             val isActive = index == activeIndex
                             val isFanOnly = step.setpointCelsius == 0
-
-                            Column(
-                                modifier = Modifier.width(colWidth),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                // AC Phase Tag
-                                Text(
-                                    text = step.label,
-                                    style = TextStyle(
-                                        fontFamily = JakartaFamily,
-                                        fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold,
-                                        fontSize = 12.sp,
-                                        color = if (isActive) activePhaseTagColor else DetailTextSecondary.copy(alpha = phaseTagAlpha),
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    maxLines = 1
-                                )
-
-                                Spacer(modifier = Modifier.height(3.dp))
-
-                                // Airflow mode tag
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.Center,
-                                    modifier = Modifier.fillMaxWidth()
+                            androidx.compose.runtime.key("bottom_${step.time}") {
+                                Column(
+                                    modifier = Modifier.width(colWidth),
+                                    horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
-                                    Icon(
-                                        imageVector = when {
-                                             isFanOnly -> PhosphorIcons.Light.Wind
-                                            step.fanMode.contains("High", ignoreCase = true) -> PhosphorIcons.Light.CaretUp
-                                            step.fanMode.contains("Quiet", ignoreCase = true) -> PhosphorIcons.Light.CaretDown
-                                            else -> PhosphorIcons.Light.CaretUp
-                                        },
-                                        contentDescription = null,
-                                        tint = if (isActive) activeAirflowIconTint else DetailTextMuted.copy(alpha = phaseTagAlpha),
-                                        modifier = Modifier.size(10.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(2.dp))
+                                    // AC Phase Tag
                                     Text(
-                                        text = when {
-                                            isFanOnly -> "Coast"
-                                            step.fanMode.contains("High", ignoreCase = true) -> "High"
-                                            step.fanMode.contains("Auto", ignoreCase = true) -> "Auto"
-                                            step.fanMode.contains("Quiet", ignoreCase = true) -> "Quiet"
-                                            else -> step.fanMode
-                                        },
+                                        text = step.label,
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.Normal,
-                                            fontSize = 11.sp,
-                                            color = if (isActive) activeAirflowTextTint else DetailTextMuted.copy(alpha = phaseTagAlpha),
+                                            fontWeight = if (isActive) FontWeight.Bold else FontWeight.SemiBold,
+                                            fontSize = 12.sp,
+                                            color = if (isActive) activePhaseTagColor else DetailTextSecondary.copy(alpha = phaseTagAlpha),
                                             textAlign = TextAlign.Center
                                         ),
+                                        modifier = Modifier.fillMaxWidth(),
                                         maxLines = 1
                                     )
+
+                                    Spacer(modifier = Modifier.height(3.dp))
+
+                                    // Airflow mode tag
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(
+                                            imageVector = when {
+                                                isFanOnly -> PhosphorIcons.Light.Wind
+                                                step.fanMode.contains("High", ignoreCase = true) -> PhosphorIcons.Light.CaretUp
+                                                step.fanMode.contains("Quiet", ignoreCase = true) -> PhosphorIcons.Light.CaretDown
+                                                else -> PhosphorIcons.Light.CaretUp
+                                            },
+                                            contentDescription = null,
+                                            tint = if (isActive) activeAirflowIconTint else DetailTextMuted.copy(alpha = phaseTagAlpha),
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Text(
+                                            text = when {
+                                                isFanOnly -> "Coast"
+                                                step.fanMode.contains("High", ignoreCase = true) -> "High"
+                                                step.fanMode.contains("Auto", ignoreCase = true) -> "Auto"
+                                                step.fanMode.contains("Quiet", ignoreCase = true) -> "Quiet"
+                                                else -> step.fanMode
+                                            },
+                                            style = TextStyle(
+                                                fontFamily = JakartaFamily,
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 11.sp,
+                                                color = if (isActive) activeAirflowTextTint else DetailTextMuted.copy(alpha = phaseTagAlpha),
+                                                textAlign = TextAlign.Center
+                                            ),
+                                            maxLines = 1
+                                        )
+                                    }
                                 }
                             }
                         }

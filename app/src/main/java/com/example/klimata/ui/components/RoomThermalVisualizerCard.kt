@@ -189,6 +189,11 @@ private fun IsometricRoomCanvas(
     val leftWallPath = remember { Path() }
     val rightWallPath = remember { Path() }
     val coolingConePath = remember { Path() }
+    val acFrontPath = remember { Path() }
+    val acTopPath = remember { Path() }
+    val acBottomPath = remember { Path() }
+    val streamLine1 = remember { Path() }
+    val streamLine2 = remember { Path() }
     val dashEffect = remember { PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f) }
 
     Canvas(modifier = modifier) {
@@ -342,32 +347,29 @@ private fun IsometricRoomCanvas(
         val acFront3 = Offset(acBack3.x - acDepth * cosA, acBack3.y - acDepth * sinA)
         val acFront4 = Offset(acBack4.x - acDepth * cosA, acBack4.y - acDepth * sinA)
 
-        val acFrontPath = Path().apply {
-            moveTo(acFront1.x, acFront1.y)
-            lineTo(acFront2.x, acFront2.y)
-            lineTo(acFront3.x, acFront3.y)
-            lineTo(acFront4.x, acFront4.y)
-            close()
-        }
+        acFrontPath.rewind()
+        acFrontPath.moveTo(acFront1.x, acFront1.y)
+        acFrontPath.lineTo(acFront2.x, acFront2.y)
+        acFrontPath.lineTo(acFront3.x, acFront3.y)
+        acFrontPath.lineTo(acFront4.x, acFront4.y)
+        acFrontPath.close()
         drawPath(acFrontPath, Color.White.copy(alpha = 0.85f))
         drawPath(path = acFrontPath, color = Color.White, style = Stroke(width = 1.2f))
 
-        val acTopPath = Path().apply {
-            moveTo(acFront4.x, acFront4.y)
-            lineTo(acFront3.x, acFront3.y)
-            lineTo(acBack3.x, acBack3.y)
-            lineTo(acBack4.x, acBack4.y)
-            close()
-        }
+        acTopPath.rewind()
+        acTopPath.moveTo(acFront4.x, acFront4.y)
+        acTopPath.lineTo(acFront3.x, acFront3.y)
+        acTopPath.lineTo(acBack3.x, acBack3.y)
+        acTopPath.lineTo(acBack4.x, acBack4.y)
+        acTopPath.close()
         drawPath(acTopPath, Color.White.copy(alpha = 0.70f))
 
-        val acBottomPath = Path().apply {
-            moveTo(acFront1.x, acFront1.y)
-            lineTo(acFront2.x, acFront2.y)
-            lineTo(acBack2.x, acBack2.y)
-            lineTo(acBack1.x, acBack1.y)
-            close()
-        }
+        acBottomPath.rewind()
+        acBottomPath.moveTo(acFront1.x, acFront1.y)
+        acBottomPath.lineTo(acFront2.x, acFront2.y)
+        acBottomPath.lineTo(acBack2.x, acBack2.y)
+        acBottomPath.lineTo(acBack1.x, acBack1.y)
+        acBottomPath.close()
         drawPath(acBottomPath, Color.White.copy(alpha = 0.40f))
 
         // Active cooling LED strip on AC unit
@@ -414,28 +416,26 @@ private fun IsometricRoomCanvas(
             )
         )
 
-        val streamLine1 = Path().apply {
-            moveTo(ventCenter.x, ventCenter.y)
-            cubicTo(
-                ventCenter.x - 20f, ventCenter.y + 15f,
-                floorTarget1.x + 10f, floorTarget1.y - 20f,
-                floorTarget1.x, floorTarget1.y
-            )
-        }
+        streamLine1.rewind()
+        streamLine1.moveTo(ventCenter.x, ventCenter.y)
+        streamLine1.cubicTo(
+            ventCenter.x - 20f, ventCenter.y + 15f,
+            floorTarget1.x + 10f, floorTarget1.y - 20f,
+            floorTarget1.x, floorTarget1.y
+        )
         drawPath(
             path = streamLine1,
             color = MineralMintActive.copy(alpha = 0.65f),
             style = Stroke(width = 1.4f, pathEffect = dashEffect)
         )
 
-        val streamLine2 = Path().apply {
-            moveTo(ventCenter.x, ventCenter.y)
-            cubicTo(
-                ventCenter.x - 15f, ventCenter.y + 25f,
-                floorTarget2.x + 15f, floorTarget2.y - 15f,
-                floorTarget2.x, floorTarget2.y
-            )
-        }
+        streamLine2.rewind()
+        streamLine2.moveTo(ventCenter.x, ventCenter.y)
+        streamLine2.cubicTo(
+            ventCenter.x - 15f, ventCenter.y + 25f,
+            floorTarget2.x + 15f, floorTarget2.y - 15f,
+            floorTarget2.x, floorTarget2.y
+        )
         drawPath(
             path = streamLine2,
             color = MineralMintActive.copy(alpha = 0.50f),
