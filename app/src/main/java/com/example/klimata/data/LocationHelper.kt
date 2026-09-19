@@ -12,13 +12,25 @@ import kotlinx.coroutines.withContext
 import java.util.Locale
 import kotlin.coroutines.resume
 
+data class LocationCoordinates(
+    val latitude: Double,
+    val longitude: Double,
+    val cityName: String
+)
+
 object LocationHelper {
 
+    val DEFAULT_JAKARTA = LocationCoordinates(
+        latitude = -6.2088,
+        longitude = 106.8456,
+        cityName = "South Jakarta"
+    )
+
     @SuppressLint("MissingPermission")
-    suspend fun detectCity(context: Context): String? = withContext(Dispatchers.IO) {
+    suspend fun detectLocation(context: Context): LocationCoordinates = withContext(Dispatchers.IO) {
         try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? LocationManager
-                ?: return@withContext null
+                ?: return@withContext DEFAULT_JAKARTA
 
             val providers = listOf(
                 LocationManager.NETWORK_PROVIDER,
@@ -38,11 +50,18 @@ object LocationHelper {
                 }
             }
 
-            val loc = bestLocation ?: return@withContext null
-            reverseGeocode(context, loc.latitude, loc.longitude)
+            val loc = bestLocation ?: return@withContext DEFAULT_JAKARTA
+            val city = reverseGeocode(context, loc.latitude, loc.longitude) ?: "South Jakarta"
+            LocationCoordinates(loc.latitude, loc.longitude, city)
         } catch (e: Exception) {
-            null
+            DEFAULT_JAKARTA
         }
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun detectCity(context: Context): String? = withContext(Dispatchers.IO) {
+        val result = detectLocation(context)
+        result.cityName
     }
 
     private suspend fun reverseGeocode(context: Context, latitude: Double, longitude: Double): String? =

@@ -60,18 +60,24 @@ object AcRecognitionService {
     )
 
     suspend fun analyzeAcPhoto(bitmap: Bitmap?, areaSquareMeters: Int): AcRecognitionResult = withContext(Dispatchers.Default) {
-        // Simulates network/vision processing delay with realistic inspection time
-        delay(1400)
+        if (bitmap != null && com.example.klimata.data.network.AiConfig.isConfigured) {
+            val aiResult = com.example.klimata.data.network.GeminiApiClient.analyzeAcPhoto(
+                bitmap = bitmap,
+                apiKey = com.example.klimata.data.network.AiConfig.GEMINI_API_KEY
+            )
+            if (aiResult.isSuccess) {
+                return@withContext aiResult.getOrThrow()
+            }
+        }
 
-        // Select sensible default profile based on room size if no image, or provide Daikin / Panasonic
-        val matchedProfile = if (areaSquareMeters > 28) {
-            sampleProfiles[1] // 1.5 PK
-        } else if (bitmap != null) {
-            // Predict based on bitmap width/height ratio or first sample
+        delay(1200)
+
+        if (areaSquareMeters > 28) {
+            sampleProfiles[1]
+        } else if (bitmap != null && bitmap.width > bitmap.height * 1.5f) {
             sampleProfiles[0]
         } else {
-            sampleProfiles[0]
+            sampleProfiles[2]
         }
-        matchedProfile
     }
 }

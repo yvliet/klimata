@@ -20,7 +20,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.example.klimata.data.LocationHelper
 import com.example.klimata.data.MockData
+import com.example.klimata.data.engine.ThermalCalculationEngine
+import com.example.klimata.data.network.AmbientWeatherReport
+import com.example.klimata.data.network.WeatherApiClient
+import com.example.klimata.data.storage.KlimataPreferences
 import com.example.klimata.ui.KlimataScreen
 import com.example.klimata.ui.screens.CarbonDetailScreen
 import com.example.klimata.ui.screens.RoomThermalDetailScreen
@@ -63,8 +70,44 @@ fun KlimataNavGraph(
         mutableStateOf(initialPhase ?: currentDiurnalPhase())
     }
 
-    var rooms by remember { mutableStateOf(MockData.rooms) }
+    val context = LocalContext.current
+    var rooms by remember { mutableStateOf(KlimataPreferences.loadRooms(context)) }
+    var weatherReport by remember { mutableStateOf<AmbientWeatherReport?>(KlimataPreferences.loadWeather(context)) }
     var hasCompletedOnboarding by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val loc = LocationHelper.detectLocation(context)
+        val weatherResult = WeatherApiClient.fetchWeather(loc.latitude, loc.longitude, loc.cityName)
+        if (weatherResult.isSuccess) {
+            val report = weatherResult.getOrThrow()
+            weatherReport = report
+            KlimataPreferences.saveWeather(context, report)
+
+            rooms = rooms.map { room ->
+                val computation = ThermalCalculationEngine.computeRoomThermalDynamics(
+                    areaSquareMeters = room.areaSquareMeters,
+                    ceilingHeightMeters = room.ceilingHeightMeters,
+                    thermalMassType = room.thermalMassLabel,
+                    acCapacity = room.profile.capacity,
+                    acInverterType = room.profile.inverterType,
+                    targetTemp = room.profile.currentSetpoint,
+                    hourlyOutdoorTemps = report.hourlyTemps
+                )
+                room.copy(
+                    location = loc.cityName,
+                    weatherCondition = report.condition,
+                    thermalSteps = computation.thermalSteps,
+                    monthlySavings = computation.monthlySavings,
+                    avoidedCarbon = computation.avoidedCarbon,
+                    savingsHistory = computation.savingsHistory,
+                    carbonHistory = computation.carbonHistory,
+                    savingsBreakdown = computation.savingsBreakdown,
+                    carbonEquivalence = computation.carbonEquivalence
+                )
+            }
+            KlimataPreferences.saveRooms(context, rooms)
+        }
+    }
 
     fun navigateSafely(route: String) {
         if (navController.currentBackStackEntry?.lifecycle?.currentState == Lifecycle.State.RESUMED) {
@@ -112,6 +155,7 @@ fun KlimataNavGraph(
                         phase = selectedPhase,
                         onPhaseChange = { selectedPhase = it },
                         rooms = rooms,
+                        weatherReport = weatherReport,
                         onPowerToggle = { roomId, isPowerOn ->
                             rooms = rooms.map {
                                 if (it.id == roomId) {
@@ -120,20 +164,32 @@ fun KlimataNavGraph(
                                     it
                                 }
                             }
+                            KlimataPreferences.saveRooms(context, rooms)
                         },
                         onEcoToggle = { roomId, isEnabled ->
                             rooms = rooms.map {
                                 if (it.id == roomId) it.copy(isEcoEnabled = isEnabled) else it
                             }
+                            KlimataPreferences.saveRooms(context, rooms)
                         },
                         onTempChange = { roomId, setpoint ->
-                            rooms = rooms.map {
-                                if (it.id == roomId) {
-                                    it.copy(profile = it.profile.copy(currentSetpoint = setpoint))
+                            rooms = rooms.map { room ->
+                                if (room.id == roomId) {
+                                    val updatedSteps = ThermalCalculationEngine.generateSchedule(
+                                        targetTemp = setpoint,
+                                        hourlyOutdoorTemps = weatherReport?.hourlyTemps ?: emptyMap(),
+                                        thermalMassType = room.thermalMassLabel
+                                    )
+                                    room.copy(
+                                        profile = room.profile.copy(currentSetpoint = setpoint),
+                                        targetTemp = setpoint,
+                                        thermalSteps = updatedSteps
+                                    )
                                 } else {
-                                    it
+                                    room
                                 }
                             }
+                            KlimataPreferences.saveRooms(context, rooms)
                         },
                         onScheduleClick = { roomId ->
                             navigateSafely(Screen.ScheduleDetail.createRoute(roomId))
@@ -299,6 +355,7 @@ fun KlimataNavGraph(
                         onBackClick = { navController.popBackStack() },
                         onRoomCreated = { newRoom ->
                             rooms = rooms + newRoom
+                            KlimataPreferences.saveRooms(context, rooms)
                             hasCompletedOnboarding = true
                             navController.popBackStack()
                         }

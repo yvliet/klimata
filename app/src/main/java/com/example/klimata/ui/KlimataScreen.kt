@@ -76,6 +76,7 @@ fun KlimataScreen(
     phase: DiurnalPhase = currentDiurnalPhase(),
     onPhaseChange: (DiurnalPhase) -> Unit = {},
     rooms: List<RoomState> = MockData.rooms,
+    weatherReport: com.example.klimata.data.network.AmbientWeatherReport? = null,
     onPowerToggle: (roomId: String, isPowerOn: Boolean) -> Unit = { _, _ -> },
     onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
     onTempChange: (roomId: String, setpoint: Int) -> Unit = { _, _ -> },
@@ -88,7 +89,7 @@ fun KlimataScreen(
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size })
     val coroutineScope = rememberCoroutineScope()
     val currentRoom = rooms[pagerState.currentPage]
-    val effectiveCondition = currentRoom.weatherCondition
+    val effectiveCondition = weatherReport?.condition ?: currentRoom.weatherCondition
 
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
@@ -252,8 +253,8 @@ fun KlimataScreen(
                         HeroTemperatureDisplay(
                             temperature = currentRoom.currentTemp,
                             condition = effectiveCondition,
-                            highTemp = MockData.weather.highTemp,
-                            lowTemp = MockData.weather.lowTemp,
+                            highTemp = weatherReport?.highTemp ?: MockData.weather.highTemp,
+                            lowTemp = weatherReport?.lowTemp ?: MockData.weather.lowTemp,
                             phase = phase,
                             roomIndex = pagerState.currentPage,
                             tempScale = animatedTempScale,

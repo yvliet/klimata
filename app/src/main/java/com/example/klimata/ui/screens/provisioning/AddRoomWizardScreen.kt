@@ -82,6 +82,10 @@ import com.example.klimata.data.AcRecognitionService
 import com.example.klimata.data.LocationHelper
 import com.example.klimata.data.RoomFactory
 import com.example.klimata.data.RoomState
+import com.example.klimata.data.engine.ThermalCalculationEngine
+import com.example.klimata.data.network.AmbientWeatherReport
+import com.example.klimata.data.network.WeatherApiClient
+import com.example.klimata.data.storage.KlimataPreferences
 import com.example.klimata.ui.components.bouncyClickable
 import com.example.klimata.ui.components.detailPageContainer
 import com.example.klimata.ui.theme.DetailBlackBackground
@@ -95,6 +99,7 @@ import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.LocalDiurnalColors
 import kotlinx.coroutines.launch
+import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -175,21 +180,27 @@ fun AddRoomWizardScreen(
 
     // Location state
     var selectedLocation by remember { mutableStateOf("South Jakarta") }
+    var liveWeatherReport by remember { mutableStateOf<AmbientWeatherReport?>(null) }
     var isDetectingGps by remember { mutableStateOf(false) }
     var gpsStatusMessage by remember { mutableStateOf<String?>(null) }
 
 
-    // GPS location detection logic
+    // GPS location & live Open-Meteo weather detection logic
     fun runGpsDetection() {
         coroutineScope.launch {
             isDetectingGps = true
-            gpsStatusMessage = "Checking GPS location..."
-            val detected = LocationHelper.detectCity(context)
-            if (!detected.isNullOrBlank()) {
-                selectedLocation = detected
-                gpsStatusMessage = "Location synchronized: $detected"
+            gpsStatusMessage = "Detecting GPS location..."
+            val loc = LocationHelper.detectLocation(context)
+            selectedLocation = loc.cityName
+            gpsStatusMessage = "Fetching Open-Meteo weather for ${loc.cityName}..."
+            val weatherResult = WeatherApiClient.fetchWeather(loc.latitude, loc.longitude, loc.cityName)
+            if (weatherResult.isSuccess) {
+                val report = weatherResult.getOrThrow()
+                liveWeatherReport = report
+                KlimataPreferences.saveWeather(context, report)
+                gpsStatusMessage = "${report.condition} · ${report.currentOutdoorTemp}°C · AQI ${report.aqiValue} (${report.aqiLabel})"
             } else {
-                gpsStatusMessage = "Using selected city microclimate"
+                gpsStatusMessage = "Location synchronized: ${loc.cityName}"
             }
             isDetectingGps = false
         }
@@ -295,7 +306,9 @@ fun AddRoomWizardScreen(
             acModel = acModel,
             acCapacity = acCapacity,
             acInverterType = acInverterType,
-            location = selectedLocation
+            location = selectedLocation,
+            hourlyOutdoorTemps = liveWeatherReport?.hourlyTemps ?: emptyMap(),
+            weatherCondition = liveWeatherReport?.condition ?: "Clear Night"
         )
         onRoomCreated(newRoom)
     }
@@ -1431,6 +1444,18 @@ fun AddRoomWizardScreen(
 
                         // Stage 7: Quiet-Confidence Impact Reveal (First-run Onboarding only)
                         WizardStage.IMPACT_REVEAL -> {
+                            val dynamicImpact = remember(areaSquareMeters, ceilingHeight, thermalMass, acCapacity, acInverterType, liveWeatherReport) {
+                                ThermalCalculationEngine.computeRoomThermalDynamics(
+                                    areaSquareMeters = areaSquareMeters,
+                                    ceilingHeightMeters = ceilingHeight,
+                                    thermalMassType = thermalMass,
+                                    acCapacity = acCapacity,
+                                    acInverterType = acInverterType,
+                                    targetTemp = 24,
+                                    hourlyOutdoorTemps = liveWeatherReport?.hourlyTemps ?: emptyMap()
+                                )
+                            }
+
                             Spacer(modifier = Modifier.height(12.dp))
 
                             Text(
@@ -1476,7 +1501,7 @@ fun AddRoomWizardScreen(
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "Rp 84.500",
+                                        text = dynamicImpact.monthlySavings.primaryValue,
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Bold,
@@ -1487,7 +1512,7 @@ fun AddRoomWizardScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "$5.40 USD / -38% overnight kWh",
+                                        text = dynamicImpact.monthlySavings.subtitle,
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Medium,
@@ -1508,7 +1533,7 @@ fun AddRoomWizardScreen(
                                 ) {
                                     ImpactStatCard(
                                         title = "Trees Equivalent",
-                                        value = "1.4",
+                                        value = "%.1f".format(Locale.US, dynamicImpact.carbonEquivalence.treesEquivalent),
                                         unit = "trees/mo",
                                         description = "CO₂ captured naturally",
                                         accentColor = diurnal.accentColor,
@@ -1516,7 +1541,7 @@ fun AddRoomWizardScreen(
                                     )
                                     ImpactStatCard(
                                         title = "Driving Avoided",
-                                        value = "138",
+                                        value = "%.0f".format(Locale.US, dynamicImpact.carbonEquivalence.drivingKmAvoided),
                                         unit = "km",
                                         description = "Combustion tailpipe offset",
                                         accentColor = diurnal.accentColor,
