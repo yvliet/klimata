@@ -102,7 +102,7 @@ fun ScheduleDetailScreen(
 
     DetailPageScaffold(
         title = "Tonight's Schedule",
-        subtitle = "${room.name} • ${if (room.isEcoEnabled) "Adaptive Thermal Drift" else "Eco Off"}",
+        subtitle = room.name,
         onBackClick = onBackClick,
         trailingContent = {
             Box(
