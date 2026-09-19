@@ -34,11 +34,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
@@ -330,6 +333,7 @@ private fun MinimalistThermalForecastCard(
                             modifier = Modifier
                                 .width(totalWidth)
                                 .height(chartHeight)
+                                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                         ) {
                             // Vertical dashed connector lines between outdoor ambient dots and AC setpoint dots
                             for (i in 0 until count) {
@@ -369,8 +373,14 @@ private fun MinimalistThermalForecastCard(
                                 )
                             }
 
-                            // Upper node dots (uniform styling across all stages)
+                            // Upper node dots with background line clearing
                             upperPoints.forEach { pt ->
+                                drawCircle(
+                                    color = Color.Black,
+                                    radius = 3.2.dp.toPx(),
+                                    center = pt,
+                                    blendMode = BlendMode.Clear
+                                )
                                 drawCircle(
                                     color = DetailCurveAmbient,
                                     radius = 3.2.dp.toPx(),
@@ -403,8 +413,14 @@ private fun MinimalistThermalForecastCard(
                                 )
                             }
 
-                            // Lower node dots (uniform styling across all stages)
+                            // Lower node dots with background line clearing
                             lowerPoints.forEach { pt ->
+                                drawCircle(
+                                    color = Color.Black,
+                                    radius = 3.2.dp.toPx(),
+                                    center = pt,
+                                    blendMode = BlendMode.Clear
+                                )
                                 drawCircle(
                                     color = setpointDotColor,
                                     radius = 3.2.dp.toPx(),

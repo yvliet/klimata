@@ -33,12 +33,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
@@ -308,6 +311,7 @@ fun ScheduleChart(
                             modifier = Modifier
                                 .width(totalWidth)
                                 .height(chartHeight)
+                                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                         ) {
                             val w = size.width
                             val h = size.height
@@ -363,9 +367,15 @@ fun ScheduleChart(
                                 )
                             }
 
-                            // Only active dot rendered (0.85x size = 3.4dp, solid without cutout)
+                            // Active dot rendered with background clearing so graph lines do not bleed through
                             if (activeIndex in 0 until count) {
                                 val activePoint = points[activeIndex]
+                                drawCircle(
+                                    color = Color.Black,
+                                    radius = 3.4.dp.toPx(),
+                                    center = activePoint,
+                                    blendMode = BlendMode.Clear
+                                )
                                 drawCircle(
                                     color = Color.White.copy(alpha = activeDotAlpha),
                                     radius = 3.4.dp.toPx(),
