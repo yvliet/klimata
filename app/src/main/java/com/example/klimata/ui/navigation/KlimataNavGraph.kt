@@ -23,7 +23,6 @@ import androidx.navigation.navArgument
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import com.example.klimata.data.LocationHelper
-import com.example.klimata.data.MockData
 import com.example.klimata.data.engine.ThermalCalculationEngine
 import com.example.klimata.data.network.AmbientWeatherReport
 import com.example.klimata.data.network.WeatherApiClient
@@ -341,11 +340,15 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
-                    ScheduleDetailScreen(
-                        room = room,
-                        onBackClick = { navController.popBackStack() }
-                    )
+                    val room = rooms.firstOrNull { it.id == roomId }
+                    if (room != null) {
+                        ScheduleDetailScreen(
+                            room = room,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                    }
                 }
 
                 composable(
@@ -371,11 +374,15 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
-                    RoomThermalDetailScreen(
-                        room = room,
-                        onBackClick = { navController.popBackStack() }
-                    )
+                    val room = rooms.firstOrNull { it.id == roomId }
+                    if (room != null) {
+                        RoomThermalDetailScreen(
+                            room = room,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                    }
                 }
 
                 composable(
@@ -401,11 +408,15 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
-                    SavingsDetailScreen(
-                        room = room,
-                        onBackClick = { navController.popBackStack() }
-                    )
+                    val room = rooms.firstOrNull { it.id == roomId }
+                    if (room != null) {
+                        SavingsDetailScreen(
+                            room = room,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                    }
                 }
 
                 composable(
@@ -431,11 +442,15 @@ fun KlimataNavGraph(
                     }
                 ) { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId")
-                    val room = rooms.firstOrNull { it.id == roomId } ?: MockData.masterBedRoom
-                    CarbonDetailScreen(
-                        room = room,
-                        onBackClick = { navController.popBackStack() }
-                    )
+                    val room = rooms.firstOrNull { it.id == roomId }
+                    if (room != null) {
+                        CarbonDetailScreen(
+                            room = room,
+                            onBackClick = { navController.popBackStack() }
+                        )
+                    } else {
+                        LaunchedEffect(Unit) { navController.popBackStack() }
+                    }
                 }
 
                 composable(

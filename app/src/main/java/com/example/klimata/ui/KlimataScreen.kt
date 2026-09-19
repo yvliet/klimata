@@ -49,6 +49,7 @@ import com.example.klimata.data.RoomState
 import com.example.klimata.ui.components.ACControlPanel
 import com.example.klimata.ui.components.AmbientTopBarActions
 import com.example.klimata.ui.components.AtmosphericSkyCanvas
+import com.example.klimata.ui.components.EmptyRoomsDoodlePrompt
 import com.example.klimata.ui.components.HeroTemperatureDisplay
 import com.example.klimata.ui.components.ImpactLedgerGrid
 import com.example.klimata.ui.components.RoomIndicator
@@ -75,7 +76,7 @@ fun KlimataScreen(
     modifier: Modifier = Modifier,
     phase: DiurnalPhase = currentDiurnalPhase(),
     onPhaseChange: (DiurnalPhase) -> Unit = {},
-    rooms: List<RoomState> = MockData.rooms,
+    rooms: List<RoomState> = emptyList(),
     weatherReport: com.example.klimata.data.network.AmbientWeatherReport? = null,
     onPowerToggle: (roomId: String, isPowerOn: Boolean) -> Unit = { _, _ -> },
     onEcoToggle: (roomId: String, isEnabled: Boolean) -> Unit = { _, _ -> },
@@ -90,10 +91,10 @@ fun KlimataScreen(
     onCarbonClick: (roomId: String) -> Unit = {},
     onAddRoomClick: () -> Unit = {},
 ) {
-    val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size })
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { rooms.size.coerceAtLeast(1) })
     val coroutineScope = rememberCoroutineScope()
-    val currentRoom = rooms[pagerState.currentPage]
-    val effectiveCondition = weatherReport?.condition ?: currentRoom.weatherCondition
+    val currentRoom = rooms.getOrNull(pagerState.currentPage)
+    val effectiveCondition = weatherReport?.condition ?: currentRoom?.weatherCondition ?: "Partly Cloudy"
 
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
@@ -171,7 +172,7 @@ fun KlimataScreen(
             val scheduleAnchorSpacer = (visibleViewportHeight - 538.dp).coerceAtLeast(12.dp)
 
             AtmosphericSkyCanvas(
-                scrollOffsetProvider = { scrollState.value.toFloat() },
+                scrollOffsetProvider = { if (rooms.isEmpty()) 0f else scrollState.value.toFloat() },
                 phase = phase,
                 weatherCondition = effectiveCondition,
                 modifier = Modifier.fillMaxSize()
@@ -180,155 +181,188 @@ fun KlimataScreen(
             val headerCutoffPx = with(density) { 62.dp.toPx() }
             val heroFadeDistancePx = with(density) { 140.dp.toPx() }
 
-            // Scrollable Content Layer
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .statusBarsPadding()
-                    .drawWithContent {
-                        val scrollOffset = scrollState.value.toFloat()
-                        val heroProgress = (scrollOffset / heroFadeDistancePx).coerceIn(0f, 1f)
-                        val clipTop = if (heroProgress >= 1f) headerCutoffPx else 0f
-                        if (clipTop > 0f) {
-                            clipRect(top = clipTop) {
-                                this@drawWithContent.drawContent()
-                            }
-                        } else {
-                            this@drawWithContent.drawContent()
-                        }
-                    }
-                    .verticalScroll(scrollState)
-                    .navigationBarsPadding()
-            ) {
-                // Unified horizontal drag gesture across hero display and dynamic spacer
-                // Dispatches real-time deltas directly to pagerState to enable fluid interactive card peeking
+            if (rooms.isEmpty()) {
+                // Non-scrollable Empty State Content Layer
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .pointerInput(rooms.size) {
-                            var accumulatedDrag = 0f
-                            detectHorizontalDragGestures(
-                                onDragStart = {
-                                    scrollJob?.cancel()
-                                    accumulatedDrag = 0f
-                                },
-                                onHorizontalDrag = { change, dragAmount ->
-                                    change.consume()
-                                    accumulatedDrag += dragAmount
-                                    pagerState.dispatchRawDelta(-dragAmount)
-                                },
-                                onDragEnd = {
-                                    val targetPage = if (accumulatedDrag < -swipeThresholdPx && pagerState.currentPage < rooms.size - 1) {
-                                        if (pagerState.currentPageOffsetFraction >= 0f) pagerState.currentPage + 1 else pagerState.currentPage
-                                    } else if (accumulatedDrag > swipeThresholdPx && pagerState.currentPage > 0) {
-                                        if (pagerState.currentPageOffsetFraction <= 0f) pagerState.currentPage - 1 else pagerState.currentPage
-                                    } else {
-                                        pagerState.currentPage
-                                    }
-                                    scrollJob = coroutineScope.launch {
-                                        pagerState.animateScrollToPage(targetPage.coerceIn(0, rooms.size - 1))
-                                    }
-                                    accumulatedDrag = 0f
-                                },
-                                onDragCancel = {
-                                    scrollJob = coroutineScope.launch {
-                                        pagerState.animateScrollToPage(pagerState.currentPage)
-                                    }
-                                    accumulatedDrag = 0f
-                                }
-                            )
-                        }
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
                 ) {
-                    // Placeholder space matching the pinned top bar + rest offset of room indicator
                     Spacer(modifier = Modifier.height(102.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .graphicsLayer {
-                                val scrollOffset = scrollState.value.toFloat()
-                                val heroProgress = (scrollOffset / heroFadeDistancePx).coerceIn(0f, 1f)
-                                alpha = (1f - heroProgress).coerceIn(0f, 1f)
-                                translationY = -scrollOffset * 0.15f
-                                val blurPx = heroProgress * 10.dp.toPx()
-                                renderEffect = if (blurPx > 0.5f) BlurEffect(blurPx, blurPx) else null
-                            }
-                    ) {
-                        HeroTemperatureDisplay(
-                            temperature = currentRoom.currentTemp,
-                            condition = effectiveCondition,
-                            highTemp = weatherReport?.highTemp ?: MockData.weather.highTemp,
-                            lowTemp = weatherReport?.lowTemp ?: MockData.weather.lowTemp,
-                            phase = phase,
-                            roomIndex = pagerState.currentPage,
-                            tempScale = animatedTempScale,
-                            tempAlpha = animatedTempAlpha,
-                            modifier = Modifier.padding(horizontal = 24.dp)
-                        )
-                    }
-
-                    // Dynamic spacer anchors Tonight's Schedule at bottom of initial viewport
-                    Spacer(
-                        modifier = Modifier
-                            .height(scheduleAnchorSpacer)
-                            .fillMaxWidth()
+                    HeroTemperatureDisplay(
+                        temperature = weatherReport?.currentOutdoorTemp ?: 28,
+                        condition = effectiveCondition,
+                        highTemp = weatherReport?.highTemp ?: 32,
+                        lowTemp = weatherReport?.lowTemp ?: 24,
+                        phase = phase,
+                        roomIndex = 0,
+                        tempScale = 1f,
+                        tempAlpha = 1f,
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     )
                 }
 
-                // Default CenterVertically misaligns top cards across rooms with differing content heights
-                // Equal pageSpacing and contentPadding ensures adjacent cards sit flush at screen edges without resting peek
-                HorizontalPager(
-                    state = pagerState,
-                    pageSpacing = 8.dp,
-                    contentPadding = PaddingValues(horizontal = 8.dp),
-                    verticalAlignment = Alignment.Top,
-                    modifier = Modifier.fillMaxWidth()
-                ) { pageIndex ->
-                    val room = rooms[pageIndex]
-
+                // Doodle invitation pointing at (+) button
+                EmptyRoomsDoodlePrompt(
+                    onAddRoomClick = onAddRoomClick,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .statusBarsPadding()
+                        .padding(top = 50.dp)
+                )
+            } else {
+                // Scrollable Content Layer for configured rooms
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .statusBarsPadding()
+                        .drawWithContent {
+                            val scrollOffset = scrollState.value.toFloat()
+                            val heroProgress = (scrollOffset / heroFadeDistancePx).coerceIn(0f, 1f)
+                            val clipTop = if (heroProgress >= 1f) headerCutoffPx else 0f
+                            if (clipTop > 0f) {
+                                clipRect(top = clipTop) {
+                                    this@drawWithContent.drawContent()
+                                }
+                            } else {
+                                this@drawWithContent.drawContent()
+                            }
+                        }
+                        .verticalScroll(scrollState)
+                        .navigationBarsPadding()
+                ) {
+                    // Unified horizontal drag gesture across hero display and dynamic spacer
+                    // Dispatches real-time deltas directly to pagerState to enable fluid interactive card peeking
                     Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .pointerInput(rooms.size) {
+                                var accumulatedDrag = 0f
+                                detectHorizontalDragGestures(
+                                    onDragStart = {
+                                        scrollJob?.cancel()
+                                        accumulatedDrag = 0f
+                                    },
+                                    onHorizontalDrag = { change, dragAmount ->
+                                        change.consume()
+                                        accumulatedDrag += dragAmount
+                                        pagerState.dispatchRawDelta(-dragAmount)
+                                    },
+                                    onDragEnd = {
+                                        val targetPage = if (accumulatedDrag < -swipeThresholdPx && pagerState.currentPage < rooms.size - 1) {
+                                            if (pagerState.currentPageOffsetFraction >= 0f) pagerState.currentPage + 1 else pagerState.currentPage
+                                        } else if (accumulatedDrag > swipeThresholdPx && pagerState.currentPage > 0) {
+                                            if (pagerState.currentPageOffsetFraction <= 0f) pagerState.currentPage - 1 else pagerState.currentPage
+                                        } else {
+                                            pagerState.currentPage
+                                        }
+                                        scrollJob = coroutineScope.launch {
+                                            pagerState.animateScrollToPage(targetPage.coerceIn(0, rooms.size - 1))
+                                        }
+                                        accumulatedDrag = 0f
+                                    },
+                                    onDragCancel = {
+                                        scrollJob = coroutineScope.launch {
+                                            pagerState.animateScrollToPage(pagerState.currentPage)
+                                        }
+                                        accumulatedDrag = 0f
+                                    }
+                                )
+                            }
                     ) {
-                        ScheduleChart(
-                            steps = room.thermalSteps,
-                            isEcoEnabled = room.isEcoEnabled,
-                            onClick = { onScheduleClick(room.id) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        // Placeholder space matching the pinned top bar + rest offset of room indicator
+                        Spacer(modifier = Modifier.height(102.dp))
 
-                        ACControlPanel(
-                            profile = room.profile,
-                            dispatch = room.dispatchState,
-                            initialPowerOn = room.isPowerOn,
-                            initialEcoEnabled = room.isEcoEnabled,
-                            onPowerToggle = { isPowerOn -> onPowerToggle(room.id, isPowerOn) },
-                            onEcoToggle = { isEnabled -> onEcoToggle(room.id, isEnabled) },
-                            onTempChange = { setpoint -> onTempChange(room.id, setpoint) },
-                            onModeChange = { mode -> onModeChange(room.id, mode) },
-                            onFanSpeedChange = { fanSpeed -> onFanSpeedChange(room.id, fanSpeed) },
-                            onSwingToggle = { isSwing -> onSwingToggle(room.id, isSwing) },
-                            onCalibrateRemote = { onCalibrateRemote(room.id) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .graphicsLayer {
+                                    val scrollOffset = scrollState.value.toFloat()
+                                    val heroProgress = (scrollOffset / heroFadeDistancePx).coerceIn(0f, 1f)
+                                    alpha = (1f - heroProgress).coerceIn(0f, 1f)
+                                    translationY = -scrollOffset * 0.15f
+                                    val blurPx = heroProgress * 10.dp.toPx()
+                                    renderEffect = if (blurPx > 0.5f) BlurEffect(blurPx, blurPx) else null
+                                }
+                        ) {
+                            HeroTemperatureDisplay(
+                                temperature = currentRoom?.currentTemp ?: weatherReport?.currentOutdoorTemp ?: 28,
+                                condition = effectiveCondition,
+                                highTemp = weatherReport?.highTemp ?: MockData.weather.highTemp,
+                                lowTemp = weatherReport?.lowTemp ?: MockData.weather.lowTemp,
+                                phase = phase,
+                                roomIndex = pagerState.currentPage,
+                                tempScale = animatedTempScale,
+                                tempAlpha = animatedTempAlpha,
+                                modifier = Modifier.padding(horizontal = 24.dp)
+                            )
+                        }
 
-                        RoomThermalVisualizerCard(
-                            room = room,
-                            onClick = { onThermalClick(room.id) },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        ImpactLedgerGrid(
-                            savings = room.monthlySavings,
-                            carbon = room.avoidedCarbon,
-                            onSavingsClick = { onSavingsClick(room.id) },
-                            onCarbonClick = { onCarbonClick(room.id) },
-                            modifier = Modifier.fillMaxWidth()
+                        // Dynamic spacer anchors Tonight's Schedule at bottom of initial viewport
+                        Spacer(
+                            modifier = Modifier
+                                .height(scheduleAnchorSpacer)
+                                .fillMaxWidth()
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(28.dp))
+                    // Default CenterVertically misaligns top cards across rooms with differing content heights
+                    // Equal pageSpacing and contentPadding ensures adjacent cards sit flush at screen edges without resting peek
+                    HorizontalPager(
+                        state = pagerState,
+                        pageSpacing = 8.dp,
+                        contentPadding = PaddingValues(horizontal = 8.dp),
+                        verticalAlignment = Alignment.Top,
+                        modifier = Modifier.fillMaxWidth()
+                    ) { pageIndex ->
+                        val room = rooms[pageIndex]
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            ScheduleChart(
+                                steps = room.thermalSteps,
+                                isEcoEnabled = room.isEcoEnabled,
+                                onClick = { onScheduleClick(room.id) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            ACControlPanel(
+                                profile = room.profile,
+                                dispatch = room.dispatchState,
+                                initialPowerOn = room.isPowerOn,
+                                initialEcoEnabled = room.isEcoEnabled,
+                                onPowerToggle = { isPowerOn -> onPowerToggle(room.id, isPowerOn) },
+                                onEcoToggle = { isEnabled -> onEcoToggle(room.id, isEnabled) },
+                                onTempChange = { setpoint -> onTempChange(room.id, setpoint) },
+                                onModeChange = { mode -> onModeChange(room.id, mode) },
+                                onFanSpeedChange = { fanSpeed -> onFanSpeedChange(room.id, fanSpeed) },
+                                onSwingToggle = { isSwing -> onSwingToggle(room.id, isSwing) },
+                                onCalibrateRemote = { onCalibrateRemote(room.id) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            RoomThermalVisualizerCard(
+                                room = room,
+                                onClick = { onThermalClick(room.id) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            ImpactLedgerGrid(
+                                savings = room.monthlySavings,
+                                carbon = room.avoidedCarbon,
+                                onSavingsClick = { onSavingsClick(room.id) },
+                                onCarbonClick = { onCarbonClick(room.id) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+                }
             }
 
             // Pinned Top Bar Overlay with Docking Room Indicator
@@ -340,9 +374,9 @@ fun KlimataScreen(
             ) {
                 // Room indicator starts above hero temp and glides up to dock at top bar Y on scroll
                 RoomIndicator(
-                    currentRoom = currentRoom.name,
+                    currentRoom = currentRoom?.name ?: "Klimata",
                     roomCount = rooms.size,
-                    currentRoomIndex = pagerState.currentPage,
+                    currentRoomIndex = if (rooms.isEmpty()) 0 else pagerState.currentPage,
                     onRoomSelected = { targetIndex ->
                         coroutineScope.launch {
                             pagerState.animateScrollToPage(targetIndex)
@@ -351,7 +385,7 @@ fun KlimataScreen(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .graphicsLayer {
-                            val scroll = scrollState.value.toFloat()
+                            val scroll = if (rooms.isEmpty()) 0f else scrollState.value.toFloat()
                             translationY = (restOffsetYPx - scroll).coerceAtLeast(0f)
                         }
                 )

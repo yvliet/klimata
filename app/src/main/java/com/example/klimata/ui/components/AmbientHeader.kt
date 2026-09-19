@@ -98,42 +98,19 @@ fun RoomIndicator(
             )
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(0.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 0.dp)
-        ) {
-            val isPrimarySelected = currentRoomIndex == 0
-            val cubeColor by animateColorAsState(
-                targetValue = if (isPrimarySelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
-                animationSpec = tween(200),
-                label = "cubeColor"
-            )
-
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(width = 16.dp, height = 18.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { onRoomSelected(0) }
+        if (roomCount > 0) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 0.dp)
             ) {
-                Icon(
-                    imageVector = PhosphorIcons.Light.Cube,
-                    contentDescription = "Primary Room",
-                    tint = cubeColor,
-                    modifier = Modifier.size(12.dp)
-                )
-            }
-
-            for (i in 1 until roomCount) {
-                val isSelected = i == currentRoomIndex
-                val dotColor by animateColorAsState(
-                    targetValue = if (isSelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
+                val isPrimarySelected = currentRoomIndex == 0
+                val cubeColor by animateColorAsState(
+                    targetValue = if (isPrimarySelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
                     animationSpec = tween(200),
-                    label = "dotColor$i"
+                    label = "cubeColor"
                 )
+
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
@@ -141,14 +118,39 @@ fun RoomIndicator(
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { onRoomSelected(i) }
+                        ) { onRoomSelected(0) }
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(5.dp)
-                            .clip(CircleShape)
-                            .background(dotColor)
+                    Icon(
+                        imageVector = PhosphorIcons.Light.Cube,
+                        contentDescription = "Primary Room",
+                        tint = cubeColor,
+                        modifier = Modifier.size(12.dp)
                     )
+                }
+
+                for (i in 1 until roomCount) {
+                    val isSelected = i == currentRoomIndex
+                    val dotColor by animateColorAsState(
+                        targetValue = if (isSelected) OnSkyPrimary else OnSkySecondary.copy(alpha = 0.45f),
+                        animationSpec = tween(200),
+                        label = "dotColor$i"
+                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(width = 16.dp, height = 18.dp)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) { onRoomSelected(i) }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(dotColor)
+                        )
+                    }
                 }
             }
         }

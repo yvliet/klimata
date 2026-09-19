@@ -37,19 +37,19 @@ object KlimataPreferences {
     }
 
     fun loadRooms(context: Context): List<RoomState> {
-        val jsonStr = getPrefs(context).getString(KEY_ROOMS_JSON, null) ?: return MockData.rooms
+        val jsonStr = getPrefs(context).getString(KEY_ROOMS_JSON, null) ?: return emptyList()
         return try {
             val jsonArray = JSONArray(jsonStr)
-            if (jsonArray.length() == 0) return MockData.rooms
+            if (jsonArray.length() == 0) return emptyList()
 
             val result = mutableListOf<RoomState>()
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 result.add(deserializeRoom(obj))
             }
-            if (result.isEmpty()) MockData.rooms else result
+            result
         } catch (e: Exception) {
-            MockData.rooms
+            emptyList()
         }
     }
 
