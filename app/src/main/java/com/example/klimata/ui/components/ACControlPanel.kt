@@ -564,12 +564,6 @@ fun ACDigitalRemoteCard(
         label = "RemoteStepperIconColor"
     )
 
-    val powerIndicatorDotColor by animateColorAsState(
-        targetValue = if (isPowerOn) PowerGreenActive else Color.White.copy(alpha = 0.20f),
-        animationSpec = tween(200),
-        label = "RemotePowerDot"
-    )
-
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(24.dp))
@@ -580,56 +574,15 @@ fun ACDigitalRemoteCard(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Header with Calibrate Signal trigger and Power dot
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Remote Control",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 12.sp,
-                        color = Color.White.copy(alpha = 0.60f)
-                    )
+            Text(
+                text = "Remote Control",
+                style = TextStyle(
+                    fontFamily = JakartaFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    color = Color.White.copy(alpha = 0.60f)
                 )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Quick Remote Signal Calibration shortcut
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(22.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.07f))
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null
-                            ) {
-                                onCalibrateRemote()
-                            }
-                    ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Light.Broadcast,
-                            contentDescription = "Calibrate Remote Signal",
-                            tint = Color.White.copy(alpha = 0.65f),
-                            modifier = Modifier.size(11.dp)
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(powerIndicatorDotColor)
-                    )
-                }
-            }
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
