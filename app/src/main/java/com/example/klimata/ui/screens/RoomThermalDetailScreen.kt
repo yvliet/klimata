@@ -68,7 +68,7 @@ fun RoomThermalDetailScreen(
 ) {
     DetailPageScaffold(
         title = "Room Space & Cooling",
-        subtitle = "${room.name} • Thermal Dynamics",
+        subtitle = room.name,
         onBackClick = onBackClick
     ) {
         // Hero Room Architecture & 3D Spatial Canvas
@@ -79,24 +79,38 @@ fun RoomThermalDetailScreen(
                 .background(DetailCardSurface)
                 .padding(20.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(38.dp)
-                            .clip(CircleShape)
-                            .background(MineralMintActive.copy(alpha = 0.18f)),
-                        contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = PhosphorIcons.Light.Cube,
-                            contentDescription = null,
-                            tint = MineralMintActive,
-                            modifier = Modifier.size(20.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(DetailCardSurfaceElevated),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = PhosphorIcons.Light.Cube,
+                                contentDescription = null,
+                                tint = MineralMintActive,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        Text(
+                            text = "Floor Area & Height",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 14.sp,
+                                color = DetailTextPrimary
+                            )
                         )
                     }
 
@@ -107,7 +121,7 @@ fun RoomThermalDetailScreen(
                             .padding(horizontal = 9.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "${room.areaSquareMeters} m² • ${room.volumeCubicMeters} m³",
+                            text = "${room.areaSquareMeters} m² / ${room.volumeCubicMeters} m³",
                             style = TextStyle(
                                 fontFamily = JakartaFamily,
                                 fontWeight = FontWeight.Bold,
@@ -259,15 +273,35 @@ fun RoomThermalDetailScreen(
                             color = DetailTextMuted
                         )
                     )
-                    Text(
-                        text = "${room.profile.brand} • ${room.profile.capacity} ${room.profile.inverterType}",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            color = DetailTextPrimary
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = room.profile.brand,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = DetailTextPrimary
+                            )
                         )
-                    )
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(9.dp)
+                                .background(DetailTextMuted.copy(alpha = 0.40f))
+                        )
+                        Text(
+                            text = "${room.profile.capacity} ${room.profile.inverterType}",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = DetailTextSecondary
+                            )
+                        )
+                    }
                 }
             }
         }

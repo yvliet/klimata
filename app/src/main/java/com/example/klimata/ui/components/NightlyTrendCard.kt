@@ -33,6 +33,7 @@ import com.example.klimata.ui.theme.DetailCardSurface
 import com.example.klimata.ui.theme.DetailCardSurfaceElevated
 import com.example.klimata.ui.theme.DetailTextMuted
 import com.example.klimata.ui.theme.DetailTextPrimary
+import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
 
@@ -72,15 +73,35 @@ fun NightlyTrendCard(
                     )
                 )
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "${trendData.primaryStat} • ${trendData.subtitle}",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 11.5.sp,
-                        color = DetailTextMuted
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = trendData.primaryStat,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.5.sp,
+                            color = DetailTextSecondary
+                        )
                     )
-                )
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(9.dp)
+                            .background(DetailTextMuted.copy(alpha = 0.35f))
+                    )
+                    Text(
+                        text = trendData.subtitle,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 11.5.sp,
+                            color = DetailTextMuted
+                        )
+                    )
+                }
             }
 
             // Minimalist Bar Visualizer with Horizontal Dotted Grid Lines

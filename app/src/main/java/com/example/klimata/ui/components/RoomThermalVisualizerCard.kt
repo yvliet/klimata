@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -132,15 +133,50 @@ fun RoomThermalVisualizerCard(
 
                     Spacer(modifier = Modifier.height(3.dp))
 
-                    Text(
-                        text = "${curRoom.thermalMassLabel} • ${curRoom.coolingLoadBtu} BTU/h • ${curRoom.profile.capacity} Match",
-                        style = TextStyle(
-                            fontFamily = JakartaFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 11.5.sp,
-                            color = Color.White.copy(alpha = 0.70f)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = curRoom.thermalMassLabel,
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.5.sp,
+                                color = Color.White.copy(alpha = 0.70f)
+                            )
                         )
-                    )
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(9.dp)
+                                .background(Color.White.copy(alpha = 0.25f))
+                        )
+                        Text(
+                            text = "${curRoom.coolingLoadBtu} BTU/h",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.5.sp,
+                                color = Color.White.copy(alpha = 0.70f)
+                            )
+                        )
+                        Box(
+                            modifier = Modifier
+                                .width(1.dp)
+                                .height(9.dp)
+                                .background(Color.White.copy(alpha = 0.25f))
+                        )
+                        Text(
+                            text = "${curRoom.profile.capacity} Match",
+                            style = TextStyle(
+                                fontFamily = JakartaFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 11.5.sp,
+                                color = Color.White.copy(alpha = 0.70f)
+                            )
+                        )
+                    }
                 }
             }
 

@@ -42,13 +42,13 @@ object RoomFactory {
         val savingsMetric = ImpactMetric(
             title = "Monthly Savings",
             primaryValue = formattedMonthlySavings,
-            subtitle = "\$$monthlySavingsUsd USD • -38% kWh"
+            subtitle = "\$$monthlySavingsUsd USD / -38% kWh"
         )
 
         val carbonMetric = ImpactMetric(
             title = "Avoided Carbon",
             primaryValue = String.format(java.util.Locale.US, "%.1f kg", avoidedMonthlyCo2Kg),
-            subtitle = String.format(java.util.Locale.US, "CO₂e offset • %.1f trees equiv", treesEquiv)
+            subtitle = String.format(java.util.Locale.US, "CO₂e offset / %.1f trees equiv", treesEquiv)
         )
 
         val weeklySavingsIdr = (monthlySavingsIdr / 4.3).roundToInt()

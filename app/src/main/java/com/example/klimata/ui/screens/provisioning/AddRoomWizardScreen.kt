@@ -740,7 +740,13 @@ fun AddRoomWizardScreen(
                                         if (isPolygonClosed && customVertices.size >= 3) {
                                             val customArea = shoelaceAreaM2(customVertices, pxPerMeter)
                                             val customVol = (customArea * ceilingHeight).roundToInt()
-                                            Text(text = "  •  ", color = DetailTextMuted)
+                                            Box(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 6.dp)
+                                                    .width(1.dp)
+                                                    .height(9.dp)
+                                                    .background(DetailTextMuted.copy(alpha = 0.40f))
+                                            )
                                             Text(
                                                 text = "%.1f m² × %d m³".format(customArea, customVol),
                                                 style = TextStyle(
@@ -1202,15 +1208,35 @@ fun AddRoomWizardScreen(
                                         }
                                     }
 
-                                    Text(
-                                        text = "$acCapacity • $acInverterType",
-                                        style = TextStyle(
-                                            fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 13.sp,
-                                            color = DetailTextSecondary
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = acCapacity,
+                                            style = TextStyle(
+                                                fontFamily = JakartaFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                                color = DetailTextSecondary
+                                            )
                                         )
-                                    )
+                                        Box(
+                                            modifier = Modifier
+                                                .width(1.dp)
+                                                .height(9.dp)
+                                                .background(DetailTextMuted.copy(alpha = 0.40f))
+                                        )
+                                        Text(
+                                            text = acInverterType,
+                                            style = TextStyle(
+                                                fontFamily = JakartaFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 13.sp,
+                                                color = DetailTextSecondary
+                                            )
+                                        )
+                                    }
 
                                     Text(
                                         text = assessment.description,
@@ -1464,7 +1490,7 @@ fun AddRoomWizardScreen(
                                     )
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "$5.40 USD • -38% overnight kWh",
+                                        text = "$5.40 USD / -38% overnight kWh",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.Medium,

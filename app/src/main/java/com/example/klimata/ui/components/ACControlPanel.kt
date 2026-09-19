@@ -274,15 +274,35 @@ fun ACTelemetryCard(
                         color = Color.White.copy(alpha = 0.80f)
                     )
                 )
-                Text(
-                    text = "${profile.capacity} • ${profile.inverterType}",
-                    style = TextStyle(
-                        fontFamily = JakartaFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 10.5.sp,
-                        color = Color.White.copy(alpha = 0.50f)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = profile.capacity,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 10.5.sp,
+                            color = Color.White.copy(alpha = 0.60f)
+                        )
                     )
-                )
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(9.dp)
+                            .background(Color.White.copy(alpha = 0.20f))
+                    )
+                    Text(
+                        text = profile.inverterType,
+                        style = TextStyle(
+                            fontFamily = JakartaFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 10.5.sp,
+                            color = Color.White.copy(alpha = 0.50f)
+                        )
+                    )
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
