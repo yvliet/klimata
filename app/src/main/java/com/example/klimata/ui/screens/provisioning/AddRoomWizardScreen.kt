@@ -40,7 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -52,9 +51,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -72,8 +73,6 @@ import com.example.klimata.data.AcRecognitionService
 import com.example.klimata.data.LocationHelper
 import com.example.klimata.data.RoomFactory
 import com.example.klimata.data.RoomState
-import com.example.klimata.sensor.RoomWalkerSensorManager
-import com.example.klimata.sensor.WalkerSnapshot
 import com.example.klimata.ui.components.bouncyClickable
 import com.example.klimata.ui.theme.DetailBlackBackground
 import com.example.klimata.ui.theme.DetailCardBorder
@@ -86,16 +85,29 @@ import com.example.klimata.ui.theme.DetailTextSecondary
 import com.example.klimata.ui.theme.JakartaFamily
 import com.example.klimata.ui.theme.MineralMintActive
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 enum class WizardStage {
     NAME_ROOM,
-    MAP_PERIMETER,
+    ROOM_SIZING,
     CONSTRUCTION_ANIMATION,
     CAPTURE_AC,
     CONFIRM_AC,
     LOCATION_SYNC,
     IMPACT_REVEAL
+}
+
+private fun shoelaceAreaM2(vertices: List<Offset>, pixelsPerMeter: Float): Float {
+    if (vertices.size < 3) return 0f
+    var sum = 0f
+    for (i in vertices.indices) {
+        val p1 = vertices[i]
+        val p2 = vertices[(i + 1) % vertices.size]
+        sum += (p1.x * p2.y - p2.x * p1.y)
+    }
+    return abs(sum / 2f) / (pixelsPerMeter * pixelsPerMeter)
 }
 
 @Composable
@@ -105,6 +117,7 @@ fun AddRoomWizardScreen(
     onRoomCreated: (RoomState) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val density = LocalDensity.current
     val coroutineScope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
@@ -131,19 +144,9 @@ fun AddRoomWizardScreen(
     var isDetectingGps by remember { mutableStateOf(false) }
     var gpsStatusMessage by remember { mutableStateOf<String?>(null) }
 
-    // Sensor walker reactive state
-    var walkerSnapshot by remember { mutableStateOf(WalkerSnapshot()) }
-    val walkerManager = remember {
-        RoomWalkerSensorManager(context = context) { snap ->
-            walkerSnapshot = snap
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            walkerManager.stopTracking()
-        }
-    }
+    // Custom canvas polygon state
+    var customVertices by remember { mutableStateOf<List<Offset>>(emptyList()) }
+    var isPolygonClosed by remember { mutableStateOf(false) }
 
     // GPS location detection logic
     fun runGpsDetection() {
@@ -297,9 +300,9 @@ fun AddRoomWizardScreen(
                         .clickable {
                             when (currentStage) {
                                 WizardStage.NAME_ROOM -> onBackClick()
-                                WizardStage.MAP_PERIMETER -> currentStage = WizardStage.NAME_ROOM
-                                WizardStage.CONSTRUCTION_ANIMATION -> currentStage = WizardStage.MAP_PERIMETER
-                                WizardStage.CAPTURE_AC -> currentStage = WizardStage.MAP_PERIMETER
+                                WizardStage.ROOM_SIZING -> currentStage = WizardStage.NAME_ROOM
+                                WizardStage.CONSTRUCTION_ANIMATION -> currentStage = WizardStage.ROOM_SIZING
+                                WizardStage.CAPTURE_AC -> currentStage = WizardStage.ROOM_SIZING
                                 WizardStage.CONFIRM_AC -> currentStage = WizardStage.CAPTURE_AC
                                 WizardStage.LOCATION_SYNC -> currentStage = WizardStage.CONFIRM_AC
                                 WizardStage.IMPACT_REVEAL -> currentStage = WizardStage.LOCATION_SYNC
@@ -486,18 +489,17 @@ fun AddRoomWizardScreen(
                                 label = "Continue to Sizing",
                                 enabled = roomName.isNotBlank(),
                                 onClick = {
-                                    walkerManager.startTracking()
-                                    currentStage = WizardStage.MAP_PERIMETER
+                                    currentStage = WizardStage.ROOM_SIZING
                                 }
                             )
                         }
 
-                        // Stage 2: Hybrid Smart Walker
-                        WizardStage.MAP_PERIMETER -> {
-                            var mappingMode by remember { mutableStateOf("walk") }
+                        // Stage 2: Room Sizing
+                        WizardStage.ROOM_SIZING -> {
+                            var sizingMode by remember { mutableStateOf("presets") }
 
                             Text(
-                                text = "Map room boundaries",
+                                text = "Size your room",
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
                                     fontWeight = FontWeight.Bold,
@@ -509,10 +511,10 @@ fun AddRoomWizardScreen(
                             )
 
                             Text(
-                                text = if (mappingMode == "walk") {
-                                    "Walk along walls or tap corner buttons to plot your room."
+                                text = if (sizingMode == "presets") {
+                                    "Adjust the sliders to match your room."
                                 } else {
-                                    "Select dimensions with precision sliders."
+                                    "Tap corners to draw your room shape."
                                 },
                                 style = TextStyle(
                                     fontFamily = JakartaFamily,
@@ -534,20 +536,17 @@ fun AddRoomWizardScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (mappingMode == "walk") MineralMintActive else Color.Transparent)
-                                        .clickable {
-                                            mappingMode = "walk"
-                                            walkerManager.startTracking()
-                                        }
+                                        .background(if (sizingMode == "presets") MineralMintActive else Color.Transparent)
+                                        .clickable { sizingMode = "presets" }
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Text(
-                                        text = "Smart Walker",
+                                        text = "Presets",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 12.sp,
-                                            color = if (mappingMode == "walk") Color(0xFF0F172A) else DetailTextSecondary
+                                            color = if (sizingMode == "presets") Color(0xFF0F172A) else DetailTextSecondary
                                         )
                                     )
                                 }
@@ -555,156 +554,47 @@ fun AddRoomWizardScreen(
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (mappingMode == "manual") MineralMintActive else Color.Transparent)
-                                        .clickable {
-                                            mappingMode = "manual"
-                                            walkerManager.stopTracking()
-                                        }
+                                        .background(if (sizingMode == "custom") MineralMintActive else Color.Transparent)
+                                        .clickable { sizingMode = "custom" }
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
                                     Text(
-                                        text = "Dimension Sliders",
+                                        text = "Custom Canvas",
                                         style = TextStyle(
                                             fontFamily = JakartaFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 12.sp,
-                                            color = if (mappingMode == "manual") Color(0xFF0F172A) else DetailTextSecondary
+                                            color = if (sizingMode == "custom") Color(0xFF0F172A) else DetailTextSecondary
                                         )
                                     )
                                 }
                             }
 
-                            if (mappingMode == "walk") {
-                                // Crisp Architectural Radar
-                                WalkPerimeterCanvas(
-                                    corners = walkerSnapshot.corners,
-                                    walkedCorners = walkerSnapshot.walkedCorners,
-                                    currentWalkerPos = walkerSnapshot.currentPosition,
-                                    currentHeadingDeg = walkerSnapshot.currentHeadingDeg,
-                                    isClosed = walkerSnapshot.corners.size >= 4,
+                            if (sizingMode == "presets") {
+                                // Live wireframe canvas
+                                PresetRoomCanvas(
+                                    widthMeters = manualWidth,
+                                    lengthMeters = manualLength,
                                     modifier = Modifier
-                                        .size(240.dp)
-                                        .padding(vertical = 4.dp)
+                                        .fillMaxWidth()
+                                        .height(200.dp)
                                 )
 
-                                // Real-time reactive metrics readout
-                                val currentArea = walkerSnapshot.calculatedAreaM2.coerceAtLeast(12)
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "${walkerSnapshot.totalSteps} steps walked",
-                                        style = TextStyle(
-                                            fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.Normal,
-                                            fontSize = 12.5.sp,
-                                            color = DetailTextSecondary
-                                        )
+                                // Live area/volume badge
+                                val areaDisplay = (manualWidth * manualLength)
+                                val volumeDisplay = (areaDisplay * ceilingHeight).roundToInt()
+                                Text(
+                                    text = "%.1f m² • %d m³ volume".format(areaDisplay, volumeDisplay),
+                                    style = TextStyle(
+                                        fontFamily = JakartaFamily,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = MineralMintActive,
+                                        textAlign = TextAlign.Center
                                     )
-                                    Text(text = " • ", color = DetailTextMuted)
-                                    Text(
-                                        text = "~$currentArea m² estimated",
-                                        style = TextStyle(
-                                            fontFamily = JakartaFamily,
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp,
-                                            color = MineralMintActive
-                                        )
-                                    )
-                                }
+                                )
 
-                                // Active wall distance fine-tuning row
-                                val activeDist = walkerSnapshot.currentWallDistanceMeters.takeIf { it > 0.1f } ?: 4.0f
-                                Row(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(DetailCardSurface)
-                                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Text(
-                                        text = "Wall: ${String.format(java.util.Locale.US, "%.1f", activeDist)} m",
-                                        style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, color = DetailTextPrimary)
-                                    )
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(DetailCardSurfaceElevated)
-                                            .clickable { walkerManager.adjustCurrentWall(-0.5f) }
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                                    ) {
-                                        Text(text = "-0.5m", style = TextStyle(fontFamily = JakartaFamily, fontSize = 11.sp, color = DetailTextSecondary))
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(DetailCardSurfaceElevated)
-                                            .clickable { walkerManager.adjustCurrentWall(0.5f) }
-                                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                                    ) {
-                                        Text(text = "+0.5m", style = TextStyle(fontFamily = JakartaFamily, fontSize = 11.sp, color = MineralMintActive))
-                                    }
-                                }
-
-                                // Interactive action buttons
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    val cornerCount = walkerSnapshot.corners.size
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
-                                            .clip(RoundedCornerShape(14.dp))
-                                            .background(DetailCardSurface)
-                                            .bouncyClickable {
-                                                walkerSnapshot = walkerManager.markCorner()
-                                                areaSquareMeters = walkerSnapshot.calculatedAreaM2.coerceIn(10, 80)
-                                            }
-                                    ) {
-                                        Text(
-                                            text = "Mark Corner ($cornerCount)",
-                                            style = TextStyle(
-                                                fontFamily = JakartaFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 13.sp,
-                                                color = DetailTextPrimary
-                                            )
-                                        )
-                                    }
-
-                                    val isReadyToFinish = walkerSnapshot.corners.size >= 3
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(48.dp)
-                                            .clip(RoundedCornerShape(14.dp))
-                                            .background(if (isReadyToFinish) MineralMintActive else DetailCardSurfaceElevated)
-                                            .bouncyClickable(enabled = isReadyToFinish) {
-                                                val area = walkerManager.finishRoom()
-                                                areaSquareMeters = area.coerceIn(10, 80)
-                                                currentStage = WizardStage.CONSTRUCTION_ANIMATION
-                                            }
-                                    ) {
-                                        Text(
-                                            text = "Finish Room",
-                                            style = TextStyle(
-                                                fontFamily = JakartaFamily,
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 13.sp,
-                                                color = if (isReadyToFinish) Color(0xFF0F172A) else DetailTextMuted
-                                            )
-                                        )
-                                    }
-                                }
-                            } else {
-                                // Manual sliders panel
+                                // Room size presets
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -717,7 +607,11 @@ fun AddRoomWizardScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        listOf("Compact\n12 m²" to 12, "Standard\n20 m²" to 20, "Spacious\n35 m²" to 35).forEach { (lbl, sqm) ->
+                                        listOf(
+                                            Triple("Compact", 9, 3.0f to 3.0f),
+                                            Triple("Standard", 16, 4.0f to 4.0f),
+                                            Triple("Spacious", 25, 5.0f to 5.0f)
+                                        ).forEach { (label, sqm, dims) ->
                                             val isSelected = areaSquareMeters == sqm
                                             Box(
                                                 contentAlignment = Alignment.Center,
@@ -727,13 +621,13 @@ fun AddRoomWizardScreen(
                                                     .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
                                                     .clickable {
                                                         areaSquareMeters = sqm
-                                                        manualLength = (sqm * 0.55f).coerceAtLeast(3f)
-                                                        manualWidth = (sqm / manualLength)
+                                                        manualWidth = dims.first
+                                                        manualLength = dims.second
                                                     }
                                                     .padding(vertical = 10.dp)
                                             ) {
                                                 Text(
-                                                    text = lbl,
+                                                    text = "$label\n$sqm m²",
                                                     style = TextStyle(
                                                         fontFamily = JakartaFamily,
                                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
@@ -746,10 +640,11 @@ fun AddRoomWizardScreen(
                                         }
                                     }
 
+                                    // Width slider
                                     Column {
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Text(text = "Width", style = TextStyle(fontFamily = JakartaFamily, fontSize = 12.sp, color = DetailTextSecondary))
-                                            Text(text = "${String.format(java.util.Locale.US, "%.1f", manualWidth)} m", style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
+                                            Text(text = "%.1f m".format(manualWidth), style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
                                         }
                                         Slider(
                                             value = manualWidth,
@@ -766,10 +661,11 @@ fun AddRoomWizardScreen(
                                         )
                                     }
 
+                                    // Length slider
                                     Column {
                                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Text(text = "Length", style = TextStyle(fontFamily = JakartaFamily, fontSize = 12.sp, color = DetailTextSecondary))
-                                            Text(text = "${String.format(java.util.Locale.US, "%.1f", manualLength)} m", style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
+                                            Text(text = "%.1f m".format(manualLength), style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.Bold, fontSize = 12.sp, color = DetailTextPrimary))
                                         }
                                         Slider(
                                             value = manualLength,
@@ -790,6 +686,125 @@ fun AddRoomWizardScreen(
                                 PrimaryActionButton(
                                     label = "Confirm Dimensions ($areaSquareMeters m²)",
                                     onClick = { currentStage = WizardStage.CONSTRUCTION_ANIMATION }
+                                )
+                            } else {
+                                // Custom polygon canvas
+                                CustomRoomCanvas(
+                                    vertices = customVertices,
+                                    onVerticesChanged = { customVertices = it },
+                                    isClosed = isPolygonClosed,
+                                    onClosedChanged = { isPolygonClosed = it },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(280.dp)
+                                )
+
+                                // Area readout and controls
+                                if (customVertices.isNotEmpty()) {
+                                    val pxPerMeter = with(density) { 60.dp.toPx() }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "${customVertices.size} corners",
+                                            style = TextStyle(
+                                                fontFamily = JakartaFamily,
+                                                fontWeight = FontWeight.Normal,
+                                                fontSize = 12.5.sp,
+                                                color = DetailTextSecondary
+                                            )
+                                        )
+
+                                        if (isPolygonClosed && customVertices.size >= 3) {
+                                            val customArea = shoelaceAreaM2(customVertices, pxPerMeter)
+                                            Text(text = " • ", color = DetailTextMuted)
+                                            Text(
+                                                text = "%.1f m²".format(customArea),
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp,
+                                                    color = MineralMintActive
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // Undo button
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(44.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(DetailCardSurface)
+                                                .bouncyClickable {
+                                                    if (isPolygonClosed) {
+                                                        isPolygonClosed = false
+                                                    } else if (customVertices.isNotEmpty()) {
+                                                        customVertices = customVertices.dropLast(1)
+                                                    }
+                                                }
+                                        ) {
+                                            Text(
+                                                text = if (isPolygonClosed) "Reopen" else "Undo",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 12.5.sp,
+                                                    color = DetailTextPrimary
+                                                )
+                                            )
+                                        }
+
+                                        // Reset button
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(44.dp)
+                                                .clip(RoundedCornerShape(12.dp))
+                                                .background(DetailCardSurface)
+                                                .bouncyClickable {
+                                                    customVertices = emptyList()
+                                                    isPolygonClosed = false
+                                                }
+                                        ) {
+                                            Text(
+                                                text = "Reset",
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 12.5.sp,
+                                                    color = DetailTextSecondary
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                val canFinishCustom = isPolygonClosed && customVertices.size >= 3
+                                PrimaryActionButton(
+                                    label = if (canFinishCustom) {
+                                        val pxPerMeter = with(density) { 60.dp.toPx() }
+                                        val customArea = shoelaceAreaM2(customVertices, pxPerMeter).roundToInt()
+                                        "Confirm Room ($customArea m²)"
+                                    } else {
+                                        "Close the shape first"
+                                    },
+                                    enabled = canFinishCustom,
+                                    onClick = {
+                                        val pxPerMeter = with(density) { 60.dp.toPx() }
+                                        areaSquareMeters = shoelaceAreaM2(customVertices, pxPerMeter).roundToInt().coerceIn(8, 80)
+                                        currentStage = WizardStage.CONSTRUCTION_ANIMATION
+                                    }
                                 )
                             }
 
@@ -827,6 +842,40 @@ fun AddRoomWizardScreen(
                                                     fontFamily = JakartaFamily,
                                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                                     fontSize = 11.5.sp,
+                                                    color = if (isSelected) MineralMintActive else DetailTextSecondary,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Ceiling height
+                                Text(
+                                    text = "Ceiling Height",
+                                    style = TextStyle(fontFamily = JakartaFamily, fontWeight = FontWeight.SemiBold, fontSize = 12.5.sp, color = DetailTextPrimary)
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    listOf("2.6m" to 2.6f, "2.8m" to 2.8f, "3.0m" to 3.0f, "3.5m" to 3.5f).forEach { (label, height) ->
+                                        val isSelected = ceilingHeight == height
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(if (isSelected) MineralMintActive.copy(alpha = 0.20f) else DetailCardSurfaceElevated)
+                                                .clickable { ceilingHeight = height }
+                                                .padding(vertical = 8.dp)
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                style = TextStyle(
+                                                    fontFamily = JakartaFamily,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                    fontSize = 12.sp,
                                                     color = if (isSelected) MineralMintActive else DetailTextSecondary,
                                                     textAlign = TextAlign.Center
                                                 )
