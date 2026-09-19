@@ -95,7 +95,7 @@ fun KlimataScreen(
     val scrollState = rememberScrollState()
     val density = LocalDensity.current
     val swipeThresholdPx = with(density) { 45.dp.toPx() }
-    val restOffsetYPx = with(density) { 60.dp.toPx() }
+    val restOffsetYPx = with(density) { 65.dp.toPx() }
 
     var scrollJob by remember { mutableStateOf<Job?>(null) }
     var heroSectionHeightPx by remember { mutableFloatStateOf(0f) }
