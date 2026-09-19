@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,7 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.adamglin.PhosphorIcons
 import com.adamglin.phosphoricons.Light
+import com.adamglin.phosphoricons.light.ArrowsVertical
+import com.adamglin.phosphoricons.light.BoundingBox
 import com.adamglin.phosphoricons.light.Cube
+import com.adamglin.phosphoricons.light.Snowflake
 import com.example.klimata.data.MockData
 import com.example.klimata.data.RoomState
 import com.example.klimata.data.volumeCubicMeters
@@ -164,24 +168,27 @@ fun RoomThermalDetailScreen(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Dimension metric chips
+                // Dimension metric items
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    DimensionChip(
+                    DimensionStatItem(
                         title = "Floor Area",
                         value = "${room.areaSquareMeters} m²",
+                        icon = PhosphorIcons.Light.BoundingBox,
                         modifier = Modifier.weight(1f)
                     )
-                    DimensionChip(
+                    DimensionStatItem(
                         title = "Ceiling Height",
                         value = "${room.ceilingHeightMeters} m",
+                        icon = PhosphorIcons.Light.ArrowsVertical,
                         modifier = Modifier.weight(1f)
                     )
-                    DimensionChip(
+                    DimensionStatItem(
                         title = "Cooling Load",
                         value = "${room.coolingLoadBtu} BTU/h",
+                        icon = PhosphorIcons.Light.Snowflake,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -191,21 +198,26 @@ fun RoomThermalDetailScreen(
 }
 
 @Composable
-private fun DimensionChip(
+private fun DimensionStatItem(
     title: String,
     value: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(DetailCardSurfaceElevated)
-            .padding(vertical = 10.dp, horizontal = 10.dp)
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.Start
     ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = DetailTextMuted,
+                modifier = Modifier.size(12.dp)
+            )
             Text(
                 text = title,
                 style = TextStyle(
@@ -213,19 +225,23 @@ private fun DimensionChip(
                     fontWeight = FontWeight.Normal,
                     fontSize = 11.sp,
                     color = DetailTextMuted
-                )
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = value,
-                style = TextStyle(
-                    fontFamily = JakartaFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.5.sp,
-                    color = DetailTextPrimary
-                )
+                ),
+                maxLines = 1
             )
         }
+        Spacer(modifier = Modifier.height(3.dp))
+        Text(
+            text = value,
+            style = TextStyle(
+                fontFamily = JakartaFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                letterSpacing = (-0.2).sp,
+                color = DetailTextPrimary
+            ),
+            maxLines = 1,
+            softWrap = false
+        )
     }
 }
 
