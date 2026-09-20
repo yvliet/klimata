@@ -4,6 +4,7 @@
 
 ### Turn dumb ACs autonomous with *zero* new hardware. Just your phone.
 
+[![Latest Release](https://img.shields.io/badge/Release-v1.0.0-success.svg?logo=github&logoColor=white)](https://github.com/yvliet/klimata/releases/tag/v1.0.0)
 [![Platform](https://img.shields.io/badge/Platform-Android%208.0%2B-3DDC84.svg?logo=android&logoColor=white)](app)
 [![Framework](https://img.shields.io/badge/UI-Jetpack%20Compose%20%2B%20M3-4285F4.svg?logo=jetpackcompose&logoColor=white)](app/src/main/java/com/example/klimata/ui)
 [![AI Engine](https://img.shields.io/badge/Vision_AI-Google%20Gemini-8E75B2.svg?logo=googlegemini&logoColor=white)](app/src/main/java/com/example/klimata/data/network/GeminiApiClient.kt)
@@ -25,12 +26,15 @@
 
 ## 1. Releases & Availability
 
-Pre-compiled Android APK binaries are available under [GitHub Releases](https://github.com/yvliet/klimata/releases):
+Download the latest pre-compiled Android APK:
 
-- **Target Architecture**: Universal APK (ARM64-v8a, armeabi-v7a, x86_64)
+👉 **[Download Klimata v1.0.0 (APK)](https://github.com/yvliet/klimata/releases/download/v1.0.0/klimata-v1.0.0.apk)** • **[View Release Notes](https://github.com/yvliet/klimata/releases/tag/v1.0.0)**
+
+- **Direct Install**: Download `klimata-v1.0.0.apk` onto your phone, tap to open, and allow installation from unknown sources.
+- **Target Architecture**: Universal APK (~2.2 MB, ARM64-v8a, armeabi-v7a, x86_64)
 - **Minimum Operating System**: Android 8.0 Oreo (API Level 26) or higher
-- **Recommended Hardware**: Any Android smartphone with a built-in Consumer Infrared (IR) blaster (POCO, Xiaomi, Redmi, Huawei, Vivo, TCL)
-- **Devices without an IR Blaster**: Klimata runs in visual companion mode with full weather sync, thermal load calculations, and manual setpoint controls. Standalone $3 ESP32 Wi-Fi/IR puck firmware is planned for hardware-independent operation.
+- **Recommended Hardware**: Any Android phone with a built-in Consumer Infrared (IR) blaster (POCO, Xiaomi, Redmi, Huawei, Vivo, TCL)
+- **Devices without an IR Blaster**: Klimata runs in companion mode with full weather sync, thermal load calculations, and manual setpoint controls. Standalone $3 ESP32 Wi-Fi/IR puck firmware is in development for hardware-independent operation.
 
 ## 2. Why Klimata?
 
